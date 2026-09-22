@@ -60,7 +60,21 @@ export default defineConfig([
     },
   },
   {
-    files: ['scripts/**/*.ts', 'tests/**/*.ts', 'tests/**/*.tsx'],
+    // 4. vasszabály: a felhasználókon átívelő dbAdmin csak scriptből, cronból és az admin felületről
+    files: ['app/**/*.{ts,tsx}', 'src/components/**/*.{ts,tsx}'],
+    ignores: ['app/api/cron/**', 'app/(admin)/**', 'app/api/admin/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [{ name: '@/lib/db/admin', message: 'A dbAdmin csak scripts/, app/api/cron/ és app/(admin)/ alól használható.' }],
+          patterns: [{ group: ['@/lib/db/seed/*'], message: 'A seed csak scriptből futhat.' }],
+        },
+      ],
+    },
+  },
+  {
+    files: ['scripts/**/*.{ts,mjs}', 'tests/**/*.ts', 'tests/**/*.tsx'],
     rules: { 'no-console': 'off' },
   },
   globalIgnores([
