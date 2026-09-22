@@ -1,0 +1,701 @@
+{
+ "version": 1,
+ "megjegyzes": "Képhely-rendszer. A komponensek soha nem fájlnévre, hanem képhelyre (slot) hivatkoznak. Egy képhely az első olyan elemet használja, amelyik az aktuális környezetben engedélyezett. Csere: vegyél fel új elemet source='own'|'licensed'|'partner' értékkel, és tedd a képhely listájának elejére.",
+ "licencek": {
+  "moodboard-dev-only": "Pinterest-moodboard. Fejlesztéshez és belső demóhoz. Nyilvános élesítés előtt cserélendő, vagy ALLOW_DEV_IMAGES=true tudatos döntéssel.",
+  "own": "Saját készítésű vagy AI-generált, saját jogú kép.",
+  "licensed": "Stockból licencelt kép, a licenc azonosítójával.",
+  "partner": "Partnerprogram kreatívja (banner, kampánykép). A program feltételei szerint, gyakran lejárati dátummal (validUntil)."
+ },
+ "assets": [
+  {
+   "id": "b00-borostyan-napfeny",
+   "src": "/brand/moodboard/szepseg/b00-borostyan-napfeny.webp",
+   "width": 736,
+   "height": 920,
+   "orientation": "portrait",
+   "collection": "szepseg",
+   "alt": "Nő portréja, arcán meleg, borostyánszínű napfényfoltokkal",
+   "dominantColor": "#a88266",
+   "blurDataURL": "data:image/webp;base64,UklGRpoAAABXRUJQVlA4II4AAAAwAgCdASoNABAAAsBMJbACdAYsZLW/JeM9AAD+68PYLZdv+DgexsVDz7dy/kv+qkmJ+Hn6tFF1xVSjXgG/5wH5qbSyA3RYIpO/atq19LsAHbhy7GEv3DjSFgofXq+nz8gUn9Jtm4Ih7mKlP7tgyAOhp+MzP3NEfms7NDeCoOtgoY8vOPEAMhBoxTj3gAAA",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "AI _ Skin Care _ Model _ Premium.jpg"
+  },
+  {
+   "id": "b01-ajkak-kozeli",
+   "src": "/brand/moodboard/szepseg/b01-ajkak-kozeli.webp",
+   "width": 736,
+   "height": 782,
+   "orientation": "portrait",
+   "collection": "szepseg",
+   "alt": "Ajkak és arcbőr közelről, kézzel az arcon",
+   "dominantColor": "#c89f94",
+   "blurDataURL": "data:image/webp;base64,UklGRmwAAABXRUJQVlA4IGAAAADwAQCdASoPABAAAsBMJbACdADc+DFGZMAA/tPTWqqQ/qgPTOgk/lvQ1+BXk3N3S4MjEeXHdvH+eCE9NG0uaCMZvf64jE9VpCdv76WQHK8uTB6YF60pemiBPvz3rBEWAAA=",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "Acne E-Course _ Paula's Choice.jpg"
+  },
+  {
+   "id": "b02-kezek-arcon",
+   "src": "/brand/moodboard/szepseg/b02-kezek-arcon.webp",
+   "width": 736,
+   "height": 414,
+   "orientation": "landscape",
+   "collection": "szepseg",
+   "alt": "Arcát két kézzel érintő nő világos háttér előtt",
+   "dominantColor": "#d7bcae",
+   "blurDataURL": "data:image/webp;base64,UklGRl4AAABXRUJQVlA4IFIAAAAQAgCdASoQAAkAAsBMJaACdAELyOVNSzmwAP76GtXyPjCtYnBlkN7GSBz/uWW6KR76ZjtKHPjEb44hHnltOROn13+DLCS1NRz4wLuGrxGSQ8AA",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "Articles.jpg"
+  },
+  {
+   "id": "b03-feher-ter",
+   "src": "/brand/moodboard/szepseg/b03-feher-ter.webp",
+   "width": 734,
+   "height": 320,
+   "orientation": "landscape",
+   "collection": "szepseg",
+   "alt": "Világos, szinte üres kompozíció egy fülbevaló részletével",
+   "dominantColor": "#edd6cc",
+   "blurDataURL": "data:image/webp;base64,UklGRk4AAABXRUJQVlA4IEIAAADwAQCdASoQAAcAAsBMJZAC7AELX81PdQAA/vluU3XEmQqF4L8kgqG0wPHryOhmQeCQ377IzF392jkFIKpAU5AAAAA=",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "Cosmetic Grade Peels Treatment _ Laser Clinics Australia.jpg"
+  },
+  {
+   "id": "b04-krem-a-boron",
+   "src": "/brand/moodboard/szepseg/b04-krem-a-boron.webp",
+   "width": 736,
+   "height": 1308,
+   "orientation": "portrait",
+   "collection": "szepseg",
+   "alt": "Fénylő bőr krémcsíkkal, közelről",
+   "dominantColor": "#95694d",
+   "blurDataURL": "data:image/webp;base64,UklGRmQAAABXRUJQVlA4IFgAAADQAQCdASoJABAAAsBMJZgCdADZesaiwAD+rT0f/SmuGQi3rlyDmihSzwzUatIr+6+lBxIx0rcCYAfkVhJwxZn0G4W94CyU1pW+vVVNTnbvkdhhdbQaxkAA",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "Cuidado facial antiedad no invasivo para reducir arrugas.jpg"
+  },
+  {
+   "id": "b05-mosoly",
+   "src": "/brand/moodboard/szepseg/b05-mosoly.webp",
+   "width": 735,
+   "height": 1105,
+   "orientation": "portrait",
+   "collection": "szepseg",
+   "alt": "Mosolygó nő, két kezével az arcán",
+   "dominantColor": "#b19582",
+   "blurDataURL": "data:image/webp;base64,UklGRoAAAABXRUJQVlA4IHQAAABQAgCdASoLABAAAsBMJaACdAYvhgfE1Pc/ngAA/vKF9NzQqJBiK1ahdPE1uSfHJpJJk7wDi2/A9LYo9VhTs4p7EThx5hdFQ5bDYc7z9/jW2/yvLNhboXhPN5RdYZ0gBX28QniuRrfrkRcZJpw7hytAhifgAA==",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "Healthy Skin Comes from Consistency.jpg"
+  },
+  {
+   "id": "b06-napfeny-kar",
+   "src": "/brand/moodboard/szepseg/b06-napfeny-kar.webp",
+   "width": 735,
+   "height": 776,
+   "orientation": "portrait",
+   "collection": "szepseg",
+   "alt": "Napfényben álló nő, karját a feje fölé emeli",
+   "dominantColor": "#aa7a5f",
+   "blurDataURL": "data:image/webp;base64,UklGRn4AAABXRUJQVlA4IHIAAACQAgCdASoPABAAAsBMJbACdAYuRd158eOpBfWgQAD+6sN7fhy663VZNSOoGfW2HHRtog6sI3ire9hnoD+/XclWecggCE2bxX7Ow78endi66UfGBa+ahnKp4lWg1/GPzs/PVVos2iU3zjlPW2RU1mCdCAA=",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "La peau change avec la lumière, la fatigue, le rythme des jours__Elle garde des traces, des nuances, une histoire.__Prendre soin, ce n’.__#CleanBeauty  #slowbeauty #NaturalSkincare #HolisticBeautyCare _#SelfCareMoments"
+  },
+  {
+   "id": "b07-szemtapasz",
+   "src": "/brand/moodboard/szepseg/b07-szemtapasz.webp",
+   "width": 736,
+   "height": 1313,
+   "orientation": "portrait",
+   "collection": "szepseg",
+   "alt": "Szem alatti tapaszt viselő, kacsintó nő",
+   "dominantColor": "#907065",
+   "blurDataURL": "data:image/webp;base64,UklGRmwAAABXRUJQVlA4IGAAAAAQAgCdASoJABAAAsBMJZgCdADdKUmt6SSAAM4+8527paJ0cypc5v019/q7pcpP0fKVXYpO44M4/4VBN3HQ7uvVKsEug7JR8/U7jQE5D55SmeoDhqF+ohbNrq4v7rgIAAA=",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "Le soin perfection.jpg"
+  },
+  {
+   "id": "b08-krem-arcon",
+   "src": "/brand/moodboard/szepseg/b08-krem-arcon.webp",
+   "width": 736,
+   "height": 920,
+   "orientation": "portrait",
+   "collection": "szepseg",
+   "alt": "Arcra kent krémcsík, csukott szem",
+   "dominantColor": "#a77d6c",
+   "blurDataURL": "data:image/webp;base64,UklGRnwAAABXRUJQVlA4IHAAAADwAQCdASoNABAAAsBMJbACdAE5ZLwT+jAA+X/YVX5i/1nJ4OXsnL2ornAz6d4BwT4mVtOpr8BxHj4c3DDnnjTs8iH1STguqc+bBLm4r7ACKUDrc+kU3enHspS7OfG3aQ9TKpJttsS6S2R/FozA68AA",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "Why Sunscreen Is the #1 Anti-Aging Product.jpg"
+  },
+  {
+   "id": "b09-szemkornyek-pottyok",
+   "src": "/brand/moodboard/szepseg/b09-szemkornyek-pottyok.webp",
+   "width": 736,
+   "height": 1309,
+   "orientation": "portrait",
+   "collection": "szepseg",
+   "alt": "Krémpöttyök a szem alatt, csukott szemmel",
+   "dominantColor": "#c39986",
+   "blurDataURL": "data:image/webp;base64,UklGRmQAAABXRUJQVlA4IFgAAAAwAgCdASoJABAAAsBMJZgCdAELYrV9xC0WgADwOep9lIac7o6QZF8rvmuV+97VY1kbal+xyBmMJMfBBLL168/dVwGzbPYLzhsoS4pj6zt0Gh8da9pcXwAA",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "arnaud paris beauty shot - Google Search.jpg"
+  },
+  {
+   "id": "b10-rozsafeny",
+   "src": "/brand/moodboard/szepseg/b10-rozsafeny.webp",
+   "width": 736,
+   "height": 917,
+   "orientation": "portrait",
+   "collection": "szepseg",
+   "alt": "Rózsaszín-narancs fényfolt egy női arcon",
+   "dominantColor": "#925748",
+   "blurDataURL": "data:image/webp;base64,UklGRnoAAABXRUJQVlA4IG4AAABQAgCdASoNABAAAsBMJbACdADdKaD9rOrb5IAA/vMu5Pq5YapHYg4IPQXGsjxrJZhO3nt8mROnmWOd5gnqsyun3IiL4ztJJmrrrJJYcpH28P70fTcxTkW5CVOvctImy/rgYKLXl8Xo0nOZmQ8AAA==",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "letöltés - 2026-09-22T184406.392.jpg"
+  },
+  {
+   "id": "b11-feny-es-arnyek",
+   "src": "/brand/moodboard/szepseg/b11-feny-es-arnyek.webp",
+   "width": 736,
+   "height": 920,
+   "orientation": "portrait",
+   "collection": "szepseg",
+   "alt": "Fény és árnyék játéka egy fiatal nő arcán",
+   "dominantColor": "#ae8479",
+   "blurDataURL": "data:image/webp;base64,UklGRoAAAABXRUJQVlA4IHQAAAAwAgCdASoNABAAAsBMJbACdAEYESeyHOPZKAD5f8kpTsfvpv457oJSxvk6D/2xdw2qD1EcYyw1MCo95eIUMjOPtgpcb3SO4JKmg7/TImHq6xap+UfqzGPUutsh+2/GHpByInmhmldkprhxjqyi2xF1w/4sAA==",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "letöltés - 2026-09-22T184415.237.jpg"
+  },
+  {
+   "id": "b12-uveggomb",
+   "src": "/brand/moodboard/szepseg/b12-uveggomb.webp",
+   "width": 736,
+   "height": 920,
+   "orientation": "portrait",
+   "collection": "szepseg",
+   "alt": "Narancsszínű üveggömb egy női arc előtt",
+   "dominantColor": "#a6766a",
+   "blurDataURL": "data:image/webp;base64,UklGRo4AAABXRUJQVlA4IIIAAAAQAgCdASoNABAAAsBMJbACdAEWfcrDJFwAAP7CvbrRkFWYsH29cEAQCC8UsDEtqH8Ef6izwnI7Kt5E4ZJqsEidtQ6ew4n1LfmRrMEP8cfjLKsqov6x0dw5CFBdHuOeN7MPDFwG/buPl5HwigfG1qqUHK5yAABNredVOLWCGZxTQAAA",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "letöltés - 2026-09-22T184428.313.jpg"
+  },
+  {
+   "id": "b13-arcot-erinto-kez",
+   "src": "/brand/moodboard/szepseg/b13-arcot-erinto-kez.webp",
+   "width": 736,
+   "height": 1104,
+   "orientation": "portrait",
+   "collection": "szepseg",
+   "alt": "Arcot érintő kéz, meleg bézs háttér",
+   "dominantColor": "#b88565",
+   "blurDataURL": "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAADwAQCdASoLABAAAsBMJbACdADJM+FNiLgA/rgJcvRRha4ukZ2ZVxgf3cHu/zwyQ4Dzi6im8kHrgExdwhKjyjJBl2T7qhYd/1T2hye+jE9qkMc2bvmLzN2uyG62AAAA",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "letöltés - 2026-09-22T184501.791.jpg"
+  },
+  {
+   "id": "b14-profil-fenyben",
+   "src": "/brand/moodboard/szepseg/b14-profil-fenyben.webp",
+   "width": 736,
+   "height": 1098,
+   "orientation": "portrait",
+   "collection": "szepseg",
+   "alt": "Csukott szemű nő profilból, fénylő bőrrel",
+   "dominantColor": "#c18b6a",
+   "blurDataURL": "data:image/webp;base64,UklGRnIAAABXRUJQVlA4IGYAAABwAgCdASoLABAAAsBMJbACdLoAAoLfs+kFWRuAAP0CtGYPuyCmJwAidg2uGlnA/TC7b+l2T50eNEuIHfC6un4LJuCFhxV2XQ50NteIwk1AcObQdGwjWhL/w2qs4r7578fBsqAAAAA=",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "letöltés - 2026-09-22T184507.437.jpg"
+  },
+  {
+   "id": "b15-nyugalom",
+   "src": "/brand/moodboard/szepseg/b15-nyugalom.webp",
+   "width": 736,
+   "height": 1308,
+   "orientation": "portrait",
+   "collection": "szepseg",
+   "alt": "Csukott szemű nő kezével az arcán, meleg fényben",
+   "dominantColor": "#b18163",
+   "blurDataURL": "data:image/webp;base64,UklGRmwAAABXRUJQVlA4IGAAAAAQAgCdASoJABAAAsBMJagCdADdjfT3YAeAAP7Csq33XSQmNksaZhuc282QCsWLclRXKX6HGMTeNSnJ9LRvI1XY/j2jtDX02pUJacUOYwPecsbB5tyk+bhPynplBwwhkAA=",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "letöltés - 2026-09-22T184512.579.jpg"
+  },
+  {
+   "id": "b16-reggeli-rutin",
+   "src": "/brand/moodboard/szepseg/b16-reggeli-rutin.webp",
+   "width": 736,
+   "height": 1104,
+   "orientation": "portrait",
+   "collection": "szepseg",
+   "alt": "Csukott szemű nő bőrápolás közben, lágy napfényben",
+   "dominantColor": "#a87955",
+   "blurDataURL": "data:image/webp;base64,UklGRn4AAABXRUJQVlA4IHIAAABQAgCdASoLABAAAsBMJbACdAEe4Yxy/KndGAAA/thmjS5ratvg7WGlqj2QhdYYCl0C+HcshgCBrmjcphKw5fFSvC8pJYifDGz7ezgn8QRnMEwSu29Ktp8dWk0geaQ3uf7WhgeHOnPZd/m3PT+W32nnkAA=",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "letöltés - 2026-09-22T184518.004.jpg"
+  },
+  {
+   "id": "b17-orom",
+   "src": "/brand/moodboard/szepseg/b17-orom.webp",
+   "width": 736,
+   "height": 1104,
+   "orientation": "portrait",
+   "collection": "szepseg",
+   "alt": "Nevető nő felfelé tekint, világos háttér előtt",
+   "dominantColor": "#c8a697",
+   "blurDataURL": "data:image/webp;base64,UklGRnQAAABXRUJQVlA4IGgAAADwAQCdASoLABAAAsBMJbACdADRmsQw8IgA/vZqaXKTC91t+SY/eWR/eFFKrDlK8C+1bcov5TcRHO3BR2umGlIvgPYK3LCCTy6rG8V/ukg432AM+atYzQt2ykh6dDTLrDYCGukRliAAAA==",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "letöltés - 2026-09-22T184528.864.jpg"
+  },
+  {
+   "id": "b18-krem-kozeli",
+   "src": "/brand/moodboard/szepseg/b18-krem-kozeli.webp",
+   "width": 589,
+   "height": 884,
+   "orientation": "portrait",
+   "collection": "szepseg",
+   "alt": "Krém felvitele az arccsontra, közeli kép",
+   "dominantColor": "#ab6d53",
+   "blurDataURL": "data:image/webp;base64,UklGRnQAAABXRUJQVlA4IGgAAAAQAgCdASoLABAAAsBMJbACdAEO9cKwaceAAP68nh0nVyx06j5h5yzDMR/7KPaZb19RHJsgDqtMSkFGJp5CqwGpoIxcln9tt4N8PIneWIu+9xtS7NX29ifn6l69Gfsicv4oaKuR4IwAAA==",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "letöltés - 2026-09-22T184542.748.jpg"
+  },
+  {
+   "id": "b19-szemkrem",
+   "src": "/brand/moodboard/szepseg/b19-szemkrem.webp",
+   "width": 736,
+   "height": 1308,
+   "orientation": "portrait",
+   "collection": "szepseg",
+   "alt": "Három krémpötty a szem alatt, közelről",
+   "dominantColor": "#a36f56",
+   "blurDataURL": "data:image/webp;base64,UklGRlwAAABXRUJQVlA4IFAAAADQAQCdASoJABAAAsBMJagCdADb6++D4AD+bL+jxQwsjspaJNdnm4xj+3rEnFjqMtGVr+RABwVcbghfqthwR4voe3VVUBrxw6189W7BMAAAAA==",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "letöltés - 2026-09-22T184556.470.jpg"
+  },
+  {
+   "id": "b20-jatekos-rutin",
+   "src": "/brand/moodboard/szepseg/b20-jatekos-rutin.webp",
+   "width": 728,
+   "height": 1092,
+   "orientation": "portrait",
+   "collection": "szepseg",
+   "alt": "Szem alatti krémmel játékosan grimaszoló nő",
+   "dominantColor": "#ad8574",
+   "blurDataURL": "data:image/webp;base64,UklGRoYAAABXRUJQVlA4IHoAAAAwAgCdASoLABAAAsBMJagCdAELYqG6yFm0AAD+wgQF8Pu76UKOYNNJNxEZTzWCkR/e3yXl+DMnhJ2bmUU2vYnpjumtH4TIKilz/nrSH4nwnA2JH2+OugVnK8CSDubImVUp28M5zHjUZwZlDoTAcy8XOkmTqrDKtFAAAA==",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "letöltés - 2026-09-22T184605.708.jpg"
+  },
+  {
+   "id": "b21-vizcseppek",
+   "src": "/brand/moodboard/szepseg/b21-vizcseppek.webp",
+   "width": 736,
+   "height": 1308,
+   "orientation": "portrait",
+   "collection": "szepseg",
+   "alt": "Vizes hajú nő profilból, vízcseppekkel a bőrén",
+   "dominantColor": "#b08e79",
+   "blurDataURL": "data:image/webp;base64,UklGRmwAAABXRUJQVlA4IGAAAADQAQCdASoJABAAAsBMJZgCdADW+gkDYAD+7u35uj8/VjyEc3pB52hoKhtWNRowC4udWO1RWLtnycGgTH2SBpz/GiCXSdyR9oJQxEYMWR/HTviXqeJzHVVhJFzfc6mAAAA=",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "letöltés - 2026-09-22T184618.857.jpg"
+  },
+  {
+   "id": "b22-napfenyes-vall",
+   "src": "/brand/moodboard/szepseg/b22-napfenyes-vall.webp",
+   "width": 736,
+   "height": 1104,
+   "orientation": "portrait",
+   "collection": "szepseg",
+   "alt": "Napfényes váll és nyak meleg árnyalatokban",
+   "dominantColor": "#9f7356",
+   "blurDataURL": "data:image/webp;base64,UklGRm4AAABXRUJQVlA4IGIAAAAQAgCdASoLABAAAsBMJagCdADcWIwGG32YAPa8N+i15C+l2VpA6/vzNF6SdrNuA7bNKj0WwVehumhUnURgkbiJqBlgOZmsmupDar4TDSaevLroDp7h4pGZ2pGxHME38MAAAA==",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "Сияющая кожа в солнечном свете Glowing Skin in Sunlight.jpg"
+  },
+  {
+   "id": "e00-tukrok-egbolt",
+   "src": "/brand/moodboard/eletmod/e00-tukrok-egbolt.webp",
+   "width": 736,
+   "height": 1308,
+   "orientation": "portrait",
+   "collection": "eletmod",
+   "alt": "Fehér öltönyös nő tükörfalak között, kék ég alatt",
+   "dominantColor": "#789da3",
+   "blurDataURL": "data:image/webp;base64,UklGRlAAAABXRUJQVlA4IEQAAADwAQCdASoJABAAAsBMJbACdAEU6TcnSIAA/qJFP76F/J0Zr0I3+S6CUgXEkEfsIeGTA+Pcg48Dyq1YbL19yLFJgD9gAA==",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "+.jpg"
+  },
+  {
+   "id": "e01-kalap-kanape",
+   "src": "/brand/moodboard/eletmod/e01-kalap-kanape.webp",
+   "width": 736,
+   "height": 981,
+   "orientation": "portrait",
+   "collection": "eletmod",
+   "alt": "Kalapos, fehér ruhás nő piros csíkos kanapén magazint olvas",
+   "dominantColor": "#92766d",
+   "blurDataURL": "data:image/webp;base64,UklGRnYAAABXRUJQVlA4IGoAAADQAQCdASoMABAAAsBMJYgCdAEPz2At0AD+83TWa2Jsr1kFPSRNle5xorhWGnTyVWwjzS2Wevj3w+93zOCloY1KwOVnf7ffryDNae+G331biOL1S2xMAOR1yWW1DJewKbqMwlPpSjMT2RAA",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "Dreaming of Salalah, Oman_ Here’s your mini travel guide to save for your trip!👇🏼🏝️🇴🇲__🧺Afoul (Masood Hidden) Beach – Enjoy a peaceful. 🐪Jabal Samhan – Experience a beautiful outdoor lunch prepared before you___"
+  },
+  {
+   "id": "e02-bezs-kabat",
+   "src": "/brand/moodboard/eletmod/e02-bezs-kabat.webp",
+   "width": 736,
+   "height": 412,
+   "orientation": "landscape",
+   "collection": "eletmod",
+   "alt": "Bézs kabátos nő meleg fényben",
+   "dominantColor": "#8c7762",
+   "blurDataURL": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAAAQAgCdASoQAAkAAsBMJQBOgMVzphsgOQGAAP7wTHBX3Cp3ZjV6A/rfyu192YSviw3HyXJcmSHhkAV8meea25ZPE63rgb62ga1jBTTYvctEkBagr6AAAA==",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "Fashionista.jpg"
+  },
+  {
+   "id": "e03-kerti-mozi",
+   "src": "/brand/moodboard/eletmod/e03-kerti-mozi.webp",
+   "width": 736,
+   "height": 1104,
+   "orientation": "portrait",
+   "collection": "eletmod",
+   "alt": "Esti kerti társalgó tűzrakóval, fényfüzérrel és vetítővászonnal",
+   "dominantColor": "#6d5942",
+   "blurDataURL": "data:image/webp;base64,UklGRnYAAABXRUJQVlA4IGoAAAAQAgCdASoLABAAAsBMJZACdAEesNnBKz+AAP7xtPrkqlWQ6cZMZs7MQPiuQ7t/h1mVstwQQ+7pDS1aWF2v4u4JRetJLTsiqIhbTfRPT3GOOs2Rjz4KVkkXN8XJVbTGOiJhqXDZTtobxSAA",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "House with Garden Ideas.jpg"
+  },
+  {
+   "id": "e04-narancs-sakk",
+   "src": "/brand/moodboard/eletmod/e04-narancs-sakk.webp",
+   "width": 736,
+   "height": 1318,
+   "orientation": "portrait",
+   "collection": "eletmod",
+   "alt": "Fehér ruhás nő narancs táskával óriás sakkfigurák között",
+   "dominantColor": "#907c77",
+   "blurDataURL": "data:image/webp;base64,UklGRm4AAABXRUJQVlA4IGIAAADwAQCdASoJABAAAsBMJbACdH8AF8Xq7ogAytX1b/BOYCb7VQOsVdfpbT1N0fzzSwjYPTnLxiyzMNtuzWgNibFK3ylQFF0igLxwy8vY0uUuTrAXOw+DtVf1+//GRUPksAAAAA==",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "Minimal White Look in High Fashion.jpg"
+  },
+  {
+   "id": "e05-lila-bunda-sakk",
+   "src": "/brand/moodboard/eletmod/e05-lila-bunda-sakk.webp",
+   "width": 720,
+   "height": 1280,
+   "orientation": "portrait",
+   "collection": "eletmod",
+   "alt": "Lila bundás, napszemüveges férfi sakkozik egy tetőn",
+   "dominantColor": "#577290",
+   "blurDataURL": "data:image/webp;base64,UklGRngAAABXRUJQVlA4IGwAAAAQAgCdASoJABAAAsBMJbACdADdYsALWQQAAP7QCKbfGvLMVUTOxrf1wePCF9C9Rmn7X9smK7wEnSuqlkOjWTvqeDF2+9+Bj5P8ggUYd/tZ2b4rbf6CpqNc5fHhSXQJ7/nGs9CHEzkBxYajCAA=",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "Pria Papua Keren.jpg"
+  },
+  {
+   "id": "e06-trench",
+   "src": "/brand/moodboard/eletmod/e06-trench.webp",
+   "width": 735,
+   "height": 413,
+   "orientation": "landscape",
+   "collection": "eletmod",
+   "alt": "Trench kabátos nő bézs fal előtt",
+   "dominantColor": "#836a54",
+   "blurDataURL": "data:image/webp;base64,UklGRlAAAABXRUJQVlA4IEQAAADwAQCdASoQAAkAAsBMJQBOgCL8xJmKWYAA/vMz9g8TJfbv27fv7UOyRjQhPXd3Om4MClMUfRKQVysMJko3Sr1eVwAAAA==",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "The Legacy.jpg"
+  },
+  {
+   "id": "e07-kert-pergola",
+   "src": "/brand/moodboard/eletmod/e07-kert-pergola.webp",
+   "width": 736,
+   "height": 1318,
+   "orientation": "portrait",
+   "collection": "eletmod",
+   "alt": "Kert felülnézetből pergolával, kerti konyhával és tűzrakóval",
+   "dominantColor": "#505743",
+   "blurDataURL": "data:image/webp;base64,UklGRmAAAABXRUJQVlA4IFQAAADwAQCdASoJABAAAsBMJQBOgBtrXBA034AA9kcubtx+IPud3SBpn4qx/wR3FpaikYWHfCPzBlQ3lL5Sqj4OMqxVomrk8aun/LXUbFkZi7qXKdYAAAA=",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "letöltés - 2026-09-22T190459.130.jpg"
+  },
+  {
+   "id": "e08-kert-este",
+   "src": "/brand/moodboard/eletmod/e08-kert-este.webp",
+   "width": 736,
+   "height": 1104,
+   "orientation": "portrait",
+   "collection": "eletmod",
+   "alt": "Esti kert étkezőasztallal és tűzrakóval",
+   "dominantColor": "#4d4735",
+   "blurDataURL": "data:image/webp;base64,UklGRlYAAABXRUJQVlA4IEoAAACwAQCdASoLABAAAsBMJQBOgCKkKofAAP7kaaV9LZxoXsnVKgZ1XCc7EDFlxX+FgoC93uz7jcJ0S/bbWdHIWoDT3xoOWky6yj3QAA==",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "letöltés - 2026-09-22T190504.226.jpg"
+  },
+  {
+   "id": "e09-fuggoagy",
+   "src": "/brand/moodboard/eletmod/e09-fuggoagy.webp",
+   "width": 736,
+   "height": 1104,
+   "orientation": "portrait",
+   "collection": "eletmod",
+   "alt": "Függőágy és kerti ülőgarnitúra fényfüzér alatt",
+   "dominantColor": "#706453",
+   "blurDataURL": "data:image/webp;base64,UklGRnIAAABXRUJQVlA4IGYAAAAQAgCdASoLABAAAsBMJQBOgCKKaKgBjhQAAP7SgXGPT1Aj1kynOFi+q06/CRwQzKP8IGvvA3WB1TOKvfgg9XuP2q3f7zGCF6Eq1ZmSnWSJ9AXeeAZdcia3vENJwyD08HBwrqAAAAA=",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "letöltés - 2026-09-22T190511.471.jpg"
+  },
+  {
+   "id": "e10-kerti-vacsora",
+   "src": "/brand/moodboard/eletmod/e10-kerti-vacsora.webp",
+   "width": 736,
+   "height": 1307,
+   "orientation": "portrait",
+   "collection": "eletmod",
+   "alt": "Kerti vacsoraasztal kemencével és fényfüzérrel",
+   "dominantColor": "#4d402a",
+   "blurDataURL": "data:image/webp;base64,UklGRlAAAABXRUJQVlA4IEQAAADwAQCdASoJABAAAsBMJYgCdAEPCsZh9YAA/uzhFlUo4W7l4A/YFppqctIwFjPBS6uSJ4Beu6pQ+PZ7+rR4a3fo/1QAAA==",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "letöltés - 2026-09-22T191951.878.jpg"
+  },
+  {
+   "id": "e11-arany-ekszer",
+   "src": "/brand/moodboard/eletmod/e11-arany-ekszer.webp",
+   "width": 736,
+   "height": 981,
+   "orientation": "portrait",
+   "collection": "eletmod",
+   "alt": "Szeplős nő arany karperecekkel és karikafülbevalóval, levélárnyékban",
+   "dominantColor": "#a6a299",
+   "blurDataURL": "data:image/webp;base64,UklGRngAAABXRUJQVlA4IGwAAADwAQCdASoMABAAAsBMJZACdAYrTZ+vSWAA/prKmRFXMPZ1T0UQi+cSrWJ1Fva5ieWgsx2+Jh/M7Gx4AW8K+LPbR+3YtRFaHt5wK2bvOxaBw177LSd+Py2jmkE8IQhQ/8tmDVx7fIkUT7sPxAA=",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "letöltés - 2026-09-22T192107.063.jpg"
+  },
+  {
+   "id": "e12-voros-ruha-kert",
+   "src": "/brand/moodboard/eletmod/e12-voros-ruha-kert.webp",
+   "width": 736,
+   "height": 1308,
+   "orientation": "portrait",
+   "collection": "eletmod",
+   "alt": "Vörös ruhás nő táncol egy formakertben",
+   "dominantColor": "#574e37",
+   "blurDataURL": "data:image/webp;base64,UklGRnAAAABXRUJQVlA4IGQAAAAwAgCdASoJABAAAsBMJaACdAEfUqzCmei2IAD+5vJlWndkQDZTSUX/nJN8QOAEpY+NZexa/rOQ2wNZMH1zKUNjsEoCsrSYqwvtABMels2YjhiKEI47zNWHlk0WN6ZyENGAsgAA",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "letöltés - 2026-09-22T192148.449.jpg"
+  },
+  {
+   "id": "e13-fekete-ruha",
+   "src": "/brand/moodboard/eletmod/e13-fekete-ruha.webp",
+   "width": 735,
+   "height": 420,
+   "orientation": "landscape",
+   "collection": "eletmod",
+   "alt": "Fekete szaténruhás nő meleg fényben",
+   "dominantColor": "#4b443e",
+   "blurDataURL": "data:image/webp;base64,UklGRlIAAABXRUJQVlA4IEYAAADQAQCdASoQAAkAAsBMJZQCdADc8DTmQAD+8WzruhCat4RN+dtwBHtDcYNPcjPD/7QvanSNrQ17fv6lP3CY6nLSkkalMsAA",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "letöltés - 2026-09-22T192425.597.jpg"
+  },
+  {
+   "id": "e14-medence",
+   "src": "/brand/moodboard/eletmod/e14-medence.webp",
+   "width": 736,
+   "height": 1103,
+   "orientation": "portrait",
+   "collection": "eletmod",
+   "alt": "Fekete ruhás nő a medence szélén, napfényben",
+   "dominantColor": "#9d948b",
+   "blurDataURL": "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAACQAgCdASoLABAAAsBMJYwCdAYtVwkZyj3jUrx4AAD+yP3Dey/slD/gryqE2VbIQKabiBo6MDvMC+ukiviYELN+vx2w4ECSDi8Hkg2ZZJV//GTIfR1yicV+qSAFPAAA",
+   "source": "moodboard",
+   "license": "moodboard-dev-only",
+   "originalFilename": "Фото у бассейна.jpg"
+  }
+ ],
+ "slots": {
+  "landing.hero": [
+   "b00-borostyan-napfeny",
+   "b22-napfenyes-vall",
+   "b11-feny-es-arnyek"
+  ],
+  "landing.ai": [
+   "b10-rozsafeny",
+   "b12-uveggomb"
+  ],
+  "landing.valodiAkcio": [
+   "b11-feny-es-arnyek",
+   "b14-profil-fenyben"
+  ],
+  "landing.szepsegpolc": [
+   "b08-krem-arcon",
+   "b19-szemkrem",
+   "b04-krem-a-boron"
+  ],
+  "landing.ajandekRadar": [
+   "e10-kerti-vacsora",
+   "e03-kerti-mozi",
+   "e09-fuggoagy"
+  ],
+  "landing.listak": [
+   "e04-narancs-sakk",
+   "e01-kalap-kanape"
+  ],
+  "landing.bizalom": [
+   "e00-tukrok-egbolt"
+  ],
+  "landing.zaroCta": [
+   "b17-orom",
+   "b05-mosoly"
+  ],
+  "auth.oldalkep": [
+   "b16-reggeli-rutin",
+   "b15-nyugalom"
+  ],
+  "onboarding.cel": [
+   "b05-mosoly"
+  ],
+  "onboarding.borprofil": [
+   "b15-nyugalom",
+   "b14-profil-fenyben"
+  ],
+  "onboarding.keret": [
+   "e06-trench",
+   "e02-bezs-kabat"
+  ],
+  "onboarding.szeretteim": [
+   "e09-fuggoagy",
+   "e10-kerti-vacsora"
+  ],
+  "onboarding.ertesitesek": [
+   "b06-napfeny-kar"
+  ],
+  "app.nekedMost": [
+   "b14-profil-fenyben",
+   "b22-napfenyes-vall"
+  ],
+  "kategoria.szepsegapolas": [
+   "b09-szemkornyek-pottyok",
+   "b00-borostyan-napfeny"
+  ],
+  "kategoria.arcapolas": [
+   "b04-krem-a-boron",
+   "b18-krem-kozeli"
+  ],
+  "kategoria.napvedelem": [
+   "b08-krem-arcon",
+   "b06-napfeny-kar"
+  ],
+  "kategoria.szemkornyek": [
+   "b19-szemkrem",
+   "b07-szemtapasz"
+  ],
+  "kategoria.smink": [
+   "b01-ajkak-kozeli"
+  ],
+  "kategoria.testapolas": [
+   "b22-napfenyes-vall",
+   "b06-napfeny-kar"
+  ],
+  "kategoria.parfum": [
+   "b12-uveggomb",
+   "b10-rozsafeny"
+  ],
+  "kategoria.ajandek": [
+   "e10-kerti-vacsora",
+   "e03-kerti-mozi"
+  ],
+  "kategoria.otthon": [
+   "e07-kert-pergola",
+   "e08-kert-este",
+   "e09-fuggoagy"
+  ],
+  "kategoria.divat": [
+   "e06-trench",
+   "e02-bezs-kabat",
+   "e01-kalap-kanape"
+  ],
+  "kategoria.ekszer": [
+   "e11-arany-ekszer"
+  ],
+  "kategoria.nyar": [
+   "e14-medence",
+   "e01-kalap-kanape"
+  ],
+  "cimzett.anya": [
+   "b05-mosoly"
+  ],
+  "cimzett.baratno": [
+   "b17-orom"
+  ],
+  "cimzett.par": [
+   "e12-voros-ruha-kert"
+  ],
+  "cimzett.ferfi": [
+   "e05-lila-bunda-sakk"
+  ],
+  "cimzett.magamnak": [
+   "b16-reggeli-rutin"
+  ],
+  "cimzett.otthonra": [
+   "e09-fuggoagy"
+  ],
+  "alkalom.karacsony": [
+   "e03-kerti-mozi"
+  ],
+  "alkalom.nevnap": [
+   "e10-kerti-vacsora"
+  ],
+  "alkalom.szuletesnap": [
+   "e04-narancs-sakk"
+  ],
+  "alkalom.valentin": [
+   "e12-voros-ruha-kert"
+  ],
+  "alkalom.anyakNapja": [
+   "b05-mosoly"
+  ],
+  "alkalom.blackFriday": [
+   "e13-fekete-ruha"
+  ],
+  "utmutato.boritokep": [
+   "b02-kezek-arcon",
+   "b13-arcot-erinto-kez",
+   "e13-fekete-ruha"
+  ],
+  "ures.alap": [
+   "b03-feher-ter"
+  ],
+  "hiba.404": [
+   "e00-tukrok-egbolt"
+  ]
+ }
+}
