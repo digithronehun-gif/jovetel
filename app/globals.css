@@ -1,0 +1,285 @@
+@import 'tailwindcss';
+@import '../src/styles/tokens.css';
+
+/* A sötét változat a `data-theme` attribútumot és a rendszerbeállítást is követi. */
+@custom-variant dark {
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme='light']) *) {
+      @slot;
+    }
+  }
+  &:where([data-theme='dark'] *) {
+    @slot;
+  }
+}
+
+/*
+ * Tailwind ↔ tokenek. Az alapértelmezett Tailwind-paletta ki van kapcsolva (`--color-*: initial`),
+ * így komponensben csak tokenből jövő szín használható (bg-paper, text-ink…).
+ */
+@theme inline {
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-stone: var(--stone);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-amber: var(--amber);
+  --color-amber-deep: var(--amber-deep);
+  --color-peach: var(--peach);
+  --color-sky: var(--sky);
+  --color-sky-deep: var(--sky-deep);
+  --color-on-accent: var(--on-accent);
+  --color-on-ink: var(--on-ink);
+  --color-deal: var(--deal);
+  --color-deal-bg: var(--deal-bg);
+  --color-usual: var(--usual);
+  --color-usual-bg: var(--usual-bg);
+  --color-pricier: var(--pricier);
+  --color-pricier-bg: var(--pricier-bg);
+  --color-overlay: var(--overlay);
+
+  --font-*: initial;
+  --font-display: var(--font-bodoni), 'Bodoni Moda', Georgia, serif;
+  --font-sans: var(--font-manrope), 'Manrope', system-ui, sans-serif;
+
+  --radius-*: initial;
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl);
+  --radius-full: 9999px;
+
+  --shadow-*: initial;
+  --shadow-soft: var(--shadow-soft);
+  --shadow-lift: var(--shadow-lift);
+  --shadow-glow: var(--shadow-glow);
+
+  --ease-sun: var(--ease-sun);
+
+  /* Töréspontok: 390 (alap) · 640 · 900 · 1200 */
+  --breakpoint-*: initial;
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 56.25rem;
+  --breakpoint-lg: 75rem;
+
+  /* Tartalomszélességek */
+  --container-landing: 75rem;
+  --container-app: 67.5rem;
+  --container-prose: 42.5rem;
+  --container-measure: 65ch;
+}
+
+/* Tipográfiai skála (DESIGN_SYSTEM 3. pont), mobil → desktop (900 px) */
+@utility text-display-xl {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  @media (width >= 56.25rem) {
+    font-size: 4.5rem;
+  }
+}
+@utility text-display-l {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  @media (width >= 56.25rem) {
+    font-size: 3.25rem;
+  }
+}
+@utility text-display-m {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 500;
+  line-height: 1.1;
+  text-wrap: balance;
+  @media (width >= 56.25rem) {
+    font-size: 2.25rem;
+  }
+}
+@utility text-title {
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-wrap: balance;
+  @media (width >= 56.25rem) {
+    font-size: 1.5rem;
+  }
+}
+@utility text-body-l {
+  font-size: 1.0625rem;
+  font-weight: 400;
+  line-height: 1.6;
+  @media (width >= 56.25rem) {
+    font-size: 1.125rem;
+  }
+}
+@utility text-body {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.55;
+}
+@utility text-small {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+@utility text-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  @media (width >= 56.25rem) {
+    font-size: 0.8125rem;
+  }
+}
+@utility text-price-l {
+  font-family: var(--font-sans);
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  @media (width >= 56.25rem) {
+    font-size: 2rem;
+  }
+}
+@utility text-price {
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  @media (width >= 56.25rem) {
+    font-size: 1.125rem;
+  }
+}
+
+/* Fókuszgyűrű: 2 px --amber-deep, 2 px eltolással (DESIGN_SYSTEM 11. pont) */
+@utility focus-ring {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  &:focus-visible {
+    outline-color: var(--amber-deep);
+  }
+}
+
+@layer base {
+  html {
+    background: var(--paper);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.55;
+    min-height: 100dvh;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--amber-deep);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--peach);
+    color: var(--ink);
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  a {
+    color: inherit;
+  }
+}
+
+/* Fénysáv lassú vándorlása (DESIGN_SYSTEM 5.1) és a hero lépcsőzött belépője (9. pont) */
+@keyframes light-drift {
+  0% {
+    transform: translate3d(-6%, -4%, 0) scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate3d(6%, 5%, 0) scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(-6%, -4%, 0) scale(1);
+    opacity: 0.85;
+  }
+}
+@keyframes rise-in {
+  from {
+    transform: translate3d(0, 0.5rem, 0);
+    opacity: 0.35;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.animate-light-drift {
+  animation: light-drift 18s var(--ease-sun) infinite;
+}
+.animate-rise-in {
+  animation: rise-in var(--dur-slow) var(--ease-sun) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-light-drift {
+    animation: none !important;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes sheet-up {
+  from {
+    transform: translate3d(0, 2rem, 0);
+    opacity: 0.4;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* Témázott blokk (pl. a /styleguide egymás melletti világos/sötét paneljei) */
+[data-theme] {
+  background-color: var(--paper);
+  color: var(--ink);
+}

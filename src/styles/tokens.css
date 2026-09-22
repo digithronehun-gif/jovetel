@@ -1,0 +1,119 @@
+/*
+ * „Napfény” design tokenek — DESIGN_SYSTEM.md 2–4. pont.
+ * EZ AZ EGYETLEN HELY, ahol literál színérték állhat (a `src/lib/brand/palette.ts` a levelek és
+ * az OG-kép számára tükrözi, egy teszt ellenőrzi az egyezést). Komponensben literál hex tilos.
+ */
+
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+
+  /* Alapszínek */
+  --paper: #f6f1ea;
+  --surface: #fffcf7;
+  --stone: #eae0d2;
+  --line: #ddd0be;
+  --ink: #2a201a;
+  --ink-muted: #6b5a4c;
+  --ink-subtle: #8a7a6c;
+  --amber: #d9822b; /* csak dekoráció, szövegre tilos */
+  --amber-deep: #a8581a;
+  --peach: #f0c3a4;
+  --sky: #a9cfe0;
+  --sky-deep: #2f6c87;
+  --on-accent: #ffffff; /* szöveg az --amber-deep háttéren */
+  --on-ink: #f6f1ea; /* szöveg az --ink háttéren (elsődleges gomb) */
+
+  /* Szemantikus tokenek („Valódi akció?” ítélet, állapotok) */
+  --deal: #3f6b3a;
+  --deal-bg: #e3ebd9;
+  --usual: #6b5a4c;
+  --usual-bg: #efe7db;
+  --pricier: #9c3f2c;
+  --pricier-bg: #f5dfd6;
+
+  /* Fedőréteg (dialog, alsó lap) */
+  --overlay: rgb(23 18 15 / 0.42);
+
+  /* Lekerekítés */
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --r-xl: 32px;
+
+  /* Árnyék: meleg árnyalat, takarékosan (az emelést jelzi, nem dísz) */
+  --shadow-soft: 0 1px 2px rgb(42 32 26 / 0.06), 0 8px 24px -12px rgb(42 32 26 / 0.18);
+  --shadow-lift: 0 18px 48px -20px rgb(120 70 30 / 0.35);
+  --shadow-glow: 0 6px 20px -8px var(--amber);
+
+  /* Levélárnyék átlátszósága (DESIGN_SYSTEM 5.2) */
+  --leaf-opacity: 0.08;
+
+  /* Mozgás (DESIGN_SYSTEM 9. pont) */
+  --ease-sun: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur-fast: 150ms;
+  --dur-mid: 250ms;
+  --dur-slow: 400ms;
+}
+
+/*
+ * Sötét mód: rendszerbeállítás szerint, kivéve ha kifejezetten világos témát kértek.
+ * A `data-theme` bármely elemen működik (a /styleguide egymás mellett mutatja a két módot).
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --paper: #17120f;
+    --surface: #211a15;
+    --stone: #2b231d;
+    --line: #3a3028;
+    --ink: #f3ebe0;
+    --ink-muted: #b9a999;
+    --ink-subtle: #8f8072;
+    --amber: #e8994a;
+    --amber-deep: #f0ae68;
+    --peach: #4a3226;
+    --sky: #2d4a57;
+    --sky-deep: #9cc8dc;
+    --on-accent: #17120f;
+    --on-ink: #17120f;
+    --deal: #a9cc98;
+    --deal-bg: #22301f;
+    --usual: #cdbfb0;
+    --usual-bg: #2b231d;
+    --pricier: #f0a08c;
+    --pricier-bg: #3a231c;
+    --overlay: rgb(0 0 0 / 0.55);
+    --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -12px rgb(0 0 0 / 0.5);
+    --shadow-lift: 0 18px 48px -20px rgb(0 0 0 / 0.7);
+    --leaf-opacity: 0.04;
+  }
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --paper: #17120f;
+  --surface: #211a15;
+  --stone: #2b231d;
+  --line: #3a3028;
+  --ink: #f3ebe0;
+  --ink-muted: #b9a999;
+  --ink-subtle: #8f8072;
+  --amber: #e8994a;
+  --amber-deep: #f0ae68;
+  --peach: #4a3226;
+  --sky: #2d4a57;
+  --sky-deep: #9cc8dc;
+  --on-accent: #17120f;
+  --on-ink: #17120f;
+  --deal: #a9cc98;
+  --deal-bg: #22301f;
+  --usual: #cdbfb0;
+  --usual-bg: #2b231d;
+  --pricier: #f0a08c;
+  --pricier-bg: #3a231c;
+  --overlay: rgb(0 0 0 / 0.55);
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -12px rgb(0 0 0 / 0.5);
+  --shadow-lift: 0 18px 48px -20px rgb(0 0 0 / 0.7);
+  --leaf-opacity: 0.04;
+}
