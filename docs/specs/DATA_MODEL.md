@@ -166,3 +166,32 @@ Kategóriafa (szépségápolás és ajándék, képhelyekkel) · 3 hálózat · 
 300 mintatermék valósághű magyar nevekkel és árakkal, **`[DEMO]` jelöléssel a kereskedő nevében** ·
 45 napnyi szintetikus ártörténet (hogy az ítélet látszódjon fejlesztésben) · `usage_defaults` ·
 teljes `namedays` tábla · 1 admin felhasználó a `SEED_ADMIN_EMAIL`-ből · 3 szerkesztői útmutató váz.
+
+---
+
+## 7. Megvalósítás (F1) — kiegészítések és eltérések
+
+A séma forrása a kézzel írt, kétirányú SQL-migráció (`src/lib/db/migrations/NNNN_*.up.sql` + `.down.sql`,
+futtató: `pnpm db:migrate` / `pnpm db:rollback`); a Drizzle séma (`src/lib/db/schema`) ezt tükrözi, és egy teszt
+(`tests/db/migrations.test.ts`) ellenőrzi, hogy oszlopra és NULL-ságra egyeznek.
+
+| Hol | Mi | Miért |
+|---|---|---|
+| kiterjesztések | az `extensions` sémában (`unaccent`, `pg_trgm`, `pgcrypto`), `search_path` bővítve | Supabase-kompatibilitás |
+| keresés | `simple_unaccent` konfiguráció + `search_tsquery(q)` + `search_products(q, lim)` | A magyar Snowball-szótövező ékezetmentes szón következetlen („parfum” → parfu, „parfumok” → parfum), ezért szavanként *szótő VAGY ékezetmentes előtag*; a rangsor kétlépcsős (ts_rank előszűrés → ts_rank_cd + word_similarity), elírásnál trigram-visszaesés. Mért: 50 000 terméken p95 20,7 ms |
+| `products` | + `brand_name`, `category_text` (denormalizált) | a generált `search_vector` más táblára nem hivatkozhat |
+| `products` | `name_normalized` generált: `f_normalize(name)` | egy helyen normalizálunk |
+| `networks` | + `tracking_domains text[]` | a `/go` cél-host ellenőrzéséhez (ARCHITECTURE 4.3) |
+| `feeds` | + `config jsonb` | adapter-beállítás (oszlop-leképezés); titok nem kerül ide |
+| `feed_runs` | + `stats jsonb` | részletes futási statisztika |
+| `offers` | + `missed_runs smallint` | „2 egymást követő futás után inaktív” (ARCHITECTURE 3.7) |
+| `price_daily` | havi partíciók + alapértelmezett partíció, `ensure_price_daily_partitions(nap, hónapok)`; az RLS a partíciókon is be van kapcsolva | a partíció közvetlenül is lekérdezhető tábla |
+| `namedays` | + `in_calendar`, `calendar_rank`, `source` | a közkeletű naptár napjai (választó sorrendje); forrás: MEK (OSZK) + magyar Wikipedia |
+| `profiles` | + `onboarding_step` | lépésenkénti mentés (PRODUCT_SPEC 4.2) |
+| `consents` | + `anon_id`, + `type = 'marketing'` | a süti-hozzájárulás névtelen látogatónál is naplózható; a marketing süti-kategória elkülönül a marketing e-mailtől. UPDATE tiltva (triggerrel) |
+| `occasions` | részleges egyedi index `(loved_one_id, type)` az automatikus alkalmakra | egy szerettünknek egy születésnapja van |
+| `reservations` | az egyediség részleges: `unique (list_item_id) where status in ('active','purchased')` | a visszavont foglalás ne blokkolja az újat (PRODUCT_SPEC 5.6, F8 elfogadási teszt) |
+| `shelf_items` | + `cycle` | a „Polc: fogyóban” értesítés dedup kulcsa (polctétel + ciklus) |
+| `ai_requests` | + `output jsonb` | a kinyert séma (a nyers szöveg nem) |
+| RLS | minden `public` táblán bekapcsolva; policy csak a saját sorokra (`authenticated`) és a nyilvános katalógus olvasására | a publikus anon kulccsal semmilyen felhasználói adat nem érhető el |
+| seed-védelem | `alter database … set app.environment = 'production'` a prod DB-n | a seed ezt is ellenőrzi az `APP_ENV` mellett |

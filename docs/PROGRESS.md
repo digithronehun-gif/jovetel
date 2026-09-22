@@ -35,7 +35,7 @@ Tailwind 4.3.3 · Playwright 1.56.1 (a gépen lévő Chromium-buildhez illeszked
 | Fázis | Tartalom | Állapot | Git tag | Mért számok |
 |---|---|---|---|---|
 | F0 | Projekt-alap és design rendszer | ✅ | `fazis-00` (c34eb0b) | 61 unit teszt · build zöld · ő/ű: 1 font/mondat |
-| F1 | Adatbázis, seed, névnaptár | ✅ | `fazis-01` | 41 DB-teszt · névkeresés p95 20,7 ms / 50 000 termék |
+| F1 | Adatbázis, seed, névnaptár | ✅ | `fazis-01` (0583ac7) | 41 DB-teszt · névkeresés p95 20,7 ms / 50 000 termék |
 | F2 | Landing, várólista, jogi oldalak, hozzájárulás | ⏳ | | |
 | F3 | Feed-import és napi árgyűjtő | ⏳ | | |
 | F4 | Keresés, kategóriák, útmutatók | ⏳ | | |

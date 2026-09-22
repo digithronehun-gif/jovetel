@@ -31,6 +31,39 @@ pnpm screenshots -- /styleguide   # képernyőkép 390/1440 px × világos/söt�
 
 A teljes lista a `package.json`-ban és a `CLAUDE.md` 6. pontjában.
 
+## Helyi fejlesztés (adatbázis és belépés)
+
+**A) Supabase CLI + Docker (ajánlott a saját gépeden):**
+```bash
+supabase start                     # Postgres :54322, API :54321, Studio :54323, levelek :54324
+pnpm db:migrate && pnpm db:seed    # sémák + fejlesztői minta-adat
+pnpm dev
+```
+A `.env.local`-ba a `supabase start` által kiírt `anon key` és `service_role key` kerül, a `DATABASE_URL` pedig
+`postgresql://postgres:postgres@127.0.0.1:54322/postgres`.
+
+**B) Docker nélkül (Linux, pl. felhős fejlesztői környezet):**
+```bash
+pnpm local:up        # Postgres 16 + GoTrue (Supabase Auth) + Mailpit, ugyanazokon a portokon
+pnpm db:migrate && pnpm db:seed
+pnpm dev:local       # a .local/stack.env változóival indul
+pnpm local:down
+```
+Ez PostgreSQL 16 szervert igényel a gépen (`postgresql-16`); a GoTrue és a Mailpit binárisát a script tölti le.
+
+**Tesztek:** `pnpm test:db` egy friss `jovetel_test` adatbázist hoz létre a helyi szerveren (vagy a
+`TEST_DATABASE_ADMIN_URL`-en), és azon futtatja a migrációkat.
+
+### A valódi Supabase bekötése
+1. Két projekt a Supabase-ben, **Frankfurt (eu-central-1)** régióban: `jovetel-dev` és `jovetel-prod`.
+2. Project Settings → Database: a **Connection pooling** (Transaction, 6543-as port) címe a `DATABASE_URL`,
+   a közvetlen (5432) cím a `DIRECT_DATABASE_URL`. API → `NEXT_PUBLIC_SUPABASE_URL`, `anon`, `service_role` kulcs.
+3. Migráció: `DIRECT_DATABASE_URL=… pnpm db:migrate` (production-ben a deploy előtti GitHub Action futtatja).
+4. **A prod adatbázis megjelölése** (a seed ezt is ellenőrzi, és nem fut rajta):
+   `alter database postgres set app.environment = 'production';`
+5. Auth → URL Configuration: Site URL és Redirect URLs (`https://<domain>/auth/callback`); Auth → Email Templates:
+   a magyar sablon a `supabase/templates/magic-link.html`; Auth → SMTP: a Resend SMTP-adatai.
+
 ## Képek és a production build
 
 A `public/brand/moodboard/` képei Pinterest-moodboardból származnak (`moodboard-dev-only` licenc).
