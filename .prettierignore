@@ -1,0 +1,12 @@
+node_modules
+.next
+.local
+pnpm-lock.yaml
+public
+docs
+*.md
+coverage
+playwright-report
+test-results
+tests/fixtures
+src/content/brand/assets.manifest.json
