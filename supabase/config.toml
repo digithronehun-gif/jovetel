@@ -1,0 +1,46 @@
+# Supabase CLI (`supabase start`) helyi fejlesztéshez — Dockerrel. Docker nélkül: `pnpm local:up`.
+# Mindkettő ugyanazokat a portokat és demó kulcsokat adja, így a .env.local ugyanaz.
+# A migrációkat NEM a supabase/migrations mappából futtatjuk, hanem: pnpm db:migrate
+project_id = "jovetel"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+
+[db]
+port = 54322
+major_version = 17
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/**", "http://localhost:3100/**"]
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+
+[auth.email.template.magic_link]
+subject = "Belépési link a JóVételhez"
+content_path = "./supabase/templates/magic-link.html"
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[auth.external.google]
+enabled = false
+client_id = "env(GOOGLE_CLIENT_ID)"
+secret = "env(GOOGLE_CLIENT_SECRET)"
