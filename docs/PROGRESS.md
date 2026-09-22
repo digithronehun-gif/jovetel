@@ -4,7 +4,7 @@
 > A tulajdonos innen követi, hol tart a fejlesztés.
 
 ## Aktuális állapot
-- **Jelenlegi fázis:** F1 — Adatbázis, seed, névnaptár (🔨)
+- **Jelenlegi fázis:** F2 — Landing, várólista, jogi oldalak, hozzájárulás (🔨)
 - **Utolsó frissítés:** 2026-09-22
 - **Mérföldkő / teendő a tulajdonosnak:** — (az F2 után jön az első)
 
@@ -34,8 +34,8 @@ Tailwind 4.3.3 · Playwright 1.56.1 (a gépen lévő Chromium-buildhez illeszked
 
 | Fázis | Tartalom | Állapot | Git tag | Mért számok |
 |---|---|---|---|---|
-| F0 | Projekt-alap és design rendszer | ✅ | `fazis-00` | 61 unit teszt · build zöld · ő/ű: 1 font/mondat |
-| F1 | Adatbázis, seed, névnaptár | ⏳ | | |
+| F0 | Projekt-alap és design rendszer | ✅ | `fazis-00` (c34eb0b) | 61 unit teszt · build zöld · ő/ű: 1 font/mondat |
+| F1 | Adatbázis, seed, névnaptár | ✅ | `fazis-01` | 41 DB-teszt · névkeresés p95 20,7 ms / 50 000 termék |
 | F2 | Landing, várólista, jogi oldalak, hozzájárulás | ⏳ | | |
 | F3 | Feed-import és napi árgyűjtő | ⏳ | | |
 | F4 | Keresés, kategóriák, útmutatók | ⏳ | | |
@@ -114,3 +114,53 @@ komponenseket shadcn-mintára kézzel írom (Radix + cva + tailwind-merge), `com
   `components.json` megvan a későbbi shadcn-bővítéshez.
 
 **Nyitott kérdés:** nincs új.
+
+### F1 — Adatbázis, seed, névnaptár
+
+**Terv:**
+1. Docker nélküli helyi stack (`pnpm local:up`): Postgres 16 az 54322-es porton, GoTrue (Supabase Auth
+   bináris, pinelt verzió) + kis átjáró a `/auth/v1` útvonalhoz (54321), Mailpit (54324). Ugyanazok a
+   portok és demó kulcsok, mint a Supabase CLI-nél, így a tulajdonos gépén a `supabase start` is jó.
+2. Kézzel írt SQL-migrációk fel/le párban (`src/lib/db/migrations`), saját futtatóval (`pnpm db:migrate`,
+   `db:rollback`); a Drizzle séma TS-ben tükrözi, egy teszt ellenőrzi az eltérést (drift).
+3. Kiterjesztések az `extensions` sémában (Supabase-kompatibilis), `hu_unaccent`, `f_unaccent`, minden tábla a
+   `DATA_MODEL.md` szerint, `price_daily` havi partíciókkal, RLS minden felhasználói táblán.
+4. `db` / `dbAdmin` kliens, lekérdező réteg váza `userId` első paraméterrel.
+5. Névnaptár: MEK (OSZK) névnaptár fő-jelöléssel + a magyar Wikipedia két listája; a forrás és a mért
+   egyezés a seed fejlécében.
+6. Seed (`[DEMO]` kereskedők, 300 termék, 45 nap ártörténet), production-ben nem fut.
+7. Mérés: migráció fel–le–fel, ékezet/szótő-keresés, 50 000 terméken p95, két felhasználó izolációja, névnapok.
+
+**Kockázat:** a magyar Snowball-szótövező ékezetmentesített szón fut (unaccent → stem), ez eltérhet a
+várttól; ha a „cipők → cipő” nem megy, kiegészítő (simple + trigram) keresés kell.
+
+**Kész (2026-09-22):**
+- Helyi stack Docker nélkül (`pnpm local:up`): Postgres 16 + GoTrue v2.179.0 + Mailpit, a Supabase CLI portjaival;
+  `supabase/config.toml` a Dockeres CLI-hez. README: helyi fejlesztés és a valódi Supabase bekötése.
+- 7 kétirányú SQL-migráció (32 tábla, ~40 index, 19 havi `price_daily` partíció, RLS mindenütt), Drizzle séma
+  drift-teszttel, `db`/`dbAdmin` kliens, `queries/user/*` (userId első paraméter, gépileg ellenőrizve).
+- Névnaptár: MEK (OSZK) + magyar Wikipedia (két lista), 7810 sor / 2941 név, `scripts/db/build-namedays.ts`
+  reprodukálja (SHA-256 a fájlban). `lib/occasions`: névnap-javaslat és választó.
+- Seed: 33 kategória, 3 hálózat, 3 `[DEMO]` kereskedő, 300 termék, 592 ajánlat, 24 624 ártörténet-sor, admin,
+  3 útmutató-váz — 1,9 mp alatt, idempotens, production-ben nem fut.
+
+**Mért számok (`pnpm test:db`, 41 teszt zöld; `pnpm verify` 74 unit teszt zöld):**
+- Migráció: mind a 7 fel → mind vissza (0 tábla marad) → újra fel, azonos táblakészlettel; lépésenként is.
+- Keresés: „parfum” → „parfüm” és „parfümök” ✓ · „cipők” → „cipő” ✓ · „szerum” ↔ „szérum” ✓ · „parfümök” ≡ „parfum” ✓.
+- **Névkeresés 50 000 generált terméken: 200 lekérdezés, p50 = 10,5 ms, p95 = 20,7 ms** (cél < 50 ms), 0 üres találat.
+  Az első mérés p95 = 674 ms volt (seq scan + trigram minden jelöltre); javítás: SSD tervező-beállítás,
+  kétlépcsős rangsor (`ts_rank` előszűrés → `ts_rank_cd` + `word_similarity`), trigram csak visszaesésként.
+- Izoláció: A nem látja/írja/törli B szerettét a lekérdező rétegen át; RLS alatt (`authenticated`) csak a saját
+  sor látszik, más nevében beszúrni nem lehet; `anon` semmilyen felhasználói adatot nem lát.
+- Névnapok: István aug. 20. · Katalin nov. 25. · Anna júl. 26. · László jún. 27. · Péter jún. 29. · Erzsébet nov. 19. ·
+  Miklós dec. 6. · János jún. 24. · József márc. 19. · Márton nov. 11. · András nov. 30. · Luca dec. 13. · Éva dec. 24. —
+  mind szerepel, és mind megjelenik a választóban; ékezet- és kisbetű-független (`eva`, `EVA`, `istvan`).
+
+**Eltérés a spectől és miért:** a `DATA_MODEL.md` új 7. pontja sorolja fel (denormalizált keresési mezők, két
+keresési konfiguráció, részleges egyediség a foglalásnál, `anon_id` a süti-hozzájárulásnál stb.).
+Jánosnál a MEK fő napja jún. 26. és dec. 27., a jún. 24. „naptári” nap — ezért a teszt azt méri, hogy a nap
+szerepel és a választóban megjelenik (OPEN_QUESTIONS #12).
+
+**Nyitott kérdések:** #11 (Supabase projektek), #12 (névnap-alapértelmezés), #13 (tracking-domainek).
+**Megjegyzés:** a git tagek a munkamenet proxyja miatt nem pusholhatók (csak a kijelölt branch); helyben
+megvannak, és a táblázatban a commit-hash is szerepel. Pótlás bárhol: `git tag fazis-01 <hash> && git push --tags`.
