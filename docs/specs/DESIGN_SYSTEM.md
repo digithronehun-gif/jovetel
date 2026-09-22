@@ -57,7 +57,8 @@ amber-deep/paper 4,6 · fehér/amber-deep 5,2 · deal 5,1 · usual 5,4 · pricie
 **Gombok:**
 - Elsődleges: háttér `--ink`, szöveg `--paper`. Hover: enyhe borostyán fény a gomb alján (`box-shadow: 0 6px 20px -8px var(--amber)`).
 - Másodlagos: keret `--line`, szöveg `--ink`, háttér `--surface`.
-- Kiemelt (ritkán, pl. „Megnézem a boltban”): háttér `--amber-deep`, szöveg fehér.
+- Kiemelt (ritkán, pl. „Megnézem a boltban”): háttér `--amber-deep`, szöveg `--on-accent` (világosban fehér,
+  sötétben `#17120F`, mert a sötét módú `--amber-deep` világos narancs, amin a fehér szöveg 1,9 : 1 lenne).
 - Szöveges: `--amber-deep`, aláhúzás hoverre.
 
 ---
@@ -72,8 +73,10 @@ amber-deep/paper 4,6 · fehér/amber-deep 5,2 · deal 5,1 · usual 5,4 · pricie
 ```ts
 // app/fonts.ts — a latin-ext KÖTELEZŐ, a latin készletből hiányzik az ő és ű
 import { Bodoni_Moda, Manrope } from 'next/font/google'
-export const display = Bodoni_Moda({ subsets: ['latin', 'latin-ext'], style: ['normal', 'italic'], variable: '--font-display', display: 'swap' })
-export const sans = Manrope({ subsets: ['latin', 'latin-ext'], variable: '--font-sans', display: 'swap' })
+export const display = Bodoni_Moda({ subsets: ['latin', 'latin-ext'], style: ['normal', 'italic'], variable: '--font-bodoni', display: 'swap' })
+export const sans = Manrope({ subsets: ['latin', 'latin-ext'], variable: '--font-manrope', display: 'swap' })
+// A Tailwind `font-display` / `font-sans` tokenje ezekre a változókra hivatkozik (app/globals.css → @theme).
+// A változónév azért tér el, hogy a token ne hivatkozzon önmagára.
 ```
 
 **Próbamondat minden betűtípus-változtatás után:** „Tűzőgép, őszi fűszál: ŐŰ őű.” (a `/styleguide` tetején).
