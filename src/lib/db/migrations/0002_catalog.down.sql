@@ -1,0 +1,15 @@
+drop table if exists public.namedays;
+drop table if exists public.usage_defaults;
+drop table if exists public.product_tags;
+drop function if exists public.ensure_price_daily_partitions(date, integer);
+drop table if exists public.price_daily cascade;
+drop table if exists public.offers;
+drop table if exists public.source_items;
+drop table if exists public.products;
+drop table if exists public.category_mappings;
+drop table if exists public.categories;
+drop table if exists public.brands;
+drop table if exists public.feed_runs;
+drop table if exists public.feeds;
+drop table if exists public.merchants;
+drop table if exists public.networks;

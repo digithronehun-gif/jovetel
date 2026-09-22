@@ -1,0 +1,13 @@
+drop table if exists public.waitlist;
+drop table if exists public.notifications;
+drop table if exists public.shelf_items;
+drop table if exists public.price_alerts;
+drop table if exists public.reservations;
+drop table if exists public.list_items;
+drop table if exists public.lists;
+drop table if exists public.gift_history;
+drop table if exists public.occasions;
+drop table if exists public.loved_ones;
+drop table if exists public.consents;
+drop function if exists public.consents_append_only();
+drop table if exists public.profiles;
