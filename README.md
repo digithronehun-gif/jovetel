@@ -65,6 +65,20 @@ Ez PostgreSQL 16 szervert igényel a gépen (`postgresql-16`); a GoTrue és a Ma
 5. Auth → URL Configuration: Site URL és Redirect URLs (`https://<domain>/auth/callback`); Auth → Email Templates:
    a magyar sablon a `supabase/templates/magic-link.html`; Auth → SMTP: a Resend SMTP-adatai.
 
+## Feed-import és árgyűjtés
+
+```bash
+pnpm ingest -- --fixtures      # a 7 adapter fixture-feedjei (tests/fixtures/feeds/); production DB-n nem fut
+pnpm ingest -- --feed <uuid>   # egy feed
+pnpm ingest -- --all           # minden aktív feed + a 30 napnál régebbi nyers pillanatképek törlése
+pnpm test:db:perf              # 50 000 soros mérés (idő, memória, újrafuttatás)
+```
+
+Élesben a `.github/workflows/ingest.yml` futtatja naponta 04:00-kor és 16:00-kor (Budapest, nyári és téli időszámítás
+szerint is). Új feed: `feeds` sor a kereskedőhöz (`adapter`: `awin`, `cj`, `dognet`, `admitad`, `generic-csv`,
+`generic-xml`, `manual`; a titok a URL-ben helyőrzőként: `…/apikey/{AWIN_API_TOKEN}/…`). Az admin felület:
+`/admin/feedek` (admin szerepkör + kétlépcsős azonosítás).
+
 ## Képek és a production build
 
 A `public/brand/moodboard/` képei Pinterest-moodboardból származnak (`moodboard-dev-only` licenc).

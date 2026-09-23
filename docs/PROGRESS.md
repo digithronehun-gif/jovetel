@@ -4,9 +4,47 @@
 > A tulajdonos innen követi, hol tart a fejlesztés.
 
 ## Aktuális állapot
-- **Jelenlegi fázis:** F3 — Feed-import és napi árgyűjtő (🔨)
+- **Jelenlegi fázis:** F4 — Keresés, kategóriák, útmutatók (🔨)
 - **Utolsó frissítés:** 2026-09-23
-- **Mérföldkő / teendő a tulajdonosnak:** lásd lent, **1. mérföldkő: a landing élesíthető waitlist módban**
+- **Mérföldkő / teendő a tulajdonosnak:** **2. mérföldkő: az árgyűjtő élesítése — határidő 2026. október 28.** (lent),
+  és az 1. mérföldkő (a landing waitlist módban) továbbra is érvényes.
+
+> ## 🚩 MÉRFÖLDKŐ 2 — az árgyűjtő élesítése (F3 kész) · HATÁRIDŐ: 2026. október 28.
+>
+> A Black Friday (november 27.) „Valódi akció” ítéletéhez 30 nap saját ártörténet kell, ezért az árgyűjtőnek
+> **legkésőbb október 28-án** élesben kell futnia. Az ítélet csak a saját napi árainkból számol (6. vasszabály),
+> ezt később nem lehet pótolni.
+>
+> **1. Előfeltétel:** az 1. mérföldkő 1. lépése (Supabase prod projekt, `pnpm db:migrate`, `app.environment` jelölő).
+>
+> **2. Legalább egy jóváhagyott partnerprogram, élő feeddel** (OPEN_QUESTIONS #3, #4, #14)
+> - Awin: Toolbox → Create-a-Feed → a program kiválasztása, formátum CSV, tömörítés gzip → a letöltési URL.
+>   A URL-ben az API-kulcs helyére írd: `{AWIN_API_TOKEN}` (a kulcs soha nem kerül az adatbázisba).
+> - Küldd el nekem (vagy tedd a `tests/fixtures/feeds/<hálózat>/` mappába) egy valódi mintafájl első 20 sorát,
+>   hogy az oszlopneveket ellenőrizzem.
+> - Felvétel: `merchants` sor (`domain_allowlist`: a bolt domainje(i), `status = 'active'`, `is_comparison_allowed`
+>   a program feltételei szerint) és `feeds` sor (`adapter`, `url`). Ezt az admin felület F12-ben kapja meg; addig
+>   SQL-lel vagy nekem szólva.
+>
+> **3. GitHub → Settings → Secrets and variables → Actions → New repository secret:**
+>
+> | Secret | Érték |
+> |---|---|
+> | `INGEST_DATABASE_URL` | Supabase → Project Settings → Database → Connection string → **Session pooler** (5432-es port a `pooler.supabase.com` hoston; IPv4) |
+> | `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Project Settings → API (a service role kulcs csak itt és a Vercelen szerepelhet) |
+> | `NEXT_PUBLIC_SITE_URL` | `https://<domain>` (a riasztó levél linkje) |
+> | `RESEND_API_KEY`, `EMAIL_FROM` | mint az 1. mérföldkőben |
+> | `ADMIN_ALERT_EMAIL` | ide jön a levél, ha egy feed blokkolt (60% alatti tételszám / 20% feletti hiba) vagy hibás |
+> | `AWIN_API_TOKEN`, `AWIN_PUBLISHER_ID` (és a többi hálózaté, ha van) | a hálózati felületről |
+>
+> **4. Első futás kézzel:** GitHub → Actions → „Feed-import” → Run workflow. A zöld pipa és az admin felület
+> (`/admin/feedek`) „Sikeres” jelvénye után a cron magától fut naponta 04:00-kor és 16:00-kor.
+>
+> **5. (Opcionális) [Futtatás most] az adminban:** Vercel env: `INGEST_DISPATCH_TOKEN` (GitHub finomhangolt token,
+> csak ehhez a repóhoz, *Actions: read and write*), `INGEST_DISPATCH_REPO` (`tulajdonos/repo`) — OPEN_QUESTIONS #17.
+>
+> **6. Nagy feed esetén** (50 MB fölötti tömörített fájl): Supabase → Storage → Settings → Upload file size limit
+> emelése (OPEN_QUESTIONS #16). Ha kimarad, az árgyűjtés akkor is fut, csak a nyers pillanatkép nem mentődik.
 
 > ## 🚩 MÉRFÖLDKŐ 1 — a landing élesíthető waitlist módban (F2 kész, 2026-09-23)
 >
@@ -98,7 +136,7 @@ Tailwind 4.3.3 · Playwright 1.56.1 (a gépen lévő Chromium-buildhez illeszked
 | F0 | Projekt-alap és design rendszer | ✅ | `fazis-00` (c34eb0b) | 61 unit teszt · build zöld · ő/ű: 1 font/mondat |
 | F1 | Adatbázis, seed, névnaptár | ✅ | `fazis-01` (0583ac7) | 41 DB-teszt · névkeresés p95 20,7 ms / 50 000 termék |
 | F2 | Landing, várólista, jogi oldalak, hozzájárulás | ✅ | `fazis-02` (9c69ba8) | Lighthouse mobil 96/100/100/100 (h2) · 90/100/100/100 (h1) · 21 e2e |
-| F3 | Feed-import és napi árgyűjtő | ⏳ | | |
+| F3 | Feed-import és napi árgyűjtő | ✅ | `fazis-03` (HASH_F3) | 50 000 sor 17,7 s · újrafuttatás 0 írás · 7 adapter · 25 e2e |
 | F4 | Keresés, kategóriák, útmutatók | ⏳ | | |
 | F5 | Termékoldal, teljes költség, ártörténet, „Valódi akció?” | ⏳ | | |
 | F6 | Követett kattintás, jelölés, konverziók | ⏳ | | |
@@ -321,3 +359,47 @@ feedekhez — saját parserrel ezek a hibák a feedekben rendszeresek), `saxes` 
 CDATA, névterek; a 100 MB-os XML-feed nem fér memóriába DOM-ként), `sanitize-html` (a spec nevesíti; szöveg módban a
 `script`/`style` tartalmát is eldobja), `@supabase/ssr` + `@supabase/supabase-js` (a `requireAdmin()` session-kezelése;
 az F7 belépés is erre épül).
+
+**Kész (2026-09-23):**
+- `src/lib/ingestion`: SSRF-védett streaming letöltés (`fetch/`), CSV/XML streaming parser kódolás-felismeréssel
+  (`parse/`), normalizálók (`normalize/`: ár, GTIN, kiszerelés, szöveg, URL, kategória-szabályok, címkeszabályok),
+  minőségi kapu és prompt-injection jelzés (`quality/`), hét adapter (`adapters/`), pipeline (`pipeline/`: nyers
+  pillanatkép, lemezes átmeneti tár, kötegelt publikálás egy tranzakcióban).
+- Fixture-ök mind a hat hálózati formátumra + kézi feed (`tests/fixtures/feeds/`, generátorral), szándékosan hibás
+  sorokkal: hibás kódolás, hiányzó mező, negatív/nulla ár, euró, HTML + `<script>`, prompt-injection, idegen domain,
+  rossz GTIN.
+- `scripts/ingest.ts` (`--feed`, `--all`, `--fixtures`), riasztó levél (`emails/FeedAlert.tsx`) blokkolt / hibás futásnál.
+- `.github/workflows/ingest.yml`: 04:00 és 16:00 Budapest nyári és téli időszámítás szerint (négy UTC-bejegyzés,
+  a kiváltó bejegyzés dönt), `concurrency: ingest`, kézi indítás uuid-ellenőrzéssel.
+- `requireAdmin()` (Supabase session + `profiles.role = 'admin'` + MFA `aal2`; nem admin → 404, MFA nélkül →
+  `/admin/mfa`), az adatréteg a szerepkört a lekérdezésben újra ellenőrzi; `/admin/feedek` (lista) és
+  `/admin/feedek/[id]` (futások, hibaminta szövegként, leképezetlen kategóriák, [Futtatás most] → GitHub
+  `workflow_dispatch`, helyben közvetlen futás), minden admin írás `audit_log`-ba.
+
+**Mért számok:**
+- **50 000 soros import: 17,7 s** (a határ 10 perc); változatlan újrafuttatás 7,8 s, **0 változott tétel**;
+  minden ár megváltozik: 14,8 s (csak ajánlat + ártörténet íródik). Heap-csúcs 106 MB, RSS-csúcs 232 MB (a teszt-
+  folyamattal együtt) — a memória nem nő a sorokkal arányosan (`pnpm test:db:perf`, `tests/.artifacts/perf/`).
+- **Változatlan feed újrafuttatása: 0 írás** a katalógus-táblákban (products, offers, source_items, price_daily,
+  product_tags, brands) — soronkénti írásszámláló triggerrel mérve (`tests/db/ingest.test.ts`).
+- **Hibás sorok nem állítják meg a futást:** Awin-fixture 26 sor → 22 érvényes, 4 elutasított (encoding,
+  invalid_price, missing_field, url_not_allowed), a futás `success`.
+- **60% alatti tételszám → `blocked`:** 10 → 5 tétel: `blocked`, a katalógusban 0 írás, `last_item_count` marad 10,
+  a riasztó levél kimegy (a script kimenetéből ellenőrizve). 20% feletti elutasítás (2/6) → `blocked`.
+- **HTML és script a DB-ben tisztított szöveg:** 0 termék és 0 `source_items.payload` illeszkedik
+  `<tag|alert(|onerror|javascript:` mintára; a HTML-es leírás: „Könnyű gél állag.\nKattints”.
+- **`price_daily` két eltérő árú futás után helyes:** 10 000 → 9 000 → 9 500 Ft ugyanazon a napon: min 9 000,
+  last 9 500; másnap új sor 9 500/9 500; `last_price_change_at` a tényleges árváltozás ideje.
+- 2 kihagyott futás után inaktív, utána 0 írás, visszatéréskor újra aktív; ismétlődő SKU elutasítva.
+- Tesztek: unit 223 (+123 az F3-ban), DB 8 fájl / 52 (+11) + 1 teljesítményteszt (`PERF=1`), e2e 25 (+4 admin,
+  valódi GoTrue-sessionnel és TOTP-MFA-val). `pnpm verify` zöld.
+- Képernyőképek: `/admin/feedek`, `/admin/feedek/[id]` × 390/1440 × világos/sötét (`tests/.artifacts/screens/f3/`),
+  átnézve; javítva: 390 px-en a táblázat `sr-only` eleme kitolta az oldalt (pozicionált keret, e2e őrzi).
+
+**Eltérés a spectől és miért:** DATA_MODEL 8. pont és ARCHITECTURE 3. pont „Megvalósítás (F3)” — röviden:
+az „ár ellenőrizve” a feed `last_success_at`-jéből jön (0 írás az újrafuttatáskor); a közös GTIN-ű termék szövegét a
+létrehozó kereskedő írja; advisory lock helyett GitHub concurrency + `running` futás-sor; az ingest a pooler session
+módját használja (`INGEST_DATABASE_URL`). A címkeszótár a profil szótára (`SKIN_CONCERNS`, `AVOID_INGREDIENTS`).
+Az admin MFA-regisztrációs felülete a belépéssel együtt készül (F7); addig `/admin/mfa` tájékoztat.
+
+**Nyitott kérdések:** #3, #4, #14 (feedek és oszlopnevek), #15 (Dognet), #16 (Storage-korlát), #17 (dispatch token).

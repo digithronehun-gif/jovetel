@@ -195,3 +195,20 @@ futtató: `pnpm db:migrate` / `pnpm db:rollback`); a Drizzle séma (`src/lib/db/
 | `ai_requests` | + `output jsonb` | a kinyert séma (a nyers szöveg nem) |
 | RLS | minden `public` táblán bekapcsolva; policy csak a saját sorokra (`authenticated`) és a nyilvános katalógus olvasására | a publikus anon kulccsal semmilyen felhasználói adat nem érhető el |
 | seed-védelem | `alter database … set app.environment = 'production'` a prod DB-n | a seed ezt is ellenőrzi az `APP_ENV` mellett |
+
+## 8. Megvalósítás (F3, feed-import) — pontosítások
+
+Séma-változás nem kellett; a meglévő oszlopok jelentése pontosodott:
+
+| Hol | Jelentés | Miért |
+|---|---|---|
+| `feeds.last_success_at` | az utolsó **sikeres** (nem blokkolt) futás letöltésének ideje = minden, abban a futásban látott ajánlat árának ellenőrzési ideje | a változatlan feed újrafuttatása így 0 írás a katalógusban (nem kell minden ajánlaton időbélyeget frissíteni) |
+| `offers.last_seen_at` | az utolsó futás, amelyben a tétel **változott vagy újra megjelent** | „ár ellenőrizve” (6. vasszabály) = `missed_runs = 0` esetén a feed `last_success_at`-je, egyébként ez az érték (F5 használja) |
+| `offers.last_price_change_at` | csak tényleges árváltozásnál lép | |
+| `offers.missed_runs` | csak az aktív ajánlatnál nő; 2 után `is_active = false`, utána nem írjuk újra | kihagyott ajánlat ne okozzon futásonkénti írást |
+| `offers.deeplink_template` | a feed által adott követő link (pl. Awin `aw_deep_link`, CJ `link`, Admitad `url`) | a `/go` ebből építi a subID-s célt (F6) |
+| `source_items.payload` | a **tisztított, normalizált** tétel (nem a nyers sor); a nyers fájl a Storage-ban | a feedszöveg csak tisztítva kerül a DB-be (2. vasszabály) |
+| `products.image_source_merchant_id` | a termék „tulajdonosa”: az a kereskedő, amelyik létrehozta. Csak ő írhatja felül a termék szövegét, képét, kategóriáját; a többi kereskedő csak az üres mezőket tölti ki, és címkét csak hozzáad | közös GTIN esetén egyetlen, stabil termékleírás |
+| `product_tags` (`source = rule`) | a szótár a profiléval közös: `skin_type:*` = `SKIN_TYPES`, `concern:*` = `SKIN_CONCERNS`, `free_from:*` = `AVOID_INGREDIENTS`, plusz `interest:*` a kategóriából | a profil-egyezés (PRODUCT_SPEC 7.2) közvetlenül összevethető |
+| `feed_runs.error_sample` | legfeljebb 20 elutasított sor: ok, mező, cikkszám, tisztított részlet (max. 160 karakter) | az admin hibaminta sosem nyers HTML |
+| `feed_runs.stats` | elutasítási okok, jelzések (pl. `prompt_injection`), leképezetlen kategóriák (top 20), nyers méret, publikálási számok, időtartam | |

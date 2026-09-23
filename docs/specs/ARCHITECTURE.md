@@ -79,6 +79,27 @@ Adapterek V1-ben: `generic-csv`, `generic-xml` (Google Merchant-szerű), `awin`,
    `status = blocked`, nem publikálunk, riasztás (e-mail az adminnak)
 9. Futás végén: `feeds.last_success_at`, statisztika
 
+**Megvalósítás (F3) — pontosítások:**
+- A minőségi kapu a publikálás **előtt** dönt: a normalizált tételek lemezre (NDJSON) kerülnek, a kapu után kötegenként
+  (1000) publikálunk, **egy tranzakcióban** (blokkolt futásnál semmi nem változik). Mért: 50 000 sor 17,7 s, heap-csúcs 106 MB.
+- Termék-összerendelés sorrendje: a kereskedő meglévő ajánlata (merchant + SKU) → GTIN → új termék. A közös termék szövegét a
+  létrehozó kereskedő („tulajdonos”) írja; a többi csak az üres mezőket tölti (DATA_MODEL 8. pont).
+- Letöltés: csak `https`, host-engedélylista (kereskedő domainjei + a hálózat feed-hosztjai + `feeds.config.extraFeedHosts`),
+  a DNS-feloldott cím ellenőrzése a kapcsolódáskor (egyedi `lookup`, DNS-rebinding ellen), átirányításonként újraellenőrzés,
+  512 MB tömörített / 4 GB kicsomagolt / 20 perc korlát. A titok a feed-URL-ben helyőrző (`{AWIN_API_TOKEN}`), csak
+  `AWIN_|CJ_|DOGNET_|ADMITAD_|TRADETRACKER_` kezdetű változóból.
+- Kódolás: UTF-8 / Windows-1250 / ISO-8859-2 (felismerés az első 64 KB-ból; egy hibás sor nem fordítja át a fájlt).
+  A hibás bájtú sor `encoding` okkal elutasítva.
+- Párhuzamos futás ellen: élesben minden futás a GitHub Actions `ingest` workflow-ban megy (`concurrency: ingest`, az admin
+  [Futtatás most] is `workflow_dispatch`); a DB-ben a 2 óránál frissebb `running` futás is kizár. Munkamenet-szintű advisory
+  lock szándékosan nincs (a Supabase tranzakciós poolerén beragadhat). Az ingest a pooler **session módját** használja
+  (`INGEST_DATABASE_URL`, 5432-es port a pooler hoston: IPv4, ideiglenes tábla és hosszú tranzakció is működik).
+- Nyers pillanatkép: `FEED_RAW_STORE=supabase` (privát `feeds` bucket; a bucketet az első futás létrehozza) vagy `local`
+  (`.local/raw-feeds/`). A pillanatkép mentésének hibája nem állítja meg az árgyűjtést (a statisztikában látszik).
+- Az alkalmazás közös postgres.js-kliensén a Drizzle kikapcsolja a Date/JSON szerializálót, ezért a nyers SQL-ben a dátum
+  ISO-szöveg + `::timestamptz`, a JSON `JSON.stringify(...)::text::jsonb`, a tömb `sql.array(...)` (a sima JS-tömbben a
+  logikai érték nem szerializálható).
+
 **Konverzió-szinkron (`scripts/sync-conversions.ts`):** naponta, hálózatonként a tranzakciós API-ból
 az elmúlt 60 nap, upsert `conversions`-be, `click_id` a subID mezőből.
 
