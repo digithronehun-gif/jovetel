@@ -5,6 +5,7 @@ import { RayIcon } from '@/components/brand/RayIcon'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { SlotImage } from '@/components/ui/SlotImage'
 import { AI, TRUST } from '@/content/landing'
+import { giftHref } from '@/lib/launch'
 import { Band } from './Band'
 
 /** AI tanácsadó (PRODUCT_SPEC 3.6): példa-chipek a tanácsadóba, AI-címkével. */
@@ -25,17 +26,23 @@ export function AiSection() {
         }
       />
       <ul className="flex flex-col gap-2" aria-label="Példa-kérdések">
-        {AI.chips.map((c) => (
-          <li key={c}>
-            <Link
-              href={`/ajandek?q=${encodeURIComponent(c)}`}
-              className="inline-flex min-h-11 items-center gap-2 rounded-full border border-line bg-surface px-4 py-2 text-small text-ink transition-colors hover:border-ink-subtle"
-            >
-              „{c}”
-              <ArrowRight aria-hidden className="size-4 shrink-0 text-ink-muted" />
-            </Link>
-          </li>
-        ))}
+        {AI.chips.map((c) => {
+          const href = giftHref(c)
+          const chip = 'inline-flex min-h-11 items-center gap-2 rounded-full border border-line bg-surface px-4 py-2 text-small text-ink'
+          return (
+            <li key={c}>
+              {href ? (
+                <Link href={href} className={`${chip} transition-colors hover:border-ink-subtle`}>
+                  „{c}”
+                  <ArrowRight aria-hidden className="size-4 shrink-0 text-ink-muted" />
+                </Link>
+              ) : (
+                // amíg a tanácsadó nem készült el, a chip csak példa, nem link
+                <span className={chip}>„{c}”</span>
+              )}
+            </li>
+          )
+        })}
       </ul>
       <AiLabel />
     </Band>
@@ -46,7 +53,7 @@ export function AiSection() {
 export function TrustSection() {
   return (
     <section className="mx-auto max-w-landing px-4 sm:px-6 md:px-8">
-      <div className="grid items-center gap-8 overflow-hidden rounded-xl bg-sky p-6 md:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] md:gap-12 md:p-12">
+      <div className="grid grid-cols-1 items-center gap-8 overflow-hidden rounded-xl bg-sky p-6 md:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] md:gap-12 md:p-12">
         <div className="flex flex-col gap-5">
           <SectionHeader eyebrow={<span className="text-ink">{TRUST.eyebrow}</span>} size="l" title={TRUST.title} />
           <p className="max-w-measure text-body-l text-ink">{TRUST.text}</p>

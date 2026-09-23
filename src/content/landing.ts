@@ -12,6 +12,8 @@ export const HERO = {
     'Mondd el, kinek és mire keresel. Megmutatjuk, mi éri meg valóban magyar boltokban, és szólunk, amikor eljön az ideje.',
   primary: 'Kezdjük el, ingyenes',
   secondary: 'Ajándékötlet regisztráció nélkül',
+  /** amíg az ajándék-varázsló nem készült el (ROUTE_READY.ajandek) */
+  secondaryFallback: 'Nézd meg, hogyan működik',
   trust: ['Ingyenes', 'Nem a jutalék rangsorol', 'Magyar boltok valódi árai'],
 } as const
 

@@ -5,6 +5,7 @@ import { LeafShadow } from '@/components/brand/LeafShadow'
 import { Button } from '@/components/ui/Button'
 import { SlotImage } from '@/components/ui/SlotImage'
 import { HERO } from '@/content/landing'
+import { giftHref } from '@/lib/launch'
 
 /**
  * Hero (PRODUCT_SPEC 3.2): osztott elrendezés, keretezett kép lassan vándorló fénysávval; a cím sorai
@@ -12,6 +13,7 @@ import { HERO } from '@/content/landing'
  * Mobilon a kép a szöveg fölött (4:5), kisebb méretben, hogy az első képernyőn a gombok is látszanak.
  */
 export function Hero({ startHref }: { startHref: string }) {
+  const gift = giftHref()
   return (
     <section className="relative isolate overflow-hidden">
       <LeafShadow className="-z-10 opacity-100" />
@@ -36,8 +38,8 @@ export function Hero({ startHref }: { startHref: string }) {
               </Link>
             </Button>
             <Button asChild size="lg" variant="secondary">
-              <Link href="/ajandek" data-cta="hero-secondary">
-                {HERO.secondary}
+              <Link href={gift ?? '/#hogyan'} data-cta="hero-secondary">
+                {gift ? HERO.secondary : HERO.secondaryFallback}
               </Link>
             </Button>
           </div>

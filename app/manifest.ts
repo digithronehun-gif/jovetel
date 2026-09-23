@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { palette } from '@/lib/brand/palette'
+import { routeHref } from '@/lib/launch'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -7,7 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: 'JóVétel',
     description: 'Személyes vásárlási társ, ami emlékszik rád.',
     lang: 'hu',
-    start_url: '/app',
+    start_url: routeHref('app') ?? '/',
     display: 'standalone',
     background_color: palette.light.paper,
     theme_color: palette.light.paper,
