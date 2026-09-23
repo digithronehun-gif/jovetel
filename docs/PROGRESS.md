@@ -295,3 +295,29 @@ megvannak, és a táblázatban a commit-hash is szerepel. Pótlás bárhol: `git
 
 **Nyitott kérdések:** #1 (domain), #2 (cégadatok: 18 mező), #7 (küldő domain), #10 (képek), #11 (Supabase prod).
 **Következő:** F3 — feed-import és napi árgyűjtő (határidő az élesítésre: 2026. október 28.).
+
+### F3 — Feed-import és napi árgyűjtő
+
+**Terv:**
+1. `src/lib/ingestion`: `FeedAdapter` interfész; SSRF-védett letöltés (csak https, host-engedélylista, DNS-feloldás
+   utáni privát-IP-tiltás a kapcsolódáskor is, átirányításonként újraellenőrizve, méret- és időkorlát, gzip).
+2. Streaming parserek: CSV (`csv-parse`), XML (`saxes`); kódolás-felismerés (UTF-8 / Windows-1250 / ISO-8859-2).
+3. Adapterek: `generic-csv`, `generic-xml` (Google Merchant), `awin`, `cj`, `dognet` (Heureka-XML), `admitad` (YML),
+   `manual`; kulcs nélkül fixture-ökön (`tests/fixtures/feeds/<hálózat>/`): helyes sor, hibás kódolás, hiányzó mező,
+   negatív ár, HTML/script és prompt-injection a leírásban.
+4. Normalizálás: egész Ft, GTIN-ellenőrzőszám, márka, kiszerelés-kinyerő, kategória-leképezés (tábla → kulcsszó-szabály),
+   HTML-tisztítás (`sanitize-html`, csak szöveg), URL a kereskedő engedélylistáján, szabályalapú címkék (`source=rule`).
+5. Pipeline a 9 lépéssel: nyers pillanatkép (Supabase Storage / helyben `.local/`), a normalizált tételek lemezre
+   (NDJSON), **minőségi kapu a publikálás előtt**, publikálás egy tranzakcióban kötegekben, `content_hash`
+   → változatlan tétel nem íródik, `price_daily` csak eltérésnél ír, 2 kihagyott futás → inaktív.
+6. `scripts/ingest.ts` (`--feed`, `--all`, `--fixtures`), GitHub Actions (04:00 és 16:00 Budapest, nyári/téli idő
+   szerint is pontosan), riasztó e-mail blokkolt futásnál.
+7. `requireAdmin()` (szerepkör + MFA `aal2`, két rétegben) és `/admin/feedek` (feedek, futások, hibaminta,
+   [Futtatás most] → GitHub `workflow_dispatch`, helyben közvetlen futtatás), minden admin írás `audit_log`-ba.
+8. Mérés: 50 000 soros import ideje és memóriája, újrafuttatás írásszáma (`pg_stat`), blokkolás, tisztítás, ártörténet.
+
+**Új függőségek (indoklás):** `csv-parse` (RFC 4180 streaming: idézett sortörés, BOM, laza idézőjelek a hibás
+feedekhez — saját parserrel ezek a hibák a feedekben rendszeresek), `saxes` (streaming, szabványos XML: entitások,
+CDATA, névterek; a 100 MB-os XML-feed nem fér memóriába DOM-ként), `sanitize-html` (a spec nevesíti; szöveg módban a
+`script`/`style` tartalmát is eldobja), `@supabase/ssr` + `@supabase/supabase-js` (a `requireAdmin()` session-kezelése;
+az F7 belépés is erre épül).

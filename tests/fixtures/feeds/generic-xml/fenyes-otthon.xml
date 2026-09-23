@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
+  <channel>
+    <title>[DEMO] Fényes Otthon</title>
+    <item>
+      <g:id>FO-5001</g:id>
+      <title>Aranyhíd Volumennövelő szempillaspirál 10 ml</title>
+      <description>Dús pillák, csomómentes felvitel.&nbsp;Kézzel csomagolva.</description>
+      <link>https://fenyes-otthon.example/shop/spiral</link>
+      <g:image_link>https://fenyes-otthon.example/media/spiral.jpg</g:image_link>
+      <g:price>3990.00 HUF</g:price>
+      
+      <g:brand>Aranyhíd</g:brand>
+      <g:gtin>5999000010155</g:gtin>
+      <g:product_type>Smink &gt; Szem</g:product_type>
+      <g:availability>in_stock</g:availability>
+      <g:shipping><g:country>HU</g:country><g:price>1290 HUF</g:price></g:shipping>
+    </item>
+    <item>
+      <g:id>FO-5002</g:id>
+      <title>Fehér Lótusz Éjszakai virág női parfüm EDP 50 ml</title>
+      <description>Virágos, meleg illat, női eau de parfum.&nbsp;Kézzel csomagolva.</description>
+      <link>https://fenyes-otthon.example/shop/parfum-noi</link>
+      <g:image_link>https://fenyes-otthon.example/media/parfum-noi.jpg</g:image_link>
+      <g:price>17990.00 HUF</g:price>
+      <g:sale_price>14990.00 HUF</g:sale_price>
+      <g:brand>Fehér Lótusz</g:brand>
+      <g:gtin>5999000010162</g:gtin>
+      <g:product_type>Parfüm &gt; Női</g:product_type>
+      <g:availability>in_stock</g:availability>
+      <g:shipping><g:country>HU</g:country><g:price>1290 HUF</g:price></g:shipping>
+    </item>
+    <item>
+      <g:id>FO-5003</g:id>
+      <title>Nordfény Fenyő férfi parfüm EDT 100 ml</title>
+      <description>Friss, fás férfi eau de toilette.&nbsp;Kézzel csomagolva.</description>
+      <link>https://fenyes-otthon.example/shop/parfum-ferfi</link>
+      <g:image_link>https://fenyes-otthon.example/media/parfum-ferfi.jpg</g:image_link>
+      <g:price>12990.00 HUF</g:price>
+      
+      <g:brand>Nordfény</g:brand>
+      <g:gtin>5999000010179</g:gtin>
+      <g:product_type>Parfüm &gt; Férfi</g:product_type>
+      <g:availability>in_stock</g:availability>
+      <g:shipping><g:country>HU</g:country><g:price>1290 HUF</g:price></g:shipping>
+    </item>
+    <item>
+      <g:id>FO-5004</g:id>
+      <title>Borostyán Műhely Fügés illatgyertya 200 g</title>
+      <description>Szójaviasz illatgyertya, kb. 40 óra égési idő.&nbsp;Kézzel csomagolva.</description>
+      <link>https://fenyes-otthon.example/shop/gyertya</link>
+      <g:image_link>https://fenyes-otthon.example/media/gyertya.jpg</g:image_link>
+      <g:price>6490.00 HUF</g:price>
+      
+      <g:brand>Borostyán Műhely</g:brand>
+      <g:gtin>5999000010186</g:gtin>
+      <g:product_type>Otthon &gt; Illatgyertya</g:product_type>
+      <g:availability>in_stock</g:availability>
+      <g:shipping><g:country>HU</g:country><g:price>1290 HUF</g:price></g:shipping>
+    </item>
+    <item>
+      <g:id>FO-5005</g:id>
+      <title>Borostyán Műhely Szantálfa illatosító pálcás 100 ml</title>
+      <description>Pálcás illatosító diffúzor a nappaliba.&nbsp;Kézzel csomagolva.</description>
+      <link>https://fenyes-otthon.example/shop/diffuzor</link>
+      <g:image_link>https://fenyes-otthon.example/media/diffuzor.jpg</g:image_link>
+      <g:price>7490.00 HUF</g:price>
+      
+      <g:brand>Borostyán Műhely</g:brand>
+      <g:gtin>5999000010193</g:gtin>
+      <g:product_type>Otthon &gt; Illatosító</g:product_type>
+      <g:availability>in_stock</g:availability>
+      <g:shipping><g:country>HU</g:country><g:price>1290 HUF</g:price></g:shipping>
+    </item>
+    <item>
+      <g:id>FO-5006</g:id>
+      <title>Aranyhíd Virágmintás selyemkendő</title>
+      <description>Könnyű selyemkendő, 90 × 90 cm.&nbsp;Kézzel csomagolva.</description>
+      <link>https://fenyes-otthon.example/shop/kendo</link>
+      <g:image_link>https://fenyes-otthon.example/media/kendo.jpg</g:image_link>
+      <g:price>12990.00 HUF</g:price>
+      
+      <g:brand>Aranyhíd</g:brand>
+      <g:gtin>5999000010209</g:gtin>
+      <g:product_type>Divat &gt; Kendő</g:product_type>
+      <g:availability>in_stock</g:availability>
+      <g:shipping><g:country>HU</g:country><g:price>1290 HUF</g:price></g:shipping>
+    </item>
+    <item>
+      <g:id>FO-5007</g:id>
+      <title>Kamilla &amp; Társa Téli kényeztetés ajándékcsomag</title>
+      <description>Kézkrém, ajakbalzsam és tusfürdő díszdobozban.&nbsp;Kézzel csomagolva.</description>
+      <link>https://fenyes-otthon.example/shop/szett</link>
+      <g:image_link>https://fenyes-otthon.example/media/szett.jpg</g:image_link>
+      <g:price>8990.00 HUF</g:price>
+      
+      <g:brand>Kamilla &amp; Társa</g:brand>
+      <g:gtin>5999000010216</g:gtin>
+      <g:product_type>Ajándékcsomag</g:product_type>
+      <g:availability>in_stock</g:availability>
+      <g:shipping><g:country>HU</g:country><g:price>1290 HUF</g:price></g:shipping>
+    </item>
+    <item>
+      <g:id>FO-5008</g:id>
+      <title>Aranyhíd Gyöngyös karkötő</title>
+      <description>Édesvízi gyöngy, ezüst kapoccsal.&nbsp;Kézzel csomagolva.</description>
+      <link>https://fenyes-otthon.example/shop/karkoto</link>
+      <g:image_link>https://fenyes-otthon.example/media/karkoto.jpg</g:image_link>
+      <g:price>9990.00 HUF</g:price>
+      
+      <g:brand>Aranyhíd</g:brand>
+      <g:gtin>5999000010223</g:gtin>
+      <g:product_type>Ékszer</g:product_type>
+      <g:availability>in_stock</g:availability>
+      <g:shipping><g:country>HU</g:country><g:price>1290 HUF</g:price></g:shipping>
+    </item>
+    <item>
+      <g:id>FO-5009</g:id>
+      <title>Barka Naturals Rózsavizes tonik 200 ml</title>
+      <description>Nyugtató rózsavizes tonik a bőrpír csökkentésére.&nbsp;Kézzel csomagolva.</description>
+      <link>https://fenyes-otthon.example/shop/tonik</link>
+      <g:image_link>https://fenyes-otthon.example/media/tonik.jpg</g:image_link>
+      <g:price>2790.00 HUF</g:price>
+      
+      <g:brand>Barka Naturals</g:brand>
+      <g:gtin>5999000010230</g:gtin>
+      <g:product_type>Arcápolás &gt; Arctisztítás</g:product_type>
+      <g:availability>in_stock</g:availability>
+      <g:shipping><g:country>HU</g:country><g:price>1290 HUF</g:price></g:shipping>
+    </item>
+    <item>
+      <g:id>FO-5010</g:id>
+      <title>Levendulakert Kézkrém 75 ml</title>
+      <description>Gyorsan beszívódó kézkrém.&nbsp;Kézzel csomagolva.</description>
+      <link>https://fenyes-otthon.example/shop/kezkrem</link>
+      <g:image_link>https://fenyes-otthon.example/media/kezkrem.jpg</g:image_link>
+      <g:price>1490.00 HUF</g:price>
+      
+      <g:brand>Levendulakert</g:brand>
+      <g:gtin>5999000010247</g:gtin>
+      <g:product_type>Testápolás</g:product_type>
+      <g:availability>in_stock</g:availability>
+      <g:shipping><g:country>HU</g:country><g:price>1290 HUF</g:price></g:shipping>
+    </item>
+  </channel>
+</rss>

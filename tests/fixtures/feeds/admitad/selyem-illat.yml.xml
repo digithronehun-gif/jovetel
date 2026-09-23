@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<yml_catalog date="2026-09-23 04:00">
+  <shop>
+    <name>[DEMO] Selyem és Illat</name>
+    <currencies><currency id="HUF" rate="1"/></currencies>
+    <categories>
+      <category id="1">Parfüm</category>
+      <category id="2">Otthon</category>
+      <category id="3">Divat</category>
+      <category id="4">Ajándékcsomag</category>
+      <category id="5">Ékszer</category>
+      <category id="6">Arcápolás</category>
+    </categories>
+    <offers>
+      <offer id="SI-6001" available="true">
+        <url>https://ad.admitad.com/g/abc123def/?ulp=https%3A%2F%2Fselyem-illat.example%2Fitem%2Fparfum-noi</url>
+        <price>14990</price>
+        <oldprice>17990</oldprice>
+        <currencyId>HUF</currencyId>
+        <categoryId>1</categoryId>
+        <picture>https://selyem-illat.example/pics/parfum-noi.jpg</picture>
+        <name>Fehér Lótusz Éjszakai virág női parfüm EDP 50 ml</name>
+        <vendor>Fehér Lótusz</vendor>
+        <description>Virágos, meleg illat, női eau de parfum.</description>
+        <barcode>5999000010162</barcode>
+      </offer>
+      <offer id="SI-6002" available="true">
+        <url>https://ad.admitad.com/g/abc123def/?ulp=https%3A%2F%2Fselyem-illat.example%2Fitem%2Fparfum-ferfi</url>
+        <price>12990</price>
+        
+        <currencyId>HUF</currencyId>
+        <categoryId>1</categoryId>
+        <picture>https://selyem-illat.example/pics/parfum-ferfi.jpg</picture>
+        <name>Nordfény Fenyő férfi parfüm EDT 100 ml</name>
+        <vendor>Nordfény</vendor>
+        <description>Friss, fás férfi eau de toilette.</description>
+        <barcode>5999000010179</barcode>
+      </offer>
+      <offer id="SI-6003" available="true">
+        <url>https://ad.admitad.com/g/abc123def/?ulp=https%3A%2F%2Fselyem-illat.example%2Fitem%2Fgyertya</url>
+        <price>6490</price>
+        
+        <currencyId>HUF</currencyId>
+        <categoryId>2</categoryId>
+        <picture>https://selyem-illat.example/pics/gyertya.jpg</picture>
+        <name>Borostyán Műhely Fügés illatgyertya 200 g</name>
+        <vendor>Borostyán Műhely</vendor>
+        <description>Szójaviasz illatgyertya, kb. 40 óra égési idő.</description>
+        <barcode>5999000010186</barcode>
+      </offer>
+      <offer id="SI-6004" available="true">
+        <url>https://ad.admitad.com/g/abc123def/?ulp=https%3A%2F%2Fselyem-illat.example%2Fitem%2Fdiffuzor</url>
+        <price>7490</price>
+        
+        <currencyId>HUF</currencyId>
+        <categoryId>2</categoryId>
+        <picture>https://selyem-illat.example/pics/diffuzor.jpg</picture>
+        <name>Borostyán Műhely Szantálfa illatosító pálcás 100 ml</name>
+        <vendor>Borostyán Műhely</vendor>
+        <description>Pálcás illatosító diffúzor a nappaliba.</description>
+        <barcode>5999000010193</barcode>
+      </offer>
+      <offer id="SI-6005" available="true">
+        <url>https://ad.admitad.com/g/abc123def/?ulp=https%3A%2F%2Fselyem-illat.example%2Fitem%2Fkendo</url>
+        <price>12990</price>
+        
+        <currencyId>HUF</currencyId>
+        <categoryId>3</categoryId>
+        <picture>https://selyem-illat.example/pics/kendo.jpg</picture>
+        <name>Aranyhíd Virágmintás selyemkendő</name>
+        <vendor>Aranyhíd</vendor>
+        <description>Könnyű selyemkendő, 90 × 90 cm.</description>
+        <barcode>5999000010209</barcode>
+      </offer>
+      <offer id="SI-6006" available="true">
+        <url>https://ad.admitad.com/g/abc123def/?ulp=https%3A%2F%2Fselyem-illat.example%2Fitem%2Fszett</url>
+        <price>8990</price>
+        
+        <currencyId>HUF</currencyId>
+        <categoryId>4</categoryId>
+        <picture>https://selyem-illat.example/pics/szett.jpg</picture>
+        <name>Kamilla &amp; Társa Téli kényeztetés ajándékcsomag</name>
+        <vendor>Kamilla &amp; Társa</vendor>
+        <description>Kézkrém, ajakbalzsam és tusfürdő díszdobozban.</description>
+        <barcode>5999000010216</barcode>
+      </offer>
+      <offer id="SI-6007" available="true">
+        <url>https://ad.admitad.com/g/abc123def/?ulp=https%3A%2F%2Fselyem-illat.example%2Fitem%2Fkarkoto</url>
+        <price>9990</price>
+        
+        <currencyId>HUF</currencyId>
+        <categoryId>5</categoryId>
+        <picture>https://selyem-illat.example/pics/karkoto.jpg</picture>
+        <name>Aranyhíd Gyöngyös karkötő</name>
+        <vendor>Aranyhíd</vendor>
+        <description>Édesvízi gyöngy, ezüst kapoccsal.</description>
+        <barcode>5999000010223</barcode>
+      </offer>
+      <offer id="SI-6008" available="true">
+        <url>https://ad.admitad.com/g/abc123def/?ulp=https%3A%2F%2Fselyem-illat.example%2Fitem%2Fszerum-c</url>
+        <price>7990</price>
+        <oldprice>9490</oldprice>
+        <currencyId>HUF</currencyId>
+        <categoryId>6</categoryId>
+        <picture>https://selyem-illat.example/pics/szerum-c.jpg</picture>
+        <name>Lumen Botanica C-vitaminos szérum 30 ml</name>
+        <vendor>Lumen Botanica</vendor>
+        <description>Könnyű, gyorsan felszívódó szérum a ragyogóbb bőrért. Illatanyagmentes, normál és kombinált bőrre.</description>
+        <barcode>5999000010018</barcode>
+      </offer>
+      <offer id="SI-6009" available="true">
+        <url>https://ad.admitad.com/g/abc123def/?ulp=https%3A%2F%2Fselyem-illat.example%2Fitem%2Fszerum-hial</url>
+        <price>6490</price>
+        
+        <currencyId>HUF</currencyId>
+        <categoryId>6</categoryId>
+        <picture>https://selyem-illat.example/pics/szerum-hial.jpg</picture>
+        <name>Aura Skin Lab Hialuronsavas szérum 30ml</name>
+        <vendor>Aura Skin Lab</vendor>
+        <description>Intenzív hidratálás száraz bőrre, hialuronsavval.</description>
+        <barcode>5999000010025</barcode>
+      </offer>
+    </offers>
+  </shop>
+</yml_catalog>

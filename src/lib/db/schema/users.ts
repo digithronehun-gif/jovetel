@@ -35,6 +35,18 @@ export const SKIN_TYPES = [
   'erzekeny',
   'nem_tudom',
 ] as const
+/** Fő bőrgondok (PRODUCT_SPEC 4.2): a profil és a termékek `concern:*` címkéi ugyanezt a szótárat használják. */
+export const SKIN_CONCERNS = [
+  'pattanasok',
+  'pigmentfolt',
+  'rancok',
+  'tag_porusok',
+  'szarazsag',
+  'pirossag',
+  'fakosag',
+] as const
+/** Kerülendő összetevők (PRODUCT_SPEC 4.2): a termékek `free_from:*` címkéi. */
+export const AVOID_INGREDIENTS = ['illatanyag', 'alkohol', 'paraben', 'szilikon', 'illoolaj'] as const
 export const BUDGET_BANDS = ['u5', '5_15', '15_30', 'o30'] as const
 export const USE_CASES = ['gifts', 'beauty', 'both'] as const
 export const RELATIONS = [
