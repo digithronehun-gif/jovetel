@@ -137,7 +137,6 @@ function byteCounter(onBytes: (n: number) => void): Transform {
 
 export async function runFeed(feedId: string, deps: RunDeps): Promise<RunSummary> {
   const { sql } = deps
-  const now = deps.now ?? (() => new Date())
   const log = deps.log ?? (() => {})
   const t0 = Date.now()
   const { feed, merchant } = await load(sql, feedId)
