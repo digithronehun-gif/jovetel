@@ -1,3 +1,4 @@
+import type postgres from 'postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { closeDb } from '../../src/lib/db/client'
 import {
@@ -54,14 +55,37 @@ describe('két felhasználó nem látja egymás adatait (F1 elfogadási kritéri
     expect(count[0]!.user_id).toBe(a)
   })
 
-  it('RLS: más nevében nem lehet beszúrni', async () => {
+  const asUser = <T>(uid: string, fn: (tx: postgres.TransactionSql) => Promise<T>) =>
+    sql.begin(async (tx) => {
+      await tx`set local role authenticated`
+      await tx`select set_config('request.jwt.claims', ${JSON.stringify({ sub: uid, role: 'authenticated' })}, true)`
+      return fn(tx)
+    })
+
+  it('a publikus kulccsal (PostgREST) semmi nem írható: más nevében sem, a saját nevében sem', async () => {
+    await expect(asUser(a, (tx) => tx`insert into public.loved_ones (user_id, nickname, relation) values (${b}, 'Behatoló', 'egyeb')`)).rejects.toThrow(/permission denied/)
+    await expect(asUser(a, (tx) => tx`insert into public.loved_ones (user_id, nickname, relation) values (${a}, 'Saját', 'egyeb')`)).rejects.toThrow(/permission denied/)
+    await expect(asUser(a, (tx) => tx`delete from public.loved_ones`)).rejects.toThrow(/permission denied/)
+  })
+
+  it('senki nem teheti magát adminná (sem közvetlen írással, sem triggeren át)', async () => {
+    await expect(asUser(a, (tx) => tx`update public.profiles set role = 'admin' where user_id = ${a}`)).rejects.toThrow(/permission denied/)
+    // ha valaki később újra írásjogot adna, a trigger akkor is megállítja
     await expect(
       sql.begin(async (tx) => {
+        await tx`grant update on public.profiles to authenticated`
         await tx`set local role authenticated`
         await tx`select set_config('request.jwt.claims', ${JSON.stringify({ sub: a, role: 'authenticated' })}, true)`
-        await tx`insert into public.loved_ones (user_id, nickname, relation) values (${b}, 'Behatoló', 'egyeb')`
+        await tx`update public.profiles set role = 'admin' where user_id = ${a}`
       }),
-    ).rejects.toThrow(/row-level security/)
+    ).rejects.toThrow(/szerveroldalon/)
+    expect((await getProfile(a))?.role).toBe('user')
+  })
+
+  it('foglalást a publikus kulccsal nem lehet létrehozni (csak szerveroldalon, Turnstile-lal)', async () => {
+    await expect(
+      asUser(a, (tx) => tx`insert into public.reservations (list_item_id, reserver_user_id, status) values (gen_random_uuid(), ${a}, 'active')`),
+    ).rejects.toThrow(/permission denied/)
   })
 
   it('RLS: névtelen (anon) semmilyen felhasználói adatot nem lát, a katalógust igen', async () => {
