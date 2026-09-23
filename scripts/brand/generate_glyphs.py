@@ -6,7 +6,7 @@ Futtatás (egyszeri, a kimenet commitolva van):
   python3 scripts/brand/generate_glyphs.py <bodoni-moda-variable-latin.woff2>
 
 Kimenet: src/components/brand/glyphs.generated.ts
-A szóvédjegy: opsz=28, wght=500 („Bodoni Moda 500”, DESIGN_SYSTEM 5.4). A monogram: opsz=11, wght=600
+A szóvédjegy: opsz=28, wght=500 („Bodoni Moda 500”, DESIGN_SYSTEM 5.4). A szlogen: opsz=28, wght=400. A monogram: opsz=11, wght=600
 (kis méretben, faviconként is olvasható). Az „ó” ékezete nem glif, hanem a RayIcon egyetlen,
 dőlt sugara (a komponens rajzolja --amber színnel).
 """
@@ -63,6 +63,7 @@ def main(src: str) -> None:
     tmp = Path("/tmp")
     wm_font = instance(src, 28, 500, tmp / "bodoni-wordmark.ttf")
     mono_font = instance(src, 11, 600, tmp / "bodoni-mono.ttf")
+    slogan_font = instance(src, 28, 400, tmp / "bodoni-slogan.ttf")
     cap = 1500
     wm_d, wm_glyphs, wm_width = shaped_path(wm_font, "JoVétel", cap)
     o = next(g for g in wm_glyphs if g["name"] == "o")
@@ -85,6 +86,8 @@ def main(src: str) -> None:
         "y2": round(-400),
         "width": 110,
     }
+    # A szlogen (OG-kép, közösségi előnézet): futásidőben nem kell hozzá font
+    slogan_d, _, slogan_width = shaped_path(slogan_font, "Rávilágítunk a jó vételre.", cap)
     content = f"""// GENERÁLT FÁJL — ne szerkeszd kézzel. Forrás: scripts/brand/generate_glyphs.py
 // Betűtípus: Bodoni Moda (SIL Open Font License 1.1). Egység: font-egység (UPM 2000), y lefelé.
 
@@ -94,6 +97,14 @@ export const WORDMARK = {{
   descent: 70,
   path: {json.dumps(wm_d)},
   ray: {json.dumps(ray)},
+}} as const
+
+export const SLOGAN = {{
+  text: "Rávilágítunk a jó vételre.",
+  width: {slogan_width},
+  capHeight: {cap},
+  descent: 520,
+  path: {json.dumps(slogan_d)},
 }} as const
 
 export const MONOGRAM = {{
