@@ -41,6 +41,13 @@ test.describe('admin: /admin/feedek (requireAdmin: szerepkör + MFA)', () => {
     // a hibaminta szöveg, nem markup
     expect(await sample.locator('script, img, a').count()).toBe(0)
 
+    // 390 px-en az admin oldal sem lóg ki vízszintesen (a táblázat a saját keretében görget)
+    for (const path of ['/admin/feedek', page.url()]) {
+      await page.goto(path)
+      const { scroll, client } = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }))
+      expect(scroll, path).toBeLessThanOrEqual(client)
+    }
+
     const runsBefore = await page.locator('[data-admin-runs] tbody tr').count()
     await page.locator('[data-run-now]').click()
     await expect(page.getByRole('status')).toContainText('elindult')

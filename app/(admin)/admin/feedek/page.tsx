@@ -20,7 +20,7 @@ export default async function AdminFeedsPage() {
           Napi két import (04:00 és 16:00). A {STALE_AFTER_HOURS} óránál régebbi sikeres futás pirossal jelölve.
         </p>
       </header>
-      <div className="overflow-x-auto rounded-lg border border-line bg-surface">
+      <div className="relative min-w-0 overflow-x-auto rounded-lg border border-line bg-surface">
         <table className="w-full min-w-[48rem] text-left text-small" data-admin-feeds>
           <thead className="border-b border-line text-xs text-ink-muted uppercase">
             <tr>

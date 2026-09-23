@@ -112,7 +112,7 @@ export default async function AdminFeedPage({ params }: { params: Promise<{ id: 
         <h2 id="futasok" className="text-title text-ink">
           Futások
         </h2>
-        <div className="overflow-x-auto rounded-lg border border-line bg-surface">
+        <div className="relative min-w-0 overflow-x-auto rounded-lg border border-line bg-surface">
           <table className="w-full min-w-[40rem] text-left text-small" data-admin-runs>
             <thead className="border-b border-line text-xs text-ink-muted uppercase">
               <tr>

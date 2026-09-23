@@ -1,6 +1,7 @@
 /**
  * pnpm screenshots -- [útvonal ...] [--base http://localhost:3000] [--out tests/.artifacts/screens]
  * Playwright-képernyőkép 390 és 1440 px szélességben, világos és sötét módban (CLAUDE.md 7.8).
+ * `--as-admin`: helyi teszt-admin (szerepkör + TOTP-MFA) sessionjével (a helyi stack kell: pnpm local:up).
  */
 import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -14,6 +15,7 @@ function opt(name: string, fallback: string): string {
 const base = opt('--base', process.env.SCREENSHOT_BASE ?? 'http://localhost:3000')
 const out = opt('--out', 'tests/.artifacts/screens')
 const fullPage = !args.includes('--viewport-only')
+const asAdmin = args.includes('--as-admin')
 const routes = args.filter(
   (a, i) => !a.startsWith('--') && !['--base', '--out'].includes(args[i - 1] ?? ''),
 )
@@ -27,6 +29,7 @@ async function main() {
   const browser = await chromium.launch({
     executablePath: process.env.PW_CHROMIUM ?? '/opt/pw-browsers/chromium',
   })
+  const admin = asAdmin ? await (await import('../tests/e2e/helpers/auth')).createTestUser({ admin: true, mfa: true }) : null
   for (const route of routes) {
     for (const width of widths) {
       for (const colorScheme of schemes) {
@@ -38,6 +41,7 @@ async function main() {
           locale: 'hu-HU',
           timezoneId: 'Europe/Budapest',
         })
+        if (admin) await (await import('../tests/e2e/helpers/auth')).signIn(ctx, base, admin.session)
         const page = await ctx.newPage()
         await page.goto(base + route, { waitUntil: 'networkidle' })
         // lusta képek betöltése: végiggörgetjük az oldalt
