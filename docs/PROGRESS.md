@@ -137,7 +137,7 @@ Tailwind 4.3.3 · Playwright 1.56.1 (a gépen lévő Chromium-buildhez illeszked
 | F1 | Adatbázis, seed, névnaptár | ✅ | `fazis-01` (0583ac7) | 41 DB-teszt · névkeresés p95 20,7 ms / 50 000 termék |
 | F2 | Landing, várólista, jogi oldalak, hozzájárulás | ✅ | `fazis-02` (9c69ba8) | Lighthouse mobil 96/100/100/100 (h2) · 90/100/100/100 (h1) · 21 e2e |
 | F3 | Feed-import és napi árgyűjtő | ✅ | `fazis-03` (acea1bd) | 50 000 sor 17,7 s · újrafuttatás 0 írás · 7 adapter · átnézés: 2 BLOCKER + 7 SHOULD-FIX javítva · 26 e2e |
-| F4 | Keresés, kategóriák, útmutatók | ⏳ | | |
+| F4 | Keresés, kategóriák, útmutatók | 🔨 | | |
 | F5 | Termékoldal, teljes költség, ártörténet, „Valódi akció?” | ⏳ | | |
 | F6 | Követett kattintás, jelölés, konverziók | ⏳ | | |
 | F7 | Belépés, onboarding, beállítások | ⏳ | | |
@@ -429,3 +429,22 @@ számít az ítéletbe, a letöltés SSRF-védett, titok nem kerül naplóba, Po
 | 17 | NIT | a fixture-őr csak a DB-jelölőt nézte; felülírta a hálózat `tracking_domains`-át | `APP_ENV` is; unió |
 
 **Nyitott kérdések:** #3, #4, #14 (feedek és oszlopnevek), #15 (Dognet), #16 (Storage-korlát), #17 (dispatch token).
+
+### F4 — Keresés, kategóriák, útmutatók
+
+**Terv:**
+1. Árazás a `lib/pricing`-ben: `totalCost()` (7.4) és `verdict()` (7.3) egész számos küszöbökkel, határesetes unit
+   tesztekkel. Az SQL-párjuk a 0009 migrációban: származtatott `offer_stats` / `product_stats` tábla (teljes ár, legjobb
+   ajánlat, ítélet, valódi kedvezmény, címkék) és `refresh_catalog_stats()`, csak eltérésnél ír; paritásteszt a TS és
+   az SQL között. Minden ingest végén és a seed után fut.
+2. `SearchProvider` + `PostgresSearch`: FTS (ÉS) → kevés találatnál lazított VAGY + trigram (márka + név) visszaesés;
+   szűrők (teljes ár, márka, kategória, bolt, készleten, valódi akció, bőrtípus, mentes), diszjunktív facetek
+   számokkal egy lekérdezésben, 4 rendezés, lapozás; a súlyok a `weights.ts`-ből, jutalék sehol.
+3. URL-állapot Zoddal (`parseSearchState` ↔ `toSearchParams`), `GET /api/search` rate limittel.
+4. `/kereses`: mobilon alsó lapos szűrő (`Sheet`), desktopon szűrőoszlop, aktív szűrő-chipek, rendezés, lapozás,
+   üres állapot a spec szerint (a legszűkebb szűrő lazítása); `ProductCard` mindhárom változata.
+5. `/kategoria` áttekintő és `/kategoria/[...path]` képhelyes fejléccel, morzsamenüvel, alkategória-chipekkel.
+6. `/utmutatok`, `/utmutatok/[slug]` (editorial lista; indexelhető csak ≥ 5 tétel és ≥ 150 szó mellett) +
+   `/admin/utmutatok` szerkesztő (`requireAdmin`, `audit_log`).
+7. Mérés: 50 lekérdezés (`tests/fixtures/search-queries.json`) top 5 ≥ 80%; p95 < 300 ms 50 000 terméken
+   szűrőkkel és facetekkel együtt. Kockázat: a facetek a 40 000 termékes főkategórián — ezért előaggregált stats-tábla.
