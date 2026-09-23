@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { EventName, EventProps } from '@/lib/analytics/events'
 import { sanitizeProps } from '@/lib/analytics/events'
+import { posthogConfig } from '@/lib/analytics/posthog'
 import { saveCookieConsent } from '@/app/actions/consent'
 
 export interface ConsentState {
@@ -35,16 +36,16 @@ export function ConsentProvider({ initial, children }: { initial: ConsentState |
   const queue = useRef<[EventName, EventProps | undefined][]>([])
 
   useEffect(() => {
-    const key = process.env.NEXT_PUBLIC_POSTHOG_KEY
-    if (!consent?.analytics || !key || posthog.current) {
+    const ph = posthogConfig()
+    if (!consent?.analytics || !ph || posthog.current) {
       if (!consent?.analytics && posthog.current) posthog.current.opt_out_capturing()
       return
     }
     let cancelled = false
-    void import('posthog-js').then(({ default: ph }) => {
+    void import('posthog-js').then(({ default: client }) => {
       if (cancelled) return
-      ph.init(key, {
-        api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://eu.i.posthog.com',
+      client.init(ph.key, {
+        api_host: ph.host,
         person_profiles: 'identified_only',
         capture_pageview: true,
         autocapture: false,
@@ -53,8 +54,8 @@ export function ConsentProvider({ initial, children }: { initial: ConsentState |
         persistence: 'localStorage+cookie',
         ip: false,
       })
-      posthog.current = ph
-      for (const [n, p] of queue.current) ph.capture(n, sanitizeProps(p))
+      posthog.current = client
+      for (const [n, p] of queue.current) client.capture(n, sanitizeProps(p))
       queue.current = []
     })
     return () => {

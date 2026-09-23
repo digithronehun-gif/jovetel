@@ -8,6 +8,8 @@ export interface CspOptions {
   supabaseUrl?: string | null
   posthogHost?: string | null
   sentryDsn?: string | null
+  /** alapból minden nem-fejlesztői környezetben be van kapcsolva */
+  upgradeInsecureRequests?: boolean
 }
 
 function origin(url?: string | null): string | null {
@@ -51,7 +53,7 @@ export function buildCsp(o: CspOptions): string {
   const parts = Object.entries(directives).map(
     ([k, v]) => `${k} ${[...new Set(v.filter((x): x is string => Boolean(x)))].join(' ')}`,
   )
-  if (!o.dev) parts.push('upgrade-insecure-requests')
+  if (o.upgradeInsecureRequests ?? !o.dev) parts.push('upgrade-insecure-requests')
   return parts.join('; ')
 }
 

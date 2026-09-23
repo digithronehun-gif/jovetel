@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { posthogConfig } from '@/lib/analytics/posthog'
 import { buildCsp, createNonce } from '@/lib/security/csp'
 
 /**
@@ -14,8 +15,10 @@ export function proxy(request: NextRequest) {
     nonce,
     dev,
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    posthogHost: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+    posthogHost: posthogConfig()?.host,
     sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    // helyi `next start` (http) alatt a kérések felminősítése elrontaná a helyi Supabase-hívásokat
+    upgradeInsecureRequests: request.nextUrl.protocol === 'https:',
   })
 
   const requestHeaders = new Headers(request.headers)

@@ -54,7 +54,7 @@ export function ConsentBanner() {
           </button>
         )}
         <span className="sm:hidden"> · </span>
-        <Link href="/cookie" className="text-amber-deep underline-offset-4 hover:underline">
+        <Link href="/cookie" className="text-amber-deep underline underline-offset-4 hover:text-ink">
           Süti-tájékoztató
         </Link>
       </p>
