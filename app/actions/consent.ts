@@ -3,8 +3,8 @@
 import { cookies, headers } from 'next/headers'
 import { z } from 'zod'
 import { CONSENT_COOKIE, CONSENT_MAX_AGE, CONSENT_VERSION, serializeConsent } from '@/lib/analytics/consent'
-import { db } from '@/lib/db/client'
-import { consents } from '@/lib/db/schema'
+import { getSessionUser } from '@/lib/auth/session'
+import { recordCookieConsent } from '@/lib/db/queries/anon/cookieConsents'
 import { clientIp, hashIdentifier } from '@/lib/security/ip'
 import { rateLimit, RULES } from '@/lib/security/ratelimit'
 
@@ -40,15 +40,8 @@ export async function saveCookieConsent(raw: unknown): Promise<{ ok: boolean }> 
     })
   }
   try {
-    await db.insert(consents).values(
-      (['analytics', 'marketing'] as const).map((type) => ({
-        anonId,
-        type,
-        granted: input.data[type],
-        version: CONSENT_VERSION,
-        source: 'cookie_banner',
-      })),
-    )
+    const user = await getSessionUser()
+    await recordCookieConsent({ anonId, userId: user?.id ?? null, ...input.data, version: CONSENT_VERSION })
   } catch (e) {
     // a süti akkor is érvényes, ha a napló átmenetileg nem írható; a hibát jelezzük
     console.error('consents napló sikertelen', (e as Error).message)

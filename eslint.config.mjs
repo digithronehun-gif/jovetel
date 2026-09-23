@@ -4,6 +4,11 @@ import nextTs from 'eslint-config-next/typescript'
 
 const HEX = '/#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\\b/'
 
+const LIB_NO_UI = {
+  group: ['@/components/*', '@/app/*', 'react-dom', 'next/image', 'next/link'],
+  message: 'A src/lib modul nem importálhat UI-t.',
+}
+
 export default defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -46,14 +51,21 @@ export default defineConfig([
     // src/lib modulok nem importálnak UI-t (CLAUDE.md 5. pont, modulhatár-szabály)
     files: ['src/lib/**/*.{ts,tsx}'],
     rules: {
+      'no-restricted-imports': ['error', { patterns: [LIB_NO_UI] }],
+    },
+  },
+  {
+    // 4. vasszabály: a felhasználókon átívelő dbAdmin a src/lib-ben is csak az import, az értesítések és az admin
+    // lekérdezések modulja alól érhető el (a többi modul userId-s lekérdezést használ)
+    files: ['src/lib/**/*.{ts,tsx}'],
+    ignores: ['src/lib/db/**', 'src/lib/ingestion/**', 'src/lib/notifications/**'],
+    rules: {
       'no-restricted-imports': [
         'error',
         {
           patterns: [
-            {
-              group: ['@/components/*', '@/app/*', 'react-dom', 'next/image', 'next/link'],
-              message: 'A src/lib modul nem importálhat UI-t.',
-            },
+            LIB_NO_UI,
+            { group: ['@/lib/db/admin', '**/db/admin'], message: 'A dbAdmin csak az ingestion, a notifications és a db/queries/admin modulból.' },
           ],
         },
       ],
@@ -67,7 +79,12 @@ export default defineConfig([
       'no-restricted-imports': [
         'error',
         {
-          paths: [{ name: '@/lib/db/admin', message: 'A dbAdmin csak scripts/, app/api/cron/ és app/(admin)/ alól használható.' }],
+          paths: [
+            { name: '@/lib/db/admin', message: 'A dbAdmin csak scripts/, app/api/cron/ és app/(admin)/ alól használható.' },
+            { name: '@/lib/db/client', message: 'A felület csak a src/lib/db/queries/* függvényeit hívja (userId-val).' },
+            { name: '@/lib/db/schema', message: 'A felület csak a src/lib/db/queries/* függvényeit hívja (userId-val).' },
+            { name: '@/lib/db', message: 'A felület csak a src/lib/db/queries/* függvényeit hívja (userId-val).' },
+          ],
           patterns: [{ group: ['@/lib/db/seed/*'], message: 'A seed csak scriptből futhat.' }],
         },
       ],
