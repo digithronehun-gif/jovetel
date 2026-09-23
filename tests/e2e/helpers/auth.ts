@@ -85,8 +85,29 @@ export async function createTestUser(opts: { admin?: boolean; mfa?: boolean } = 
   return { id: user.id, email, session }
 }
 
-/** A session sütijeinek beállítása a böngésző-kontextusban (a @supabase/ssr formátumában). */
-export async function signIn(context: BrowserContext, baseURL: string, session: Session) {
+const CHUNK = 3180
+
+/** A session-süti(k) tartalmának módosítása (a @supabase/ssr `base64-` formátuma, darabolva is). */
+function editSessionCookies(jar: { name: string; value: string }[], edit: (s: Record<string, unknown>) => void) {
+  const auth = jar.filter((c) => c.name.includes('-auth-token')).sort((a, b) => a.name.localeCompare(b.name, 'en', { numeric: true }))
+  if (!auth.length) return jar
+  const base = auth[0]!.name.replace(/\.\d+$/, '')
+  const raw = auth.map((c) => c.value).join('')
+  const json = JSON.parse(Buffer.from(raw.replace(/^base64-/, ''), 'base64url').toString('utf8')) as Record<string, unknown>
+  edit(json)
+  const value = `base64-${Buffer.from(JSON.stringify(json)).toString('base64url')}`
+  const rest = jar.filter((c) => !c.name.includes('-auth-token'))
+  if (value.length <= CHUNK) return [...rest, { name: base, value }]
+  const chunks = []
+  for (let i = 0; i * CHUNK < value.length; i++) chunks.push({ name: `${base}.${i}`, value: value.slice(i * CHUNK, (i + 1) * CHUNK) })
+  return [...rest, ...chunks]
+}
+
+/**
+ * A session sütijeinek beállítása a böngésző-kontextusban (a @supabase/ssr formátumában).
+ * `expired`: a sütiben a session lejártnak látszik (a proxy-nak frissítenie kell).
+ */
+export async function signIn(context: BrowserContext, baseURL: string, session: Session, opts: { expired?: boolean } = {}) {
   const jar: { name: string; value: string }[] = []
   const client = createServerClient(env('NEXT_PUBLIC_SUPABASE_URL'), env('NEXT_PUBLIC_SUPABASE_ANON_KEY'), {
     cookies: {
@@ -102,6 +123,7 @@ export async function signIn(context: BrowserContext, baseURL: string, session: 
   })
   const { error } = await client.auth.setSession(session)
   if (error) throw error
+  const cookies = opts.expired ? editSessionCookies(jar, (s) => (s.expires_at = Math.floor(Date.now() / 1000) - 60)) : jar
   const url = new URL(baseURL)
-  await context.addCookies(jar.map((c) => ({ name: c.name, value: c.value, domain: url.hostname, path: '/', httpOnly: false, sameSite: 'Lax' as const })))
+  await context.addCookies(cookies.map((c) => ({ name: c.name, value: c.value, domain: url.hostname, path: '/', httpOnly: false, sameSite: 'Lax' as const })))
 }

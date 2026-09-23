@@ -25,6 +25,16 @@ test.describe('admin: /admin/feedek (requireAdmin: szerepkör + MFA)', () => {
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Kétlépcsős azonosítás')
   })
 
+  test('lejárt access token: a proxy frissíti a sessiont, és új sütit ad', async ({ page, context, baseURL }) => {
+    const u = await createTestUser({ admin: true, mfa: true })
+    await signIn(context, baseURL!, u.session, { expired: true })
+    const res = await page.goto('/admin/feedek')
+    expect(res?.status()).toBe(200)
+    const setCookie = (await res!.allHeaders())['set-cookie'] ?? ''
+    expect(setCookie).toMatch(/sb-[\w-]+-auth-token/)
+    await expect(page.locator('[data-admin-feeds]')).toBeVisible()
+  })
+
   test('admin aal2-vel: feedlista, részletek hibamintával, [Futtatás most] naplózva', async ({ page, context, baseURL }) => {
     const u = await createTestUser({ admin: true, mfa: true })
     await signIn(context, baseURL!, u.session)
