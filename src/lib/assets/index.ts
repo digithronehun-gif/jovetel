@@ -158,3 +158,30 @@ export function assertLicensedForProduction(
 }
 
 export const ALL_SLOTS: readonly SlotId[] = SLOT_IDS
+
+/**
+ * A képek kiszolgálásának szabályai a buildhez (next.config): ha a fejlesztési képek nem engedélyezettek, a
+ * `moodboard-dev-only` fájlok közvetlen URL-en sem érhetők el (404), és a képoptimalizáló is csak a licencelt
+ * képeket szolgálja ki. Így a 7. vasszabály nem csak a képhelyek feloldására, hanem a nyilvános fájlokra is áll.
+ */
+export function imageServingRules(allowDevImages: boolean): {
+  blockedPrefixes: string[]
+  localPatterns: { pathname: string; search?: string }[] | undefined
+} {
+  if (allowDevImages) return { blockedPrefixes: [], localPatterns: undefined }
+  const ctx: LicenseContext = { allowDevImages: false, now: new Date() }
+  const devDirs = new Set(
+    manifest.assets
+      .filter((a) => !isLicenseAllowed(a, ctx))
+      .map((a) => a.src.split('/').slice(0, 3).join('/')),
+  )
+  return {
+    blockedPrefixes: [...devDirs].sort(),
+    localPatterns: [
+      ...manifest.assets
+        .filter((a) => isLicenseAllowed(a, ctx))
+        .map((a) => ({ pathname: a.src, search: '' })),
+      { pathname: '/icons/**' },
+    ],
+  }
+}

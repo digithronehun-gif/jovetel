@@ -210,6 +210,9 @@ assertLicensedForProduction(): void // build közben fut
   és `ALLOW_DEV_IMAGES=true` mellett a `moodboard-dev-only` is).
 - Megjelenítés mindig `next/image`-dzsel: `placeholder="blur"` a manifest `blurDataURL`-jével, a
   konténer háttere a `dominantColor`, `sizes` pontosan megadva, `alt` a manifestből.
+- **Nyilvános fájlok:** ha a production build nem engedi a fejlesztési képeket, a `moodboard-dev-only` képek
+  könyvtára közvetlen URL-en is 404, és a képoptimalizáló (`images.localPatterns`) csak a licencelt képeket és az
+  ikonokat szolgálja ki (`imageServingRules`, next.config).
 - **Méretkorlát:** a jelenlegi képek 736 px szélesek, ezért legfeljebb ~560 CSS px szélesen
   jelenjenek meg (retina kijelzőn is éles). Nagyobb helyre csak új, nagyobb felbontású kép kerülhet.
 

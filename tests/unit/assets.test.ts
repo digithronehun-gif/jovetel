@@ -117,3 +117,17 @@ describe('assertLicensedForProduction (7. vasszabály)', () => {
     expect(devImagesAllowed({ NODE_ENV: 'production', ALLOW_DEV_IMAGES: 'true' })).toBe(true)
   })
 })
+
+describe('imageServingRules (7. vasszabály a nyilvános fájlokra)', () => {
+  it('fejlesztési képek engedélyezve: nincs tiltás, nincs szűkítés', async () => {
+    const { imageServingRules } = await import('@/lib/assets')
+    expect(imageServingRules(true)).toEqual({ blockedPrefixes: [], localPatterns: undefined })
+  })
+  it('nem engedélyezve: a moodboard könyvtár tiltott, az optimalizáló csak a licencelt képeket és az ikonokat kapja', async () => {
+    const { imageServingRules } = await import('@/lib/assets')
+    const r = imageServingRules(false)
+    expect(r.blockedPrefixes).toContain('/brand/moodboard')
+    expect(r.localPatterns?.some((p) => p.pathname.startsWith('/brand/moodboard'))).toBe(false)
+    expect(r.localPatterns).toContainEqual({ pathname: '/icons/**' })
+  })
+})
