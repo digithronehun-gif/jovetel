@@ -86,6 +86,7 @@ export default defineConfig([
     'coverage/**',
     'playwright-report/**',
     'test-results/**',
+    'tests/.artifacts/**',
     'src/components/brand/glyphs.generated.ts',
   ]),
 ])
