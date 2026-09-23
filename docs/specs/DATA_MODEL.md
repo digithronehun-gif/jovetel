@@ -198,7 +198,15 @@ futtató: `pnpm db:migrate` / `pnpm db:rollback`); a Drizzle séma (`src/lib/db/
 
 ## 8. Megvalósítás (F3, feed-import) — pontosítások
 
-Séma-változás nem kellett; a meglévő oszlopok jelentése pontosodott:
+Új migráció: **0008 `postgrest_readonly`** (a független F3-átnézés nyomán):
+- az `anon` és `authenticated` szerepkör a `public` sémában csak olvashat (`insert/update/delete/truncate` visszavonva,
+  az alapértelmezett jogosultságokból is): minden írás szerveroldali kódon át megy (4. vasszabály), így a PostgREST-en
+  át nem kerülhető meg a Turnstile, a rate limit és a Zod-validáció (pl. foglalás). Az RLS biztonsági hálóként marad;
+- `profiles_protect_role` trigger: böngészős szerepkör a `profiles.role` mezőt nem állíthatja (ha egy későbbi migráció
+  vissza is adná az írásjogot);
+- `feed_runs_one_running_idx`: részleges egyedi index `(feed_id) where status = 'running'` — egy feedre egyszerre egy futás.
+
+A meglévő oszlopok jelentése pontosodott:
 
 | Hol | Jelentés | Miért |
 |---|---|---|

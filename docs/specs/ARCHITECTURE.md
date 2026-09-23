@@ -86,13 +86,19 @@ Adapterek V1-ben: `generic-csv`, `generic-xml` (Google Merchant-szerű), `awin`,
   létrehozó kereskedő („tulajdonos”) írja; a többi csak az üres mezőket tölti (DATA_MODEL 8. pont).
 - Letöltés: csak `https`, host-engedélylista (kereskedő domainjei + a hálózat feed-hosztjai + `feeds.config.extraFeedHosts`),
   a DNS-feloldott cím ellenőrzése a kapcsolódáskor (egyedi `lookup`, DNS-rebinding ellen), átirányításonként újraellenőrzés,
-  512 MB tömörített / 4 GB kicsomagolt / 20 perc korlát. A titok a feed-URL-ben helyőrző (`{AWIN_API_TOKEN}`), csak
-  `AWIN_|CJ_|DOGNET_|ADMITAD_|TRADETRACKER_` kezdetű változóból.
+  512 MB tömörített / 4 GB kicsomagolt / 20 perc korlát. A titok a feed-URL-ben helyőrző (`{AWIN_API_TOKEN}`), és csak a
+  feed **saját hálózatának** előtagjával (awin → `AWIN_*`) oldódik fel, akkor is csak, ha a URL hosztja a hálózat saját
+  feed-hosztja (kereskedői domainre vagy `extraFeedHosts`-ra titok nem mehet ki). Privát IPv6: a `fc00::/7`, `fe80::/10`,
+  `fec0::/10`, `::ffff:0:0/96` mellett a `2002::/16` (6to4), `2001::/32` (Teredo) és `100::/64` is tiltott.
 - Kódolás: UTF-8 / Windows-1250 / ISO-8859-2 (felismerés az első 64 KB-ból; egy hibás sor nem fordítja át a fájlt).
   A hibás bájtú sor `encoding` okkal elutasítva.
 - Párhuzamos futás ellen: élesben minden futás a GitHub Actions `ingest` workflow-ban megy (`concurrency: ingest`, az admin
-  [Futtatás most] is `workflow_dispatch`); a DB-ben a 2 óránál frissebb `running` futás is kizár. Munkamenet-szintű advisory
-  lock szándékosan nincs (a Supabase tranzakciós poolerén beragadhat). Az ingest a pooler **session módját** használja
+  [Futtatás most] is `workflow_dispatch`); a DB-ben a `feed_runs_one_running_idx` részleges egyedi index zárja ki a második
+  `running` futást (`insert … on conflict do nothing`, versenyhelyzet nélkül; a 2 óránál régebbi `running` futást előbb
+  lezárjuk). Munkamenet-szintű advisory lock szándékosan nincs (a Supabase tranzakciós poolerén beragadhat). A „sikeres”
+  jelölés (`last_success_at`, `feed_runs.status`) a publikálás tranzakciójában íródik. Egy feed váratlan hibája a
+  `--all` futásban nem állítja le a többi feedet. Webes függvényben (preview, production) import nem fut: a
+  [Futtatás most] ott csak `workflow_dispatch`; folyamaton belüli futás csak `development` környezetben, fixture-ökkel. Az ingest a pooler **session módját** használja
   (`INGEST_DATABASE_URL`, 5432-es port a pooler hoston: IPv4, ideiglenes tábla és hosszú tranzakció is működik).
 - Nyers pillanatkép: `FEED_RAW_STORE=supabase` (privát `feeds` bucket; a bucketet az első futás létrehozza) vagy `local`
   (`.local/raw-feeds/`). A pillanatkép mentésének hibája nem állítja meg az árgyűjtést (a statisztikában látszik).
@@ -173,7 +179,14 @@ Fejlécek: CSP nonce-szal, `frame-ancestors 'none'`, HSTS, `X-Content-Type-Optio
 60/perc IP · foglalás 10/óra · várólista 5/óra IP · belépési link 5/óra e-mail. Turnstile: várólista,
 AI (3. vendégkérés után), foglalás. Feed-letöltés: csak `https`, host-engedélylista, privát
 IP-tartományok (RFC 1918, loopback, link-local) tiltva DNS-feloldás után is, max. méret és időkorlát.
-Függőségek: Dependabot, `pnpm audit` a CI-ban.
+Függőségek: Dependabot, `pnpm audit` a CI-ban; a GitHub Actions lépések commit-SHA-ra pinelve.
+
+**Megvalósítás (F3 átnézés után):** a böngészőnek kiadott Supabase-kulcs (anon / authenticated) a PostgREST-en át
+**csak olvashat** (a 0008 migráció visszavonja az írásjogot; minden írás a szerveren, Zod-validált server actionön vagy
+route handleren át megy, rate limittel és Turnstile-lal ahol kell), a `profiles.role` triggerrel is védett. A lejárt
+Supabase-sessiont a `proxy.ts` frissíti (csak ha van `sb-*-auth-token` süti; jogosultsági döntést a proxy nem hoz).
+A `moodboard-dev-only` képek fájljai `ALLOW_DEV_IMAGES` nélküli production buildben közvetlen URL-en és a
+képoptimalizálón át sem érhetők el (DESIGN_SYSTEM 8. pont).
 
 ---
 

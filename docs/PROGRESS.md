@@ -136,7 +136,7 @@ Tailwind 4.3.3 · Playwright 1.56.1 (a gépen lévő Chromium-buildhez illeszked
 | F0 | Projekt-alap és design rendszer | ✅ | `fazis-00` (c34eb0b) | 61 unit teszt · build zöld · ő/ű: 1 font/mondat |
 | F1 | Adatbázis, seed, névnaptár | ✅ | `fazis-01` (0583ac7) | 41 DB-teszt · névkeresés p95 20,7 ms / 50 000 termék |
 | F2 | Landing, várólista, jogi oldalak, hozzájárulás | ✅ | `fazis-02` (9c69ba8) | Lighthouse mobil 96/100/100/100 (h2) · 90/100/100/100 (h1) · 21 e2e |
-| F3 | Feed-import és napi árgyűjtő | ✅ | `fazis-03` (HASH_F3) | 50 000 sor 17,7 s · újrafuttatás 0 írás · 7 adapter · 25 e2e |
+| F3 | Feed-import és napi árgyűjtő | ✅ | `fazis-03` (HASH_F3) | 50 000 sor 17,7 s · újrafuttatás 0 írás · 7 adapter · átnézés: 2 BLOCKER + 7 SHOULD-FIX javítva · 26 e2e |
 | F4 | Keresés, kategóriák, útmutatók | ⏳ | | |
 | F5 | Termékoldal, teljes költség, ártörténet, „Valódi akció?” | ⏳ | | |
 | F6 | Követett kattintás, jelölés, konverziók | ⏳ | | |
@@ -391,15 +391,41 @@ az F7 belépés is erre épül).
 - **`price_daily` két eltérő árú futás után helyes:** 10 000 → 9 000 → 9 500 Ft ugyanazon a napon: min 9 000,
   last 9 500; másnap új sor 9 500/9 500; `last_price_change_at` a tényleges árváltozás ideje.
 - 2 kihagyott futás után inaktív, utána 0 írás, visszatéréskor újra aktív; ismétlődő SKU elutasítva.
-- Tesztek: unit 223 (+123 az F3-ban), DB 8 fájl / 52 (+11) + 1 teljesítményteszt (`PERF=1`), e2e 25 (+4 admin,
-  valódi GoTrue-sessionnel és TOTP-MFA-val). `pnpm verify` zöld.
+- Tesztek (az átnézési javítások után): unit 232 (+132 az F3-ban), DB 8 fájl / 55 (+14) + 1 teljesítményteszt
+  (`PERF=1`), e2e 26 (+5 admin, valódi GoTrue-sessionnel és TOTP-MFA-val, lejárt token frissítésével). `pnpm verify` zöld.
 - Képernyőképek: `/admin/feedek`, `/admin/feedek/[id]` × 390/1440 × világos/sötét (`tests/.artifacts/screens/f3/`),
   átnézve; javítva: 390 px-en a táblázat `sr-only` eleme kitolta az oldalt (pozicionált keret, e2e őrzi).
 
 **Eltérés a spectől és miért:** DATA_MODEL 8. pont és ARCHITECTURE 3. pont „Megvalósítás (F3)” — röviden:
 az „ár ellenőrizve” a feed `last_success_at`-jéből jön (0 írás az újrafuttatáskor); a közös GTIN-ű termék szövegét a
-létrehozó kereskedő írja; advisory lock helyett GitHub concurrency + `running` futás-sor; az ingest a pooler session
-módját használja (`INGEST_DATABASE_URL`). A címkeszótár a profil szótára (`SKIN_CONCERNS`, `AVOID_INGREDIENTS`).
+létrehozó kereskedő írja; advisory lock helyett GitHub concurrency + részleges egyedi index a `running` futásra; az
+ingest a pooler session módját használja (`INGEST_DATABASE_URL`). A PostgREST csak olvas (0008 migráció, lent). A címkeszótár a profil szótára (`SKIN_CONCERNS`, `AVOID_INGREDIENTS`).
 Az admin MFA-regisztrációs felülete a belépéssel együtt készül (F7); addig `/admin/mfa` tájékoztat.
+
+**Független vasszabály-átnézés (alügynök, 2026-09-23):** 2 BLOCKER, 7 SHOULD-FIX, 8 NIT — mind javítva, teszttel ahol
+logika változott. Ellenőrizve és rendben: árak csak `formatHuf`-on át és „Példa” keretben, nincs webshop-link jelölés
+nélkül, a rangsor nem nézi a jutalékot, minden `queries/user/*` függvény `userId`-vel szűr, admin kétrétegű, képek csak
+képhelyről, nincs literál hex, feedszöveg tisztítva és csak szövegként, nincs URL-paraméteres átirányítás, a régi ár nem
+számít az ítéletbe, a letöltés SSRF-védett, titok nem kerül naplóba, PostHog csak hozzájárulás után.
+
+| # | Súly | Megállapítás | Javítás |
+|---|---|---|---|
+| 1 | BLOCKER | bármely belépett felhasználó adminná tehette magát (`profiles.role` PATCH a PostgREST-en) | 0008: a böngészős szerepkörök csak olvashatnak + szerepkör-védő trigger; DB-teszt |
+| 2 | BLOCKER | letöltés közben megszakadó CSV-feed az egész ingest folyamatot leállította | `pipeline()` + `destroy`; a hiba előbb reprodukálva (>64 KB után elakadt), unit teszt |
+| 3 | SHOULD | a foglalást a PostgREST-en át Turnstile és rate limit nélkül is be lehetett szúrni | 0008 (írásjog visszavonva); DB-teszt |
+| 4 | SHOULD | preview-n a [Futtatás most] webes függvényben futtatta volna az importot | csak `development`-ben fut folyamaton belül, egyébként `workflow_dispatch` |
+| 5 | SHOULD | „egy feedre egy futás” ellenőrzés versenyhelyzettel | `feed_runs_one_running_idx` + `on conflict do nothing`; DB-teszt |
+| 6 | SHOULD | titok-helyőrző bármely hálózat változójával, bármely engedélyezett hosztra | csak a saját hálózat előtagja, csak a hálózat feed-hosztjára; unit teszt |
+| 7 | SHOULD | a moodboard-képek közvetlen URL-en élesben is elérhetők | build-idejű átírás + `images.localPatterns`; unit teszt, DESIGN_SYSTEM 8 |
+| 8 | SHOULD | a Supabase-session nem frissült (Server Component nem ír sütit) | frissítés a `proxy.ts`-ben; e2e lejárt tokennel |
+| 9 | SHOULD | egy feed hibája leállította a `--all` futást; a sikeres jelölés a tranzakción kívül | feedenkénti `try/catch`; jelölés a publikálás tranzakciójában |
+| 10 | NIT | a nyers mentés hibája kezeletlen elutasítás lehetett | korai `.catch`, a forrás hibája mindkét ágat lezárja |
+| 11 | NIT | „5 000 Ft alatt” és a grafikon tengelye nem `formatHuf`-fal | `formatHuf` / `formatHufAxis` a `lib/pricing`-ben; unit teszt |
+| 12 | NIT | a süti-hozzájárulás írása az app rétegben, `userId` nélkül | `queries/anon/cookieConsents.ts`, session esetén `userId`-vel |
+| 13 | NIT | a `dbAdmin` határ csak névkonvenció | ESLint: a felület nem importálhat DB-klienst/sémát; `src/lib`-ben a `dbAdmin` csak az ingest, értesítés, db modulból |
+| 14 | NIT | hiányzó privát IPv6-tartományok | `fec0::/10`, `2002::/16`, Teredo, `100::/64`; unit teszt |
+| 15 | NIT | a proxy matcher előtagjai perjel nélkül | `api/`, `go/`, `icons/`, `brand/` |
+| 16 | NIT | a workflow lépései tagre pinelve, 45 perces időkorlát | commit-SHA pinelés (ingest + CI), 120 perc |
+| 17 | NIT | a fixture-őr csak a DB-jelölőt nézte; felülírta a hálózat `tracking_domains`-át | `APP_ENV` is; unió |
 
 **Nyitott kérdések:** #3, #4, #14 (feedek és oszlopnevek), #15 (Dognet), #16 (Storage-korlát), #17 (dispatch token).
