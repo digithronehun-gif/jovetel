@@ -3,6 +3,7 @@
  * Idempotens (a feedet a `config.fixture` jelölő azonosítja). Production adatbázison nem fut.
  */
 import type { Sql } from 'postgres'
+import { deploymentEnv } from '../../env'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
@@ -49,6 +50,7 @@ export const FIXTURE_FEEDS: FixtureFeedDef[] = [
 ]
 
 export async function assertNotProduction(sql: Sql): Promise<void> {
+  if (deploymentEnv() === 'production') throw new Error('Production környezetben a fixture-feedek nem futnak.')
   const [row] = await sql<{ v: string | null }[]>`select current_setting('app.environment', true) as v`
   if (row?.v === 'production') {
     throw new Error('Ez az adatbázis production-nek van jelölve: a fixture-feedek nem kerülnek bele.')
@@ -63,7 +65,8 @@ export async function ensureFixtureFeeds(sql: Sql, fixturesDir: string): Promise
     const [row] = await sql<{ id: string }[]>`
       insert into public.networks (code, name, subid_param, subid_max_len, tracking_domains)
       values (${n.code}, ${n.name}, ${n.subidParam}, ${n.subidMaxLen}, ${sql.array([...n.trackingDomains])})
-      on conflict (code) do update set tracking_domains = excluded.tracking_domains
+      on conflict (code) do update set tracking_domains =
+        array(select distinct unnest(public.networks.tracking_domains || excluded.tracking_domains))
       returning id`
     networkIds.set(n.code, row!.id)
   }

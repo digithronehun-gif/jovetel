@@ -137,7 +137,6 @@ function byteCounter(onBytes: (n: number) => void): Transform {
 
 export async function runFeed(feedId: string, deps: RunDeps): Promise<RunSummary> {
   const { sql } = deps
-  const log = deps.log ?? (() => {})
   const t0 = Date.now()
   const { feed, merchant } = await load(sql, feedId)
   const base: RunSummary = {
@@ -155,20 +154,14 @@ export async function runFeed(feedId: string, deps: RunDeps): Promise<RunSummary
   }
   if (!feed.isActive) return { ...base, durationMs: Date.now() - t0 }
 
-  // Egy feedre egyszerre csak egy futás. Élesben minden futás a GitHub Actions `ingest` workflow-ban megy
-  // (concurrency-csoporttal, az admin „Futtatás most” is ezt indítja); itt a 2 óránál frissebb `running` futás
-  // is kizár. A megszakadt (2 óránál régebbi) futásokat lezárjuk. Advisory lockot szándékosan nem használunk:
-  // a Supabase tranzakciós poolerén a munkamenet-szintű zár beragadhat.
+  // Egy feedre egyszerre csak egy futás: élesben minden futás a GitHub Actions `ingest` workflow-ban megy
+  // (concurrency-csoporttal, az admin „Futtatás most” is ezt indítja), a DB-ben pedig részleges egyedi index
+  // (`feed_runs_one_running_idx`) zárja ki a második `running` futást. A megszakadt (2 óránál régebbi) futást
+  // előbb lezárjuk. Advisory lockot szándékosan nem használunk: a Supabase tranzakciós poolerén beragadhat.
   await sql`
     update public.feed_runs set status = 'failed', finished_at = now(),
       stats = stats || ${JSON.stringify({ error: 'A futás megszakadt (2 óránál régebben indult, nem fejeződött be).' })}::text::jsonb
     where feed_id = ${feedId} and status = 'running' and started_at < now() - interval '2 hours'`
-  const [busy] = await sql`
-    select 1 from public.feed_runs where feed_id = ${feedId} and status = 'running' and started_at >= now() - interval '2 hours' limit 1`
-  if (busy) {
-    log(`${merchant.slug}: már fut egy import erre a feedre, kihagyva`)
-    return { ...base, error: 'Már fut egy import erre a feedre.', durationMs: Date.now() - t0 }
-  }
   return runLocked(feed, merchant, base, deps, t0)
 }
 
@@ -179,8 +172,14 @@ async function runLocked(feed: Loaded['feed'], merchant: MerchantRow, base: RunS
   const log = deps.log ?? (() => {})
   const startedAt = now()
   const [run] = await sql<{ id: string }[]>`
-    insert into public.feed_runs (feed_id, started_at, status) values (${feedId}, ${startedAt.toISOString()}::timestamptz, 'running') returning id`
-  const runId = run!.id
+    insert into public.feed_runs (feed_id, started_at, status) values (${feedId}, ${startedAt.toISOString()}::timestamptz, 'running')
+    on conflict (feed_id) where status = 'running' do nothing
+    returning id`
+  if (!run) {
+    log(`${merchant.slug}: már fut egy import erre a feedre, kihagyva`)
+    return { ...base, error: 'Már fut egy import erre a feedre.', durationMs: Date.now() - t0 }
+  }
+  const runId = run.id
   const work = await mkdtemp(join(tmpdir(), 'jovetel-ingest-'))
   const summary: RunSummary = { ...base, runId, status: 'failed' }
   const sample: Rejection[] = []
@@ -210,9 +209,14 @@ async function runLocked(feed: Loaded['feed'], merchant: MerchantRow, base: RunS
     const counter = byteCounter((n) => (rawBytes += n))
     source.stream.pipe(toParse)
     source.stream.pipe(counter)
-    source.stream.on('error', (e) => toParse.destroy(e))
+    source.stream.on('error', (e) => {
+      toParse.destroy(e)
+      counter.destroy(e)
+    })
     cleanup = () => source.stream.destroy()
     const rawDone = pipeline(counter, createGzip(), createWriteStream(rawFile))
+    // a hibát a feldolgozás után kezeljük; addig se legyen kezeletlen elutasítás (pl. megtelt lemez)
+    rawDone.catch(() => {})
 
     // 2–4. feldolgozás a lemezre írt átmeneti fájlba
     const staging = new StagingWriter(join(work, 'items.ndjson'))
@@ -282,29 +286,34 @@ async function runLocked(feed: Loaded['feed'], merchant: MerchantRow, base: RunS
       return summary
     }
 
-    // 5–7. publikálás
-    const pub = await publish(sql, {
-      feedId,
-      merchantId: merchant.id,
-      stagingPath: staging.path,
-      seenAt: startedAt,
-      day: budapestDayKey(startedAt),
-      seenSkus,
-      categoryText,
-    })
+    // 5–7. publikálás; 9. a „sikeres” jelölés ugyanabban a tranzakcióban (a last_success_at a letöltés ideje =
+    //    az ár ellenőrzésének ideje minden látott ajánlatra)
+    const pub = await publish(
+      sql,
+      {
+        feedId,
+        merchantId: merchant.id,
+        stagingPath: staging.path,
+        seenAt: startedAt,
+        day: budapestDayKey(startedAt),
+        seenSkus,
+        categoryText,
+      },
+      async (tx, p) => {
+        const durationMs = Date.now() - t0
+        await tx`update public.feeds set last_success_at = ${startedAt.toISOString()}::timestamptz, last_item_count = ${summary.valid} where id = ${feedId}`
+        await tx`
+          update public.feed_runs set status = 'success', finished_at = ${now().toISOString()}::timestamptz, items_seen = ${summary.seen},
+            items_valid = ${summary.valid}, items_rejected = ${summary.rejected}, items_changed = ${p.changed},
+            error_sample = ${JSON.stringify(sample)}::text::jsonb, raw_object_path = ${rawPath},
+            stats = ${JSON.stringify({ ...stats, publish: p, durationMs })}::text::jsonb
+          where id = ${runId}`
+      },
+    )
     summary.publish = pub
     summary.changed = pub.changed
     summary.status = 'success'
     summary.durationMs = Date.now() - t0
-
-    // 9. statisztika; a last_success_at a letöltés ideje = az ár ellenőrzésének ideje
-    await sql`update public.feeds set last_success_at = ${startedAt.toISOString()}::timestamptz, last_item_count = ${summary.valid} where id = ${feedId}`
-    await sql`
-      update public.feed_runs set status = 'success', finished_at = ${now().toISOString()}::timestamptz, items_seen = ${summary.seen},
-        items_valid = ${summary.valid}, items_rejected = ${summary.rejected}, items_changed = ${pub.changed},
-        error_sample = ${JSON.stringify(sample)}::text::jsonb, raw_object_path = ${rawPath},
-        stats = ${JSON.stringify({ ...stats, publish: pub, durationMs: summary.durationMs })}::text::jsonb
-      where id = ${runId}`
     log(`${merchant.slug}: kész — ${summary.valid} érvényes, ${summary.rejected} elutasítva, ${pub.changed} változott`)
     return summary
   } catch (e) {

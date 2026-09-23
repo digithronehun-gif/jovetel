@@ -224,7 +224,14 @@ async function publishBatch(tx: Tx, input: PublishInput, batch: NormalizedItem[]
   }
 }
 
-export async function publish(sql: Sql, input: PublishInput): Promise<PublishStats> {
+/**
+ * @param finalize a publikálással EGY tranzakcióban fut (a feed „sikeres” jelölése): vagy minden bekerül, vagy semmi.
+ */
+export async function publish(
+  sql: Sql,
+  input: PublishInput,
+  finalize?: (tx: Tx, stats: PublishStats) => Promise<void>,
+): Promise<PublishStats> {
   const stats: PublishStats = { changed: 0, newProducts: 0, newOffers: 0, reactivated: 0, missed: 0, deactivated: 0, priceDailyWritten: 0 }
   await sql.begin(async (tx) => {
     const t = tx as unknown as Tx
@@ -271,6 +278,7 @@ export async function publish(sql: Sql, input: PublishInput): Promise<PublishSta
          or price_daily.price_last_huf <> excluded.price_last_huf
          or (not price_daily.in_stock_any and excluded.in_stock_any)`
     stats.priceDailyWritten = pd.count
+    if (finalize) await finalize(t, stats)
   })
   return stats
 }

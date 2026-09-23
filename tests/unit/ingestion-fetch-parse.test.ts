@@ -20,6 +20,7 @@ describe('SSRF: privát címek', () => {
     '127.0.0.1', '10.1.2.3', '172.16.0.1', '172.31.255.255', '192.168.1.1', '169.254.169.254', '100.64.0.1',
     '0.0.0.0', '224.0.0.1', '255.255.255.255', '198.18.0.1', '::1', '::', 'fe80::1', 'fc00::1', 'fd12:3456::1',
     '::ffff:127.0.0.1', '::ffff:10.0.0.1', '64:ff9b::a00:1', 'ff02::1', '2001:db8::1', 'nem-ip',
+    'fec0::1', '2002:c0a8:0101::1', '2001:0:4136:e378::1', '100::1',
   ])('%s tiltott', (ip) => {
     expect(isPrivateAddress(ip)).toBe(true)
   })
@@ -54,12 +55,19 @@ describe('SSRF: URL és host', () => {
       expect((e as FeedUrlError).code).toBe(code)
     }
   })
-  it('helyőrző csak engedélyezett nevű változóból, URL-kódolva', () => {
-    expect(resolvePlaceholders('https://productdata.awin.com/apikey/{AWIN_API_TOKEN}/x', { AWIN_API_TOKEN: 'a/b' })).toBe(
+  it('helyőrző csak a hálózat saját változójából, a hálózat saját feed-hosztjára, URL-kódolva', () => {
+    const awin = { prefix: 'AWIN', hosts: ['productdata.awin.com'] }
+    expect(resolvePlaceholders('https://productdata.awin.com/apikey/{AWIN_API_TOKEN}/x', { AWIN_API_TOKEN: 'a/b' }, awin)).toBe(
       'https://productdata.awin.com/apikey/a%2Fb/x',
     )
-    expect(() => resolvePlaceholders('https://x.example/{DATABASE_URL}', { DATABASE_URL: 'titok' })).toThrow(FeedUrlError)
-    expect(() => resolvePlaceholders('https://x.example/{AWIN_API_TOKEN}', {})).toThrow(/Hiányzó/)
+    // más hálózat titka nem kérhető
+    expect(() => resolvePlaceholders('https://productdata.awin.com/{ADMITAD_CLIENT_SECRET}', { ADMITAD_CLIENT_SECRET: 's' }, awin)).toThrow(/Nem engedélyezett/)
+    // a kereskedő (vagy admin által felvett) hosztjára titok nem mehet
+    expect(() => resolvePlaceholders('https://bolt.example/feed?k={AWIN_API_TOKEN}', { AWIN_API_TOKEN: 's' }, awin)).toThrow(/saját feed-hosztjára/)
+    // általános adapter: helyőrző egyáltalán nem használható
+    expect(() => resolvePlaceholders('https://bolt.example/{AWIN_API_TOKEN}', { AWIN_API_TOKEN: 's' })).toThrow(/nem használhat/)
+    expect(() => resolvePlaceholders('https://productdata.awin.com/{AWIN_API_TOKEN}', {}, awin)).toThrow(/Hiányzó/)
+    expect(resolvePlaceholders('https://bolt.example/feed.csv')).toBe('https://bolt.example/feed.csv')
   })
   it('a DNS-feloldás a kapcsolódáskor is tilt (localhost → 127.0.0.1)', async () => {
     const err = await new Promise<Error | null>((res) => safeLookup('localhost', {}, (e) => res(e)))
@@ -138,5 +146,35 @@ describe('XML', () => {
     const rows = await collect(parseXml(Readable.from([Buffer.from(bomb)]), { itemTags: ['item'] }))
     const item = rows.find((r) => !isParseFailure(r)) as Record<string, string> | undefined
     expect(item?.t ?? '').not.toContain('aaaaaaaaaa')
+  })
+})
+
+describe('hibakezelés letöltés közben', () => {
+  const brokenSource = (after: number) => {
+    let sent = 0
+    return new Readable({
+      read() {
+        if (sent >= after) {
+          this.destroy(new Error('A kapcsolat megszakadt.'))
+          return
+        }
+        sent++
+        // ~100 bájtos sorok: a hiba a 64 KB-os kódolás-minta UTÁN jön (ez a veszélyes eset)
+        this.push(Buffer.from(sent === 1 ? 'id,name,price\n' : `${sent},"Termék ${sent} ${'x'.repeat(80)}",1990\n`))
+      },
+    })
+  }
+  it('CSV: a forrás hibája kivételként jön ki a parserből (nem száll el a folyamat)', async () => {
+    await expect(collect(parseCsv(brokenSource(2000)))).rejects.toThrow(/megszakadt/)
+  })
+  it('XML: ugyanígy', async () => {
+    let sent = 0
+    const src = new Readable({
+      read() {
+        if (sent++ > 2000) return this.destroy(new Error('A kapcsolat megszakadt.'))
+        this.push(Buffer.from(sent === 1 ? '<r>' : `<item><id>${sent}</id><t>${'x'.repeat(80)}</t></item>`))
+      },
+    })
+    await expect(collect(parseXml(src, { itemTags: ['item'] }))).rejects.toThrow(/megszakadt/)
   })
 })

@@ -232,6 +232,14 @@ describe('kihagyott ajánlatok és duplikátumok', () => {
     expect(await state()).toEqual({ missed: 0, active: true })
   })
 
+  it('ugyanarra a feedre két egyidejű futásból csak egy fut (részleges egyedi index)', async () => {
+    const feed = await manualFeed([item('P1', 1000), item('P2', 2000)])
+    const [a, b] = await Promise.all([run(feed), run(feed)])
+    const statuses = [a!.status, b!.status].sort()
+    expect(statuses).toEqual(['skipped', 'success'])
+    expect([a!.error, b!.error].filter(Boolean)).toEqual(['Már fut egy import erre a feedre.'])
+  })
+
   it('ugyanaz a SKU kétszer: a második elutasítva', async () => {
     const feed = await manualFeed([item('D1', 1000), item('D1', 1200), item('D2', 1000), item('D3', 1000), item('D4', 1000), item('D5', 1000)])
     const r = await run(feed)

@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { requireAdmin } from '@/lib/auth/guards'
 import { getSqlAdmin } from '@/lib/db/admin'
 import { feedExistsForAdmin, recordAdminAction } from '@/lib/db/queries/admin/feeds'
-import { isProductionDeployment } from '@/lib/env'
+import { deploymentEnv } from '@/lib/env'
 import { defaultRawStore } from '@/lib/ingestion/pipeline/raw-store'
 import { runFeed } from '@/lib/ingestion/pipeline/run'
 
@@ -39,12 +39,13 @@ export async function runFeedNow(_prev: RunNowState, form: FormData): Promise<Ru
     await recordAdminAction(admin.userId, 'feed.run_now', 'feed', feedId, { via: 'workflow_dispatch' })
     return { status: 'queued', message: 'A futás elindult a GitHub Actionsben; pár perc múlva frissítsd az oldalt.' }
   }
-  if (isProductionDeployment()) {
-    return { status: 'error', message: 'Élesben a futtatáshoz INGEST_DISPATCH_TOKEN és INGEST_DISPATCH_REPO kell.' }
+  // a feed letöltése csak az ingest scriptben történhet: webes függvényben (preview, production) soha
+  if (deploymentEnv() !== 'development') {
+    return { status: 'error', message: 'A futtatáshoz INGEST_DISPATCH_TOKEN és INGEST_DISPATCH_REPO kell (GitHub Actions).' }
   }
   await recordAdminAction(admin.userId, 'feed.run_now', 'feed', feedId, { via: 'in_process' })
   after(async () => {
-    // helyben a fixture-feedek is futtathatók (production-ben ide el sem jut a kód)
+    // helyben a fixture-feedek is futtathatók (csak development környezetben jut ide a kód)
     await runFeed(feedId, { sql: getSqlAdmin(), rawStore: defaultRawStore(), fileRoots: [join(process.cwd(), 'tests/fixtures/feeds')] })
     revalidatePath(`/admin/feedek/${feedId}`)
   })

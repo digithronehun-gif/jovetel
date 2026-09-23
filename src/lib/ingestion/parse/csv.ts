@@ -4,7 +4,7 @@
  * ismerjük fel, ha a beállítás nem adja meg.
  */
 import { parse } from 'csv-parse'
-import type { Readable } from 'node:stream'
+import { pipeline, type Readable } from 'node:stream'
 import type { RawItem } from '../types'
 import { decodeStream, textToReadable, type FeedEncoding } from './decode'
 
@@ -75,7 +75,11 @@ export async function* parseCsv(src: Readable, opts: CsvOptions = {}): AsyncGene
     cast: false,
   })
   parser.on('skip', (err: Error) => skipped.push(err.message.slice(0, 200)))
-  textToReadable(all()).pipe(parser)
+  // pipeline (nem .pipe): a forrás hibája (megszakadt letöltés, méret- vagy időkorlát) a parserig jut, és a
+  // for-await kivételt dob — a futás `failed` lesz, nem száll el a folyamat
+  pipeline(textToReadable(all()), parser, (err) => {
+    if (err) parser.destroy(err)
+  })
 
   for await (const rec of parser as AsyncIterable<Record<string, string | undefined>>) {
     while (skipped.length) yield { __parseError: skipped.shift()! }

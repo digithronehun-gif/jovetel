@@ -72,7 +72,14 @@ async function main() {
 
   const results: RunSummary[] = []
   for (const f of feeds) {
-    const s = await runFeed(f.id, { sql, rawStore, fileRoots, log: quiet ? undefined : (m) => console.log(m) })
+    let s: RunSummary
+    try {
+      s = await runFeed(f.id, { sql, rawStore, fileRoots, log: quiet ? undefined : (m) => console.log(m) })
+    } catch (e) {
+      // egy feed váratlan hibája (pl. megszakadt DB-kapcsolat) nem állítja meg a többi feed árgyűjtését
+      s = { runId: '', feedId: f.id, merchantSlug: f.id, status: 'failed', seen: 0, valid: 0, rejected: 0, changed: 0, error: (e as Error).message, durationMs: 0, rejectReasons: {}, flags: {} }
+      console.error(`Feed ${f.id}: ${(e as Error).message}`)
+    }
     results.push(s)
     if (s.status === 'blocked' || s.status === 'failed') await alert(s).catch((e) => console.error(`Riasztás sikertelen: ${(e as Error).message}`))
   }

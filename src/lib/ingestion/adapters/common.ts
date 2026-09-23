@@ -25,11 +25,16 @@ export function stringArray(v: unknown): string[] {
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string' && x.length > 0) : []
 }
 
+/** Hálózat → a titok-helyőrzők előtagja. */
+const PLACEHOLDER_PREFIX: Record<string, string> = { awin: 'AWIN', cj: 'CJ', dognet: 'DOGNET', admitad: 'ADMITAD', tradetracker: 'TRADETRACKER' }
+
 /** Letöltés: engedélylista = kereskedő domainjei + a hálózat feed-hosztjai + az admin által felvett extra hosztok. */
 export async function downloadFeed(ctx: AdapterContext, feedHosts: string[], ext: string): Promise<FetchedSource> {
   if (!ctx.feed.url) throw new Error('A feednek nincs URL-je.')
   const allowlist = [...ctx.merchant.domainAllowlist, ...feedHosts, ...stringArray(ctx.feed.config.extraFeedHosts)]
-  const url = ctx.feed.url.startsWith('file:') ? ctx.feed.url : resolvePlaceholders(ctx.feed.url)
+  // a titok-helyőrző csak a hálózat saját előtagjával és a hálózat saját feed-hosztjára (awin → AWIN_*)
+  const prefix = PLACEHOLDER_PREFIX[ctx.merchant.networkCode] ?? ''
+  const url = ctx.feed.url.startsWith('file:') ? ctx.feed.url : resolvePlaceholders(ctx.feed.url, process.env, { prefix, hosts: feedHosts })
   const stream = await safeDownload(url, { allowlist, allowFileRoots: ctx.fileRoots })
   return { stream, ext, origin: url.startsWith('file:') ? 'fixture' : new URL(url).host }
 }

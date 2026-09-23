@@ -78,6 +78,10 @@ export function isPrivateAddress(ip: string): boolean {
   const first = g[0]!
   if ((first & 0xfe00) === 0xfc00) return true // fc00::/7 egyedi helyi
   if ((first & 0xffc0) === 0xfe80) return true // fe80::/10 link-local
+  if ((first & 0xffc0) === 0xfec0) return true // fec0::/10 elavult site-local
+  if (first === 0x2002) return true // 6to4: privát IPv4-et is beágyazhat
+  if (first === 0x2001 && g[1] === 0) return true // Teredo (2001::/32)
+  if (first === 0x0100 && g.slice(1, 4).every((x) => x === 0)) return true // 100::/64 eldobó
   if ((first & 0xff00) === 0xff00) return true // multicast
   if (first === 0x2001 && g[1] === 0x0db8) return true // dokumentációs
   return false
@@ -96,13 +100,32 @@ export function hostAllowed(host: string, allowlist: readonly string[]): boolean
   })
 }
 
-/** Csak ilyen nevű környezeti változó helyettesíthető a feed-URL-be (titok soha nem kerül a DB-be). */
-const PLACEHOLDER_ENV = /^(AWIN|CJ|DOGNET|ADMITAD|TRADETRACKER)_[A-Z0-9_]+$/
-
-/** `{AWIN_API_TOKEN}` jellegű helyőrzők cseréje környezeti változóra. */
-export function resolvePlaceholders(url: string, env: Record<string, string | undefined> = process.env): string {
+/**
+ * `{AWIN_API_TOKEN}` jellegű helyőrzők cseréje környezeti változóra (a titok soha nem kerül a DB-be).
+ * Csak a hálózat SAJÁT előtagú változója (pl. awin → `AWIN_*`), és csak akkor, ha az URL hostja a hálózat
+ * saját feed-hosztja — így a titok nem mehet el a kereskedő szerverére vagy egy admin által felvett hosztra.
+ */
+export function resolvePlaceholders(
+  url: string,
+  env: Record<string, string | undefined> = process.env,
+  scope?: { prefix: string; hosts: readonly string[] },
+): string {
+  const hasPlaceholder = /\{[A-Z0-9_]+\}/.test(url)
+  if (!hasPlaceholder) return url
+  if (!scope || !scope.prefix || scope.hosts.length === 0) {
+    throw new FeedUrlError('Ez az adapter nem használhat titok-helyőrzőt.', 'placeholder')
+  }
+  let host = ''
+  try {
+    host = new URL(url.replace(/\{[A-Z0-9_]+\}/g, 'x')).hostname
+  } catch {
+    throw new FeedUrlError('Érvénytelen feed-URL.', 'protocol')
+  }
+  if (!hostAllowed(host, scope.hosts)) {
+    throw new FeedUrlError(`Titok-helyőrző csak a hálózat saját feed-hosztjára mehet (${host}).`, 'placeholder')
+  }
   return url.replace(/\{([A-Z0-9_]+)\}/g, (_, name: string) => {
-    if (!PLACEHOLDER_ENV.test(name)) throw new FeedUrlError(`Nem engedélyezett helyőrző: ${name}`, 'placeholder')
+    if (!name.startsWith(`${scope.prefix}_`)) throw new FeedUrlError(`Nem engedélyezett helyőrző: ${name}`, 'placeholder')
     const v = env[name]
     if (!v) throw new FeedUrlError(`Hiányzó környezeti változó a feed-URL-hez: ${name}`, 'placeholder')
     return encodeURIComponent(v)
