@@ -3,7 +3,6 @@ import { cookies } from 'next/headers'
 import type { ReactNode } from 'react'
 import { ConsentBanner } from '@/components/consent/ConsentBanner'
 import { ConsentProvider } from '@/components/consent/ConsentProvider'
-import { ToastProvider } from '@/components/ui/Toast'
 import { CONSENT_COOKIE, parseConsent } from '@/lib/analytics/consent'
 import { palette } from '@/lib/brand/palette'
 import { siteUrl } from '@/lib/env'
@@ -50,7 +49,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           Ugrás a tartalomra
         </a>
         <ConsentProvider initial={consent ? { analytics: consent.analytics, marketing: consent.marketing } : null}>
-          <ToastProvider>{children}</ToastProvider>
+          {/* a ToastProvider az (app) csoport layoutjába kerül (F7): a nyilvános oldalakon nincs rá szükség */}
+          {children}
           <ConsentBanner />
         </ConsentProvider>
       </body>

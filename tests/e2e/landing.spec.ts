@@ -101,6 +101,22 @@ test.describe('landing', () => {
     }
   })
 
+  test('mobilmenü: megnyílik, a linkek látszanak, Escape-re bezárul és a fókusz visszatér', async ({ page }) => {
+    await page.goto('/')
+    await page.getByRole('button', { name: 'Csak a szükségesek' }).click()
+    const button = page.getByRole('button', { name: 'Menü' })
+    await button.click()
+    const dialog = page.getByRole('dialog', { name: 'Menü' })
+    await expect(dialog).toBeVisible()
+    await expect(dialog.getByRole('link', { name: 'Így rangsorolunk' })).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(dialog).toBeHidden()
+    await expect(button).toBeFocused()
+    await button.click()
+    await page.getByRole('dialog', { name: 'Menü' }).getByRole('link', { name: 'Így rangsorolunk' }).click()
+    await expect(page).toHaveURL(/igy-rangsorolunk/)
+  })
+
   test('hibás e-mail-címre mezőszintű hibaüzenet, levél nem megy ki', async ({ page }) => {
     await page.goto('/')
     await page.getByRole('button', { name: 'Csak a szükségesek' }).click()
