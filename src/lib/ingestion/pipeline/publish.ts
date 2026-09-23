@@ -40,6 +40,9 @@ export interface PublishStats {
 }
 
 type Tx = TransactionSql<Record<string, never>>
+// Megjegyzés: a dátumot ISO-szövegként, a JSON-t szövegként adjuk át (`::timestamptz`, `::jsonb`), mert az
+// alkalmazás közös postgres.js-kliensén a Drizzle kikapcsolja a Date- és JSON-szerializálót (a JSON-t
+// `::text::jsonb`-vel, mert a sima `::jsonb` cast a postgres.js-t JSON-szerializálásra késztetné).
 
 function shortHash(s: string): string {
   let h = 2166136261
@@ -75,7 +78,7 @@ async function publishBatch(tx: Tx, input: PublishInput, batch: NormalizedItem[]
   // 1. source_items (tisztított payload)
   const sourceRows = await tx<{ id: string; merchant_sku: string }[]>`
     insert into public.source_items (feed_id, merchant_sku, content_hash, payload, first_seen_at, last_seen_at)
-    select ${input.feedId}, s, h, p::jsonb, ${input.seenAt}, ${input.seenAt}
+    select ${input.feedId}, s, h, p::jsonb, ${input.seenAt.toISOString()}::timestamptz, ${input.seenAt.toISOString()}::timestamptz
     from unnest(${tx.array(changed.map((i) => i.sku))}::text[], ${tx.array(changed.map((i) => i.contentHash))}::text[],
                 ${tx.array(changed.map((i) => JSON.stringify({ ...i, contentHash: undefined })))}::text[]) as t(s, h, p)
     on conflict (feed_id, merchant_sku) do update
@@ -182,7 +185,7 @@ async function publishBatch(tx: Tx, input: PublishInput, batch: NormalizedItem[]
   const offerRows = await tx<{ inserted: boolean }[]>`
     insert into public.offers (product_id, merchant_id, source_item_id, merchant_sku, url, deeplink_template, price_huf,
       old_price_huf, in_stock, last_seen_at, last_price_change_at, is_active, missed_runs)
-    select pid, ${input.merchantId}, sid, sku, url, dl, price, old, stock, ${input.seenAt}, ${input.seenAt}, true, 0
+    select pid, ${input.merchantId}, sid, sku, url, dl, price, old, stock, ${input.seenAt.toISOString()}::timestamptz, ${input.seenAt.toISOString()}::timestamptz, true, 0
     from unnest(${tx.array(changed.map((i) => productBySku.get(i.sku)!))}::uuid[], ${tx.array(changed.map((i) => sourceId.get(i.sku) ?? null))}::uuid[],
       ${tx.array(changed.map((i) => i.sku))}::text[], ${tx.array(changed.map((i) => i.url))}::text[], ${tx.array(changed.map((i) => i.trackingUrl))}::text[],
       ${tx.array(changed.map((i) => i.priceHuf))}::int[], ${tx.array(changed.map((i) => i.oldPriceHuf))}::int[], ${tx.array(changed.map((i) => i.inStock))}::bool[])
@@ -239,7 +242,7 @@ export async function publish(sql: Sql, input: PublishInput): Promise<PublishSta
 
     // újra látott, korábban kihagyott ajánlat: vissza aktívra (csak ha kell)
     const re = await t`
-      update public.offers o set missed_runs = 0, is_active = true, last_seen_at = ${input.seenAt}
+      update public.offers o set missed_runs = 0, is_active = true, last_seen_at = ${input.seenAt.toISOString()}::timestamptz
       from _seen s
       where o.merchant_id = ${input.merchantId} and o.merchant_sku = s.sku and (o.missed_runs > 0 or not o.is_active)`
     stats.reactivated = re.count

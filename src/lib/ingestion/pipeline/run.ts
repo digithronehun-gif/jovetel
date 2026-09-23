@@ -161,7 +161,7 @@ export async function runFeed(feedId: string, deps: RunDeps): Promise<RunSummary
   // a Supabase tranzakciós poolerén a munkamenet-szintű zár beragadhat.
   await sql`
     update public.feed_runs set status = 'failed', finished_at = now(),
-      stats = stats || ${sql.json({ error: 'A futás megszakadt (2 óránál régebben indult, nem fejeződött be).' } as never)}
+      stats = stats || ${JSON.stringify({ error: 'A futás megszakadt (2 óránál régebben indult, nem fejeződött be).' })}::text::jsonb
     where feed_id = ${feedId} and status = 'running' and started_at < now() - interval '2 hours'`
   const [busy] = await sql`
     select 1 from public.feed_runs where feed_id = ${feedId} and status = 'running' and started_at >= now() - interval '2 hours' limit 1`
@@ -179,7 +179,7 @@ async function runLocked(feed: Loaded['feed'], merchant: MerchantRow, base: RunS
   const log = deps.log ?? (() => {})
   const startedAt = now()
   const [run] = await sql<{ id: string }[]>`
-    insert into public.feed_runs (feed_id, started_at, status) values (${feedId}, ${startedAt}, 'running') returning id`
+    insert into public.feed_runs (feed_id, started_at, status) values (${feedId}, ${startedAt.toISOString()}::timestamptz, 'running') returning id`
   const runId = run!.id
   const work = await mkdtemp(join(tmpdir(), 'jovetel-ingest-'))
   const summary: RunSummary = { ...base, runId, status: 'failed' }
@@ -273,10 +273,10 @@ async function runLocked(feed: Loaded['feed'], merchant: MerchantRow, base: RunS
       summary.blockedReason = gate.reason
       summary.durationMs = Date.now() - t0
       await sql`
-        update public.feed_runs set status = 'blocked', finished_at = ${now()}, items_seen = ${summary.seen},
+        update public.feed_runs set status = 'blocked', finished_at = ${now().toISOString()}::timestamptz, items_seen = ${summary.seen},
           items_valid = ${summary.valid}, items_rejected = ${summary.rejected}, items_changed = 0,
-          error_sample = ${sql.json(sample as never)}, raw_object_path = ${rawPath}, blocked_reason = ${gate.reason},
-          stats = ${sql.json({ ...stats, durationMs: summary.durationMs } as never)}
+          error_sample = ${JSON.stringify(sample)}::text::jsonb, raw_object_path = ${rawPath}, blocked_reason = ${gate.reason},
+          stats = ${JSON.stringify({ ...stats, durationMs: summary.durationMs })}::text::jsonb
         where id = ${runId}`
       log(`${merchant.slug}: BLOKKOLVA — ${gate.reason}`)
       return summary
@@ -298,12 +298,12 @@ async function runLocked(feed: Loaded['feed'], merchant: MerchantRow, base: RunS
     summary.durationMs = Date.now() - t0
 
     // 9. statisztika; a last_success_at a letöltés ideje = az ár ellenőrzésének ideje
-    await sql`update public.feeds set last_success_at = ${startedAt}, last_item_count = ${summary.valid} where id = ${feedId}`
+    await sql`update public.feeds set last_success_at = ${startedAt.toISOString()}::timestamptz, last_item_count = ${summary.valid} where id = ${feedId}`
     await sql`
-      update public.feed_runs set status = 'success', finished_at = ${now()}, items_seen = ${summary.seen},
+      update public.feed_runs set status = 'success', finished_at = ${now().toISOString()}::timestamptz, items_seen = ${summary.seen},
         items_valid = ${summary.valid}, items_rejected = ${summary.rejected}, items_changed = ${pub.changed},
-        error_sample = ${sql.json(sample as never)}, raw_object_path = ${rawPath},
-        stats = ${sql.json({ ...stats, publish: pub, durationMs: summary.durationMs } as never)}
+        error_sample = ${JSON.stringify(sample)}::text::jsonb, raw_object_path = ${rawPath},
+        stats = ${JSON.stringify({ ...stats, publish: pub, durationMs: summary.durationMs })}::text::jsonb
       where id = ${runId}`
     log(`${merchant.slug}: kész — ${summary.valid} érvényes, ${summary.rejected} elutasítva, ${pub.changed} változott`)
     return summary
@@ -314,10 +314,10 @@ async function runLocked(feed: Loaded['feed'], merchant: MerchantRow, base: RunS
     summary.error = message
     summary.durationMs = Date.now() - t0
     await sql`
-      update public.feed_runs set status = 'failed', finished_at = ${now()}, items_seen = ${summary.seen},
+      update public.feed_runs set status = 'failed', finished_at = ${now().toISOString()}::timestamptz, items_seen = ${summary.seen},
         items_valid = ${summary.valid}, items_rejected = ${summary.rejected},
-        error_sample = ${sql.json([...sample, { reason: 'failed', detail: message }] as never)},
-        raw_object_path = ${rawPath}, stats = ${sql.json({ error: message, durationMs: summary.durationMs } as never)}
+        error_sample = ${JSON.stringify([...sample, { reason: 'failed', detail: message }])}::text::jsonb,
+        raw_object_path = ${rawPath}, stats = ${JSON.stringify({ error: message, durationMs: summary.durationMs })}::text::jsonb
       where id = ${runId}`
     log(`${merchant.slug}: HIBA — ${message}`)
     return summary

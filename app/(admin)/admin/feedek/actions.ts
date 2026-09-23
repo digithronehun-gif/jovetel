@@ -1,5 +1,6 @@
 'use server'
 
+import { join } from 'node:path'
 import { after } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
@@ -43,7 +44,8 @@ export async function runFeedNow(_prev: RunNowState, form: FormData): Promise<Ru
   }
   await recordAdminAction(admin.userId, 'feed.run_now', 'feed', feedId, { via: 'in_process' })
   after(async () => {
-    await runFeed(feedId, { sql: getSqlAdmin(), rawStore: defaultRawStore() })
+    // helyben a fixture-feedek is futtathatók (production-ben ide el sem jut a kód)
+    await runFeed(feedId, { sql: getSqlAdmin(), rawStore: defaultRawStore(), fileRoots: [join(process.cwd(), 'tests/fixtures/feeds')] })
     revalidatePath(`/admin/feedek/${feedId}`)
   })
   return { status: 'started', message: 'A futás elindult (helyi mód). Pár másodperc múlva frissítsd az oldalt.' }

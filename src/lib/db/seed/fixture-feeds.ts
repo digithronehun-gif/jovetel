@@ -81,12 +81,12 @@ export async function ensureFixtureFeeds(sql: Sql, fixturesDir: string): Promise
     const [existing] = await sql<{ id: string }[]>`select id from public.feeds where config->>'fixture' = ${f.fixture}`
     if (existing) {
       await sql`update public.feeds set merchant_id = ${m!.id}, url = ${url}, adapter = ${f.adapter}, format = ${f.format},
-        config = ${sql.json(config as never)}, is_active = true where id = ${existing.id}`
+        config = ${JSON.stringify(config)}::text::jsonb, is_active = true where id = ${existing.id}`
       out.push({ id: existing.id, fixture: f.fixture })
     } else {
       const [row] = await sql<{ id: string }[]>`
         insert into public.feeds (merchant_id, format, url, adapter, config, is_active)
-        values (${m!.id}, ${f.format}, ${url}, ${f.adapter}, ${sql.json(config as never)}, true) returning id`
+        values (${m!.id}, ${f.format}, ${url}, ${f.adapter}, ${JSON.stringify(config)}::text::jsonb, true) returning id`
       out.push({ id: row!.id, fixture: f.fixture })
     }
   }

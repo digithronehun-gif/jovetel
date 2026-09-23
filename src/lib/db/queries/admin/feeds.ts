@@ -106,7 +106,7 @@ export async function recordAdminAction(
   const sql = getSqlAdmin()
   await sql`
     insert into public.audit_log (actor_user_id, action, entity, entity_id, diff)
-    values (${adminUserId}, ${action}, ${entity}, ${entityId}, ${sql.json(diff as never)})`
+    values (${adminUserId}, ${action}, ${entity}, ${entityId}, ${JSON.stringify(diff)}::text::jsonb)`
 }
 
 export async function feedExistsForAdmin(adminUserId: string, feedId: string): Promise<boolean> {

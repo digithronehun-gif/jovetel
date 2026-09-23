@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process'
+import { drizzle } from 'drizzle-orm/postgres-js'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { ensureFixtureFeeds, FIXTURE_FEEDS } from '../../src/lib/db/seed/fixture-feeds'
@@ -81,8 +82,10 @@ describe('fixture-import (mind a 7 adapter)', () => {
   let ids: { id: string; fixture: string }[] = []
   it('minden feed sikeres; a hibás sorok nem állítják meg a futást', async () => {
     ids = await ensureFixtureFeeds(sql, FIX)
-    const results = await Promise.all(ids.map((f) => run(f.id)))
-    for (const r of results) expect(r.status, r.merchantSlug).toBe('success')
+    // sorban, ahogy a `pnpm ingest --all` is fut (a közös GTIN-ű termék tulajdonosa így determinisztikus)
+    const results = []
+    for (const f of ids) results.push(await run(f.id))
+    for (const r of results) expect(r.status, `${r.merchantSlug}: ${r.blockedReason ?? r.error ?? ""}`).toBe("success")
     const byFixture = Object.fromEntries(results.map((r, i) => [ids[i]!.fixture, r]))
     expect(byFixture.awin).toMatchObject({ seen: 26, valid: 22, rejected: 4 })
     expect(byFixture.awin!.rejectReasons).toEqual({ encoding: 1, invalid_price: 1, missing_field: 1, url_not_allowed: 1 })
@@ -101,8 +104,13 @@ describe('fixture-import (mind a 7 adapter)', () => {
     const [s] = await sql<{ n: number }[]>`
       select count(*)::int as n from public.source_items where payload::text ~* '<\\s*/?\\s*script|alert\\(|onerror'`
     expect(s!.n).toBe(0)
-    const [d] = await sql<{ d: string }[]>`select description_clean as d from public.products where name like 'Dermavera Niacinamidos%'`
+    const [d] = await sql<{ d: string }[]>`
+      select s.payload->>'description' as d from public.source_items s join public.feeds f on f.id = s.feed_id
+      where f.config->>'fixture' = 'awin' and s.merchant_sku = 'ND-1003'`
     expect(d!.d).toBe('Könnyű gél állag.\nKattints')
+    // a termék tulajdonosa az első kereskedő (Awin), ezért a termékszöveg is a tisztított változat
+    const [pd] = await sql<{ d: string }[]>`select description_clean as d from public.products where name like 'Dermavera Niacinamidos%'`
+    expect(pd!.d).toBe('Könnyű gél állag.\nKattints')
   })
 
   it('azonos GTIN több boltnál → egy termék, több ajánlat', async () => {
@@ -188,6 +196,19 @@ describe('minőségi kapu', () => {
     const r = await run(feed)
     expect(r.status).toBe('blocked')
     expect(r.blockedReason).toMatch(/33%/)
+  })
+})
+
+describe('a Next-szerver közös kliense', () => {
+  it('a Drizzle-lel közös postgres.js-kliensen is fut (admin „Futtatás most”), a naplózás is', async () => {
+    const shared = testSql()
+    drizzle(shared) // a Drizzle kikapcsolja a Date/JSON szerializálókat ugyanezen a kliensen
+    const feed = await manualFeed([item('Z1', 1000), item('Z2', 2000)])
+    const r = await runFeed(feed, { sql: shared, rawStore })
+    expect(r.status).toBe('success')
+    const [run] = await shared<{ t: string }[]>`select jsonb_typeof(stats) as t from public.feed_runs where feed_id = ${feed} order by started_at desc limit 1`
+    expect(run!.t).toBe('object')
+    await shared.end()
   })
 })
 
