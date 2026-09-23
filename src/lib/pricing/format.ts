@@ -21,3 +21,11 @@ export function formatHuf(value: number): string {
 export function formatHufNumber(value: number): string {
   return formatHuf(value).slice(0, -3)
 }
+
+/**
+ * Tömör tengelyfelirat az ártörténet-grafikonhoz: ezrekben, „e” utótaggal („12e”, „9,5e”), „Ft” nélkül —
+ * a pontos ár szövegként mindig a PriceBlock-ból jelenik meg. A pénz formázása így is egy helyen marad.
+ */
+export function formatHufAxis(value: number): string {
+  return `${(value / 1000).toLocaleString('hu-HU', { maximumFractionDigits: 1 })}e`
+}

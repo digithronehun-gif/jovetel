@@ -15,6 +15,7 @@ import {
 } from 'recharts'
 import { cn } from '@/components/ui/cn'
 import { formatDate } from '@/lib/format/date'
+import { formatHufAxis } from '@/lib/pricing/format'
 import { Price } from './PriceBlock'
 
 export interface PricePoint {
@@ -43,10 +44,6 @@ export function priceAxis(lo: number, hi: number): { domain: [number, number]; t
   return { domain: [min, max], ticks }
 }
 
-function axisLabel(v: number): string {
-  // tengelyfelirat ezrekben, „Ft” nélkül (az ár szövegként csak a PriceBlock-ból jelenhet meg)
-  return `${(v / 1000).toLocaleString('hu-HU', { maximumFractionDigits: 1 })}e`
-}
 
 function ChartTooltip({ active, payload, label }: TooltipContentProps<number, string>) {
   if (!active || !payload?.length) return null
@@ -147,7 +144,7 @@ export function PriceHistoryChart({
             <YAxis
               domain={axis.domain}
               ticks={axis.ticks}
-              tickFormatter={axisLabel}
+              tickFormatter={formatHufAxis}
               tick={{ fill: 'var(--ink-muted)', fontSize: 12 }}
               tickLine={false}
               axisLine={false}

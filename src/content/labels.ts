@@ -1,3 +1,5 @@
+import { formatHuf } from '@/lib/pricing/format'
+
 /** Felületi címkék a kódolt értékekhez (egy helyen, magyarul). */
 export const RELATION_LABEL = {
   anya: 'Anya',
@@ -13,7 +15,8 @@ export const RELATION_LABEL = {
 } as const
 
 export const BUDGET_BAND_LABEL = {
-  u5: '5 000 Ft alatt',
+  // a pénzösszeg is a formatHuf-ból (nem törő szóközök, CLAUDE.md 9. pont)
+  u5: `${formatHuf(5000)} alatt`,
   '5_15': '5–15 ezer',
   '15_30': '15–30 ezer',
   o30: '30 ezer felett',

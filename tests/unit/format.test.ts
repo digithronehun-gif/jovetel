@@ -83,3 +83,11 @@ describe('slugify', () => {
     expect(normalizeForSearch('  Szérum   ZSÍROS bőrre ')).toBe('szerum zsiros borre')
   })
 })
+
+describe('formatHufAxis', () => {
+  it('ezrekben, magyar tizedesvesszővel', async () => {
+    const { formatHufAxis } = await import('@/lib/pricing/format')
+    expect(formatHufAxis(12000)).toBe('12e')
+    expect(formatHufAxis(9500)).toBe('9,5e')
+  })
+})
