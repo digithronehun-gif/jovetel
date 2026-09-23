@@ -17,6 +17,7 @@
     "test": "vitest run --project unit",
     "test:watch": "vitest --project unit",
     "test:db": "vitest run --project db",
+    "test:db:perf": "PERF=1 vitest run --project db tests/db/ingest-perf.test.ts",
     "test:e2e": "playwright test",
     "verify": "pnpm lint && pnpm typecheck && pnpm test",
     "format": "prettier --write .",

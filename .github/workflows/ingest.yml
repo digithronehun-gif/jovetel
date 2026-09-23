@@ -1,0 +1,92 @@
+# Feed-import és napi árgyűjtés (ARCHITECTURE 3. és 7. pont): naponta 04:00-kor és 16:00-kor Budapest szerint.
+#
+# A GitHub cron UTC-ben fut, Budapest pedig nyáron UTC+2 (CEST), télen UTC+1 (CET). Ezért mindkét időpontra
+# két bejegyzés van, és az első lépés eldönti, melyik illik a mostani időszámításhoz:
+#   02:00 UTC = 04:00 CEST (nyár)   03:00 UTC = 04:00 CET (tél)
+#   14:00 UTC = 16:00 CEST (nyár)   15:00 UTC = 16:00 CET (tél)
+# Az ütemezés késhet (GitHub terhelés), a döntés ezért nem az órára, hanem a kiváltó bejegyzésre épül.
+# Kézi indítás: Actions → „Feed-import” → Run workflow (opcionálisan egy feed-azonosítóval); az admin felület
+# [Futtatás most] gombja is ezt indítja (workflow_dispatch). A concurrency-csoport miatt egyszerre egy fut.
+name: Feed-import
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+    - cron: '0 3 * * *'
+    - cron: '0 14 * * *'
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+    inputs:
+      feed:
+        description: 'Csak ez a feed (uuid); üresen: minden aktív feed'
+        required: false
+        default: ''
+
+concurrency:
+  group: ingest
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ingest:
+    name: Import és árgyűjtés
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Időszámítás-ellenőrzés (nyári / téli)
+        id: slot
+        env:
+          SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          if [ -z "$SCHEDULE" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          offset=$(TZ=Europe/Budapest date +%z)
+          case "$SCHEDULE" in
+            '0 2 * * *'|'0 14 * * *') want='+0200' ;;
+            '0 3 * * *'|'0 15 * * *') want='+0100' ;;
+            *) want='' ;;
+          esac
+          if [ "$offset" = "$want" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; else echo "run=false" >> "$GITHUB_OUTPUT"; echo "Ez a bejegyzés most nem Budapest 04:00/16:00 ($offset) — kihagyva."; fi
+
+      - uses: actions/checkout@v4
+        if: steps.slot.outputs.run == 'true'
+      - uses: pnpm/action-setup@v4
+        if: steps.slot.outputs.run == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.slot.outputs.run == 'true'
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        if: steps.slot.outputs.run == 'true'
+
+      - name: Import
+        if: steps.slot.outputs.run == 'true'
+        env:
+          APP_ENV: production
+          FEED_RAW_STORE: supabase
+          # Session-képes kapcsolat: a Supabase pooler SESSION módja (5432-es port a pooler hoston)
+          INGEST_DATABASE_URL: ${{ secrets.INGEST_DATABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          ADMIN_ALERT_EMAIL: ${{ secrets.ADMIN_ALERT_EMAIL }}
+          AWIN_API_TOKEN: ${{ secrets.AWIN_API_TOKEN }}
+          AWIN_PUBLISHER_ID: ${{ secrets.AWIN_PUBLISHER_ID }}
+          CJ_API_TOKEN: ${{ secrets.CJ_API_TOKEN }}
+          CJ_WEBSITE_ID: ${{ secrets.CJ_WEBSITE_ID }}
+          DOGNET_API_KEY: ${{ secrets.DOGNET_API_KEY }}
+          ADMITAD_CLIENT_ID: ${{ secrets.ADMITAD_CLIENT_ID }}
+          ADMITAD_CLIENT_SECRET: ${{ secrets.ADMITAD_CLIENT_SECRET }}
+          FEED_ID: ${{ inputs.feed }}
+        run: |
+          if [ -n "$FEED_ID" ]; then
+            # a bemenet csak uuid lehet (parancs-injektálás ellen)
+            if ! [[ "$FEED_ID" =~ ^[0-9a-fA-F-]{36}$ ]]; then echo "Érvénytelen feed-azonosító."; exit 2; fi
+            pnpm ingest -- --feed "$FEED_ID"
+          else
+            pnpm ingest -- --all
+          fi

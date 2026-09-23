@@ -39,7 +39,7 @@ jobs:
         continue-on-error: true
 
   db:
-    name: Adatbázis-tesztek (migráció, keresés, RLS, névnaptár, seed)
+    name: Adatbázis-tesztek (migráció, keresés, RLS, névnaptár, seed, feed-import)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     services:
