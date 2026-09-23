@@ -176,6 +176,8 @@ export const products = pgTable(
     }),
     isIndexable: boolean('is_indexable').notNull().default(false),
     searchVector: tsvector('search_vector').generatedAlwaysAs(sql`''::tsvector`),
+    /** márka + név ékezetmentesen (trigram-visszaesés, 0009) */
+    searchText: text('search_text').generatedAlwaysAs(sql`public.f_normalize(coalesce(brand_name, '') || ' ' || name)`),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -288,3 +290,72 @@ export const namedays = pgTable(
   },
   (t) => [uniqueIndex('namedays_name_month_day_key').on(t.name, t.month, t.day)],
 )
+
+/**
+ * SZÁRMAZTATOTT táblák (0009): a `refresh_catalog_stats()` tölti minden ingest végén, csak eltérésnél ír.
+ * Ajánlatonként a teljes ár (PRODUCT_SPEC 7.4) és a „Valódi akció?” ítélet (7.3) a saját ártörténetből.
+ */
+export const offerStats = pgTable(
+  'offer_stats',
+  {
+    offerId: uuid('offer_id')
+      .primaryKey()
+      .references(() => offers.id, { onDelete: 'cascade' }),
+    productId: uuid('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
+    merchantId: uuid('merchant_id')
+      .notNull()
+      .references(() => merchants.id, { onDelete: 'cascade' }),
+    feedId: uuid('feed_id').references(() => feeds.id, { onDelete: 'set null' }),
+    seenAt: timestamp('seen_at', { withTimezone: true }).notNull(),
+    missedRuns: smallint('missed_runs').notNull(),
+    priceHuf: integer('price_huf').notNull(),
+    shippingHuf: integer('shipping_huf').notNull(),
+    customsHuf: integer('customs_huf').notNull(),
+    totalHuf: integer('total_huf').notNull(),
+    inStock: boolean('in_stock').notNull(),
+    daysTracked: smallint('days_tracked').notNull(),
+    min30Huf: integer('min30_huf'),
+    med30Twice: integer('med30_twice'),
+    verdict: text('verdict', { enum: ['deal', 'usual', 'pricier', 'collecting'] }).notNull(),
+    feedDiscountNote: boolean('feed_discount_note').notNull(),
+    realDiscountPct: smallint('real_discount_pct'),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index('offer_stats_product_idx').on(t.productId), index('offer_stats_merchant_idx').on(t.merchantId, t.productId)],
+)
+
+/** Termékenként a legjobb friss, listázható ajánlat és a szűrőkhöz kellő mezők (0009). */
+export const productStats = pgTable('product_stats', {
+  productId: uuid('product_id')
+    .primaryKey()
+    .references(() => products.id, { onDelete: 'cascade' }),
+  categoryId: uuid('category_id').references(() => categories.id, { onDelete: 'set null' }),
+  categoryPath: text('category_path'),
+  brandId: uuid('brand_id').references(() => brands.id, { onDelete: 'set null' }),
+  offerCount: smallint('offer_count').notNull().default(0),
+  merchantIds: uuid('merchant_ids')
+    .array()
+    .notNull()
+    .default(sql`'{}'`),
+  bestOfferId: uuid('best_offer_id').references(() => offers.id, { onDelete: 'set null' }),
+  bestMerchantId: uuid('best_merchant_id').references(() => merchants.id, { onDelete: 'set null' }),
+  bestFeedId: uuid('best_feed_id').references(() => feeds.id, { onDelete: 'set null' }),
+  bestSeenAt: timestamp('best_seen_at', { withTimezone: true }),
+  bestMissedRuns: smallint('best_missed_runs'),
+  bestPriceHuf: integer('best_price_huf'),
+  bestShippingHuf: integer('best_shipping_huf'),
+  bestCustomsHuf: integer('best_customs_huf'),
+  bestTotalHuf: integer('best_total_huf'),
+  bestInStock: boolean('best_in_stock').notNull().default(false),
+  bestQuality: numeric('best_quality', { precision: 3, scale: 2, mode: 'number' }),
+  verdict: text('verdict', { enum: ['deal', 'usual', 'pricier', 'collecting'] }),
+  realDiscountPct: smallint('real_discount_pct'),
+  daysTracked: smallint('days_tracked'),
+  tags: text('tags')
+    .array()
+    .notNull()
+    .default(sql`'{}'`),
+  updatedAt: updatedAt(),
+})

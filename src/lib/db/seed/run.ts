@@ -410,5 +410,8 @@ export async function runSeed(sql: Sql, opts: SeedOptions = {}) {
   if (opts.withNamedays !== false) log(`névnaptár: ${await importNamedays(sql)} sor`)
   const catalog = await seedCatalog(sql, opts)
   const users = await seedUsersAndGuides(sql, { ...opts, productIds: catalog.productIds })
+  // a keresés ár-statisztikája (élesben az ingest végén fut)
+  await sql`select * from public.refresh_catalog_stats(${(opts.now ?? new Date()).toISOString()}::timestamptz)`
+  log('ár-statisztika frissítve')
   return { ...catalog, ...users }
 }

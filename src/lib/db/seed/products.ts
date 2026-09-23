@@ -97,9 +97,9 @@ const giftThemes = [
 const withFree = (r: Rng, tags: string[]) => {
   const extra = [...tags]
   if (r.chance(0.3)) extra.push('free_from:illatanyag')
-  if (r.chance(0.2)) extra.push('free_from:parabenek')
+  if (r.chance(0.2)) extra.push('free_from:paraben')
   if (r.chance(0.15)) extra.push('free_from:alkohol')
-  if (r.chance(0.1)) extra.push('free_from:szilikonok')
+  if (r.chance(0.1)) extra.push('free_from:szilikon')
   return extra
 }
 

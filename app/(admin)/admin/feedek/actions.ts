@@ -10,6 +10,7 @@ import { feedExistsForAdmin, recordAdminAction } from '@/lib/db/queries/admin/fe
 import { deploymentEnv } from '@/lib/env'
 import { defaultRawStore } from '@/lib/ingestion/pipeline/raw-store'
 import { runFeed } from '@/lib/ingestion/pipeline/run'
+import { refreshCatalogStats } from '@/lib/ingestion/pipeline/stats'
 
 export type RunNowState = { status: 'idle' } | { status: 'queued' | 'started'; message: string } | { status: 'error'; message: string }
 
@@ -47,6 +48,7 @@ export async function runFeedNow(_prev: RunNowState, form: FormData): Promise<Ru
   after(async () => {
     // helyben a fixture-feedek is futtathatók (csak development környezetben jut ide a kód)
     await runFeed(feedId, { sql: getSqlAdmin(), rawStore: defaultRawStore(), fileRoots: [join(process.cwd(), 'tests/fixtures/feeds')] })
+    await refreshCatalogStats(getSqlAdmin())
     revalidatePath(`/admin/feedek/${feedId}`)
   })
   return { status: 'started', message: 'A futás elindult (helyi mód). Pár másodperc múlva frissítsd az oldalt.' }

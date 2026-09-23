@@ -15,6 +15,7 @@ import { ensureFixtureFeeds } from '../src/lib/db/seed/fixture-feeds'
 import { sendEmail } from '../src/lib/email/send'
 import { defaultRawStore } from '../src/lib/ingestion/pipeline/raw-store'
 import { runFeed, type RunSummary } from '../src/lib/ingestion/pipeline/run'
+import { refreshCatalogStats } from '../src/lib/ingestion/pipeline/stats'
 import { siteUrl } from '../src/lib/env'
 import { requireEnv } from './_env'
 
@@ -82,6 +83,14 @@ async function main() {
     }
     results.push(s)
     if (s.status === 'blocked' || s.status === 'failed') await alert(s).catch((e) => console.error(`Riasztás sikertelen: ${(e as Error).message}`))
+  }
+  // a keresés és a kategóriaoldalak ár-statisztikája (a 30 napos ablak naponta gördül, ezért mindig fut)
+  try {
+    const st = await refreshCatalogStats(sql)
+    if (!quiet) console.log(`Ár-statisztika: ${st.offersWritten} ajánlat, ${st.productsWritten} termék frissítve (${st.durationMs} ms)`)
+  } catch (e) {
+    console.error(`Ár-statisztika frissítése sikertelen: ${(e as Error).message}`)
+    results.push({ runId: '', feedId: '', merchantSlug: '(ár-statisztika)', status: 'failed', seen: 0, valid: 0, rejected: 0, changed: 0, error: (e as Error).message, durationMs: 0, rejectReasons: {}, flags: {} })
   }
   if (has('--all')) {
     const removed = await rawStore.prune().catch((e) => {
