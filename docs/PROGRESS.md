@@ -4,9 +4,70 @@
 > A tulajdonos innen követi, hol tart a fejlesztés.
 
 ## Aktuális állapot
-- **Jelenlegi fázis:** F2 — Landing, várólista, jogi oldalak, hozzájárulás (🔨)
-- **Utolsó frissítés:** 2026-09-22
-- **Mérföldkő / teendő a tulajdonosnak:** — (az F2 után jön az első)
+- **Jelenlegi fázis:** F3 — Feed-import és napi árgyűjtő (🔨)
+- **Utolsó frissítés:** 2026-09-23
+- **Mérföldkő / teendő a tulajdonosnak:** lásd lent, **1. mérföldkő: a landing élesíthető waitlist módban**
+
+> ## 🚩 MÉRFÖLDKŐ 1 — a landing élesíthető waitlist módban (F2 kész, 2026-09-23)
+>
+> A nyilvános landing, a várólista (double opt-in), a jogi oldalak és a süti-hozzájárulás kész és mérve.
+> Ha most szeretnéd élesíteni, ezek a lépések, sorrendben. Ami nálad van, azt nem tudom helyetted megtenni.
+>
+> **1. Supabase prod projekt** (ha még nincs; OPEN_QUESTIONS #11)
+> - supabase.com → New project: `jovetel-prod`, régió **Frankfurt (eu-central-1)**, erős DB-jelszó.
+> - Project Settings → Database: a **Transaction pooler** (6543-as port) címe lesz a `DATABASE_URL`,
+>   a közvetlen (5432) cím a `DIRECT_DATABASE_URL`.
+> - A saját gépeden, a repó gyökerében: `DIRECT_DATABASE_URL="<közvetlen cím>" pnpm db:migrate`
+>   (létrehozza a táblákat; a seedet élesben **ne** futtasd).
+> - SQL Editorban egyszer: `alter database postgres set app.environment = 'production';`
+>   (ez védi a prod adatbázist a seedtől és a visszavonástól).
+>
+> **2. Domain és e-mail** (OPEN_QUESTIONS #1, #7)
+> - Domain (pl. `jovetel.hu`) megvásárlása, ha még nincs.
+> - resend.com → Domains → Add domain (javaslat: `mail.<domain>` aldomain) → a megadott **SPF, DKIM**
+>   rekordok felvétele a DNS-be, plusz egy **DMARC** rekord (`_dmarc`, kezdésnek `v=DMARC1; p=none; rua=mailto:<te címed>`).
+>   Ha „Verified”: API Keys → új kulcs (Sending access, csak erre a domainre).
+>
+> **3. Cloudflare Turnstile** (kötelező: élesben kulcs nélkül a várólista **elutasít**, így nem nyílik spam-kapu)
+> - dash.cloudflare.com → Turnstile → Add site: a domained, mód: *Managed* → Site key + Secret key.
+>
+> **4. Upstash Redis** (rate limit; nélküle csak példányonkénti memória-korlát van, ami serverlessen gyenge)
+> - upstash.com → Redis → Create database, régió **eu-central-1 (Frankfurt)** → REST URL + REST token.
+>
+> **5. PostHog EU** (nem kötelező; hozzájárulás nélkül úgysem tölt be)
+> - eu.posthog.com → új projekt → Project API key.
+>
+> **6. Vercel Pro projekt** (kereskedelmi használathoz a Pro kötelező)
+> - vercel.com → Add New → Project → a GitHub-repó importálása; Framework: Next.js (a `vercel.json` a `fra1`
+>   régiót már rögzíti). Build parancs marad: `pnpm build`.
+> - Settings → Environment Variables, **Production** környezetbe:
+>
+>   | Változó | Érték |
+>   |---|---|
+>   | `NEXT_PUBLIC_SITE_URL` | `https://<domain>` (a megerősítő levél linkje ebből készül) |
+>   | `APP_ENV` | `production` |
+>   | `LAUNCH_MODE` | `waitlist` |
+>   | `ALLOW_DEV_IMAGES` | **döntés kell** (lásd lent) |
+>   | `DATABASE_URL` | a pooler címe (6543) |
+>   | `DIRECT_DATABASE_URL` | a közvetlen cím (5432) |
+>   | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Project Settings → API |
+>   | `RESEND_API_KEY` | a 2. lépésből |
+>   | `EMAIL_FROM` | pl. `JóVétel <hello@mail.<domain>>` (a hitelesített domainről) |
+>   | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | a 3. lépésből |
+>   | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | a 4. lépésből |
+>   | `IP_HASH_SALT` | hosszú véletlen szöveg (pl. `openssl rand -base64 32`); később ne változtasd |
+>   | `NEXT_PUBLIC_POSTHOG_KEY` (opcionális) | az 5. lépésből; `NEXT_PUBLIC_POSTHOG_HOST=https://eu.i.posthog.com` |
+>
+> - Settings → Domains → a domain hozzáadása, a kiírt DNS-rekord (A / CNAME) beállítása a domain-szolgáltatónál.
+> - Deploy. Ellenőrzés: `https://<domain>/api/health` → 200; iratkozz fel a saját címeddel, és kattints a levélben.
+>
+> **Döntés: `ALLOW_DEV_IMAGES`.** A landing képei most mind a Pinterest-moodboardból valók (`moodboard-dev-only`).
+> `ALLOW_DEV_IMAGES` nélkül a production build **szándékosan leáll** (7. vasszabály), és kiírja a 42 cserélendő
+> képhelyet (`pnpm check:assets`). Két út: (a) saját / AI-generált / licencelt képek a landing képhelyeire
+> (OPEN_QUESTIONS #10), vagy (b) tudatosan `ALLOW_DEV_IMAGES=true`, a képjogi kockázatot te vállalod.
+>
+> **Élesítés előtt kitöltendő:** a jogi oldalakon 18 `[KITÖLTENDŐ]` mező (cégadatok, OPEN_QUESTIONS #2), és az
+> ügyvédi átnézés (a szövegek tervezetek). Amíg ez nincs meg, javaslom, hogy a domaint ne hirdesd.
 
 ## Indulás (2026-09-22)
 
@@ -36,7 +97,7 @@ Tailwind 4.3.3 · Playwright 1.56.1 (a gépen lévő Chromium-buildhez illeszked
 |---|---|---|---|---|
 | F0 | Projekt-alap és design rendszer | ✅ | `fazis-00` (c34eb0b) | 61 unit teszt · build zöld · ő/ű: 1 font/mondat |
 | F1 | Adatbázis, seed, névnaptár | ✅ | `fazis-01` (0583ac7) | 41 DB-teszt · névkeresés p95 20,7 ms / 50 000 termék |
-| F2 | Landing, várólista, jogi oldalak, hozzájárulás | ⏳ | | |
+| F2 | Landing, várólista, jogi oldalak, hozzájárulás | ✅ | `fazis-02` (HASH_F2) | Lighthouse mobil 96/100/100/100 (h2) · 90/100/100/100 (h1) · 21 e2e |
 | F3 | Feed-import és napi árgyűjtő | ⏳ | | |
 | F4 | Keresés, kategóriák, útmutatók | ⏳ | | |
 | F5 | Termékoldal, teljes költség, ártörténet, „Valódi akció?” | ⏳ | | |
@@ -164,3 +225,73 @@ szerepel és a választóban megjelenik (OPEN_QUESTIONS #12).
 **Nyitott kérdések:** #11 (Supabase projektek), #12 (névnap-alapértelmezés), #13 (tracking-domainek).
 **Megjegyzés:** a git tagek a munkamenet proxyja miatt nem pusholhatók (csak a kijelölt branch); helyben
 megvannak, és a táblázatban a commit-hash is szerepel. Pótlás bárhol: `git tag fazis-01 <hash> && git push --tags`.
+
+### F2 — Landing, várólista, jogi oldalak, hozzájárulás
+
+**Terv:**
+1. Közös keret: fejléc (mobilon menü-lappal), lábléc a jelöléssel, 404 (`hiba.404`), metaadatok, OG-kép a
+   szóvédjeggyel, `vercel.json` (fra1), CSP nonce-szal a `proxy.ts`-ben.
+2. Landing a PRODUCT_SPEC 3. pontja szerint, szekciónként; minden kép képhelyről; a hero-ban lassan vándorló
+   `LightLeak` és a cím sorainak lépcsőzött belépője. Mini-demók valódi komponensekkel (`LovedOneCard`,
+   `ProductCard` kompakt, `PriceHistoryChart`, `ShelfItem`), „Példa” jelöléssel, hogy a minta-ár ne tűnjön valódinak.
+3. `LAUNCH_MODE`: waitlist módban a „Kezdjük el” a várólista-űrlapra visz.
+4. Várólista: Server Action + Zod + Turnstile + rate limit (Upstash, helyben memória) + double opt-in levél
+   (React Email `WaitlistConfirm`; Resend, helyben SMTP a Mailpitbe) + `/varolista/megerosites`.
+5. Jogi oldalak valódi szerkezettel, `[KITÖLTENDŐ]` cégadatokkal; `/igy-rangsorolunk` a rangsor-súlyok
+   konfigurációs fájljából (ugyanazt használja majd a keresés).
+6. Süti-sáv három kategóriával, naplózás a `consents` táblába; PostHog csak analitika-hozzájárulás után töltődik.
+7. Mérés: e2e (feliratkozás a megerősítésig, nincs PostHog-kérés hozzájárulás előtt, a hero első képernyője),
+   Lighthouse mobil a 4 kategóriában, képernyőképek.
+
+**Kockázat:** a nonce-os CSP miatt minden oldal dinamikusan renderelődik; a landing Lighthouse-pontszámát ez
+(TTFB) befolyásolhatja — mérni fogom. A Recharts nagy csomag: a landingen csak láthatóvá váláskor töltődik be.
+
+**Kész (2026-09-23):**
+- Landing a PRODUCT_SPEC 3. pontja szerint (hero, három ígéret, négy mini-demó valódi komponensekkel, AI-szekció,
+  bizalom, GYIK, záró CTA), minden kép képhelyről. Hero: vándorló `LightLeak`, a cím sorainak lépcsőzött belépője.
+- `LAUNCH_MODE`: waitlist módban minden „Kezdjük el” a `#varolista` űrlapra visz.
+- Várólista: Server Action + Zod + mézesbödön + rate limit (5/óra IP) + Turnstile (élesben kulcs nélkül elutasít) +
+  double opt-in levél (React Email `WaitlistConfirm`; Resend, helyben SMTP → Mailpit) + `/varolista/megerosites`
+  (7 napos token, csak hash-ként tárolva; a megerősítéskor kerül a marketing-hozzájárulás a `consents` táblába).
+- Jogi oldalak valódi szerkezettel, 18 `[KITÖLTENDŐ]` mezővel; `/igy-rangsorolunk` a `RANKING_WEIGHTS`
+  konfigurációból (ugyanazt használja majd a keresés); `/rolunk`.
+- Süti-sáv (szükséges / analitika / marketing), naplózás a `consents` táblába (csak hozzáfűzés); PostHog csak
+  analitika-hozzájárulás után töltődik be (dinamikus import). A `jv_anon` süti is csak döntéskor jön létre.
+- Fejléc (mobilon menü-lap, igény szerint töltődik), lábléc a jelöléssel, 404 (`hiba.404`), metaadatok, OG-kép
+  (Bodoni-körvonalakból, futásidejű font nélkül), `vercel.json` (`fra1`), CSP nonce-szal a `proxy.ts`-ben.
+- Mérőeszköz: `pnpm perf:proxy` (helyi HTTP/2 + brotli a `next start` elé) és `pnpm perf:lighthouse <url>`
+  (több futás, medián).
+
+**Mért számok (production build, `next start`, helyi stack):**
+- **Lighthouse mobil, 5 futás mediánja, `/`:**
+  HTTP/2 + brotli (ahogy a Vercel szolgál ki): **teljesítmény 96 · akadálymentesség 100 · bevált gyakorlatok 100 ·
+  SEO 100** (LCP 2,7 s, TBT 45 ms, CLS 0). Közvetlen HTTP/1.1 `next start`: **90 · 100 · 100 · 100** (LCP 3,6 s).
+  `/adatvedelem` (h2, 3 futás): 97 · 100 · 100 · 100. A `/varolista/megerosites` SEO-ja 63, mert szándékosan
+  `noindex` (a többi kategória 97 · 100 · 100).
+- **e2e: 21/21 zöld** a production buildön (`E2E_BASE_URL`, PostHog-próbakulccsal):
+  a feliratkozás végigmegy a megerősítésig (levél a Mailpitből, a link megnyitása, „Megerősítem” → `?kesz=1`;
+  a második kattintás idempotens, a hamis token `?hiba=invalid`); hozzájárulás előtt **0** PostHog-kérés és nincs
+  `ph_*`/`jv_anon` süti, „Mindet elfogadom” után a PostHog betölt; „Csak a szükségesek” után sincs kérés;
+  390×844-en a cím, az alcím, mindkét gomb és a kép a nézetben van, és a süti-sáv egyiket sem takarja
+  (`elementFromPoint`); a landing egyik belső linkje sem vezet 404-re; 390 px-en 10 oldal közül egyik sem lóg ki
+  vízszintesen; mobilmenü (Escape, fókusz-visszaadás); minden ár demókeretben, „Példa” jelöléssel.
+- Unit: 100 teszt (új: CSP/PostHog-konfiguráció, `ROUTE_READY`, ártengely, demó-konzisztencia). `pnpm verify` zöld.
+- Landing JS (gzip): 13 csomag, ~208 KB, ebből ~115 KB a React + Next futtatókörnyezet.
+- Képernyőképek: `/`, `/adatvedelem`, `/igy-rangsorolunk`, `/varolista/megerosites`, 404 × 390/1440 × világos/sötét
+  (`tests/.artifacts/screens/f2/`), átnézve. Javítva közben: a mini-demó vízszintes ötletsora kitolta a rácsot
+  (538 px széles oldal 390-en → `grid-cols-1`, e2e-teszt őrzi); a radar-demóban a „10 nap múlva” mellett rögzített
+  „november 25.” állt (most a mai naphoz számolt dátum); az ártengelyen „12,9e” osztás (most kerek lépésköz).
+
+**Eltérés a spectől és miért:**
+- *Még el nem készült útvonalra nem linkelünk* (`src/lib/launch.ts` → `ROUTE_READY`, teszt ellenőrzi, hogy egyezik az
+  `app/` tartalmával): a hero második gombja („Ajándékötlet regisztráció nélkül” → `/ajandek`) az F10-ig
+  „Nézd meg, hogyan működik” (→ `#hogyan`), az AI-chipek addig nem linkek, a Belépés gomb és a 404 „Keresés” gombja
+  addig rejtve. A fázisok a saját kapcsolójukat állítják át.
+- A radar-demó kártyáján nincs keresztnév (a spec példája „Anya · Katalin”): a névnap dátuma a mai naphoz számolt
+  (+10 nap), és így nem állítunk hamis név–dátum párt.
+- A `ToastProvider` nem a gyökér-layoutban van (a nyilvános oldalakon nincs rá szükség, 13 KB); az F8 app-kerete kapja.
+- A Lighthouse-kritériumot két módon mértem: a helyi `next start` HTTP/1.1-en szolgál ki (6 kapcsolat/hoszt), ami
+  a Lighthouse szimulációjában torzít; a Vercel HTTP/2-t és brotlit ad. Mindkét mérés ≥ 90.
+
+**Nyitott kérdések:** #1 (domain), #2 (cégadatok: 18 mező), #7 (küldő domain), #10 (képek), #11 (Supabase prod).
+**Következő:** F3 — feed-import és napi árgyűjtő (határidő az élesítésre: 2026. október 28.).

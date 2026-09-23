@@ -58,7 +58,8 @@ Ez PostgreSQL 16 szervert igényel a gépen (`postgresql-16`); a GoTrue és a Ma
 1. Két projekt a Supabase-ben, **Frankfurt (eu-central-1)** régióban: `jovetel-dev` és `jovetel-prod`.
 2. Project Settings → Database: a **Connection pooling** (Transaction, 6543-as port) címe a `DATABASE_URL`,
    a közvetlen (5432) cím a `DIRECT_DATABASE_URL`. API → `NEXT_PUBLIC_SUPABASE_URL`, `anon`, `service_role` kulcs.
-3. Migráció: `DIRECT_DATABASE_URL=… pnpm db:migrate` (production-ben a deploy előtti GitHub Action futtatja).
+3. Migráció a saját gépedről: `DIRECT_DATABASE_URL=… pnpm db:migrate` (az automatikus, deploy előtti
+   migráció GitHub Actionben később készül el; addig kézzel, minden séma-változás után).
 4. **A prod adatbázis megjelölése** (a seed ezt is ellenőrzi, és nem fut rajta):
    `alter database postgres set app.environment = 'production';`
 5. Auth → URL Configuration: Site URL és Redirect URLs (`https://<domain>/auth/callback`); Auth → Email Templates:

@@ -2,17 +2,17 @@ import { launchMode } from './env'
 
 /**
  * Az ebben a buildben már elkészült nyilvános útvonalak. Minden fázis a saját útvonalát kapcsolja be
- * (F4: belépés, F6: ajándék-varázsló); addig a landing nem linkel 404-re. A `tests/unit/launch.test.ts`
+ * (F4: keresés, F7: belépés, F8: app-keret, F10: ajándék-varázsló); addig a landing nem linkel 404-re. A `tests/unit/launch.test.ts`
  * ellenőrzi, hogy a kapcsoló és az `app/` tartalma egyezik.
  */
 export const ROUTE_READY = {
-  /** F4 */
-  belepes: false,
-  /** F5 */
-  kereses: false,
-  /** F6 */
-  ajandek: false,
   /** F7 */
+  belepes: false,
+  /** F4 */
+  kereses: false,
+  /** F10 */
+  ajandek: false,
+  /** F8 */
   app: false,
 } as const satisfies Record<string, boolean>
 
