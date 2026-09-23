@@ -24,7 +24,7 @@ export function Band({
 }) {
   return (
     <section id={id} className={cn('mx-auto max-w-landing scroll-mt-20 px-4 sm:px-6 md:px-8', className)}>
-      <div className="grid items-center gap-8 md:grid-cols-2 md:gap-16">
+      <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-16">
         <div className={cn('mx-auto w-[82%] max-w-[26rem] md:w-full md:max-w-[30rem]', flip && 'md:order-2')}>
           <SlotImage
             slot={slot}
@@ -41,7 +41,7 @@ export function Band({
 
 export function DemoFrame({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn('relative flex flex-col gap-3 rounded-xl border border-line bg-paper p-4 sm:p-5', className)}>
+    <div className={cn('relative flex flex-col gap-3 rounded-xl border border-line bg-paper p-4 sm:p-5', className)} data-demo-frame>
       <span className="absolute -top-2.5 right-4 rounded-full border border-line bg-surface px-2.5 py-0.5 text-xs font-semibold text-ink-muted">
         Példa
       </span>

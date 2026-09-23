@@ -14,7 +14,7 @@ export default async function ConfirmPage({ searchParams }: { searchParams: Prom
   const token = sp.t ?? ''
 
   return (
-    <main id="tartalom" className="mx-auto grid max-w-landing items-center gap-10 px-4 py-12 sm:px-6 md:grid-cols-2 md:px-8 md:py-20">
+    <main id="tartalom" className="mx-auto grid max-w-landing grid-cols-1 items-center gap-10 px-4 py-12 sm:px-6 md:grid-cols-2 md:px-8 md:py-20">
       <div className="flex flex-col gap-6">
         {done ? (
           <SectionHeader

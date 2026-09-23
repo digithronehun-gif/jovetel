@@ -14,10 +14,14 @@ export interface LicenseContext {
 }
 
 /** A futási környezetből: fejlesztésben igen; production buildben csak ALLOW_DEV_IMAGES=true mellett. */
-export function devImagesAllowed(env: Record<string, string | undefined> = process.env): boolean {
-  if (env.ALLOW_DEV_IMAGES === 'true') return true
-  if (env.ALLOW_DEV_IMAGES === 'false') return false
-  return env.NODE_ENV !== 'production'
+export function devImagesAllowed(env?: Record<string, string | undefined>): boolean {
+  // Literális `process.env.ALLOW_DEV_IMAGES`: a next.config `env` blokkja így build-időben beégeti,
+  // vagyis a build-kori tudatos döntés érvényes a `next start` futásidejében is.
+  const allow = env ? env.ALLOW_DEV_IMAGES : process.env.ALLOW_DEV_IMAGES
+  const nodeEnv = env ? env.NODE_ENV : process.env.NODE_ENV
+  if (allow === 'true') return true
+  if (allow === 'false') return false
+  return nodeEnv !== 'production'
 }
 
 export function currentLicenseContext(): LicenseContext {

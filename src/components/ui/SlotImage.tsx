@@ -44,7 +44,10 @@ export function SlotImage({
         alt={alt ?? img.alt}
         fill
         sizes={sizes}
-        priority={priority}
+        // Next 16: a `priority` helyett `preload`; az LCP-képnek magas letöltési prioritás is jár
+        preload={priority}
+        fetchPriority={priority ? 'high' : undefined}
+        loading={priority ? 'eager' : undefined}
         placeholder="blur"
         blurDataURL={img.blurDataURL}
         className={cn('object-cover', imageClassName)}

@@ -10,7 +10,7 @@ export function Promises() {
       <h2 id="igeretek" className="sr-only">
         Három ígéretünk
       </h2>
-      <ul className="grid gap-4 md:grid-cols-3 md:gap-6">
+      <ul className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
         {PROMISES.map((p) => {
           const Icon = ICONS[p.key]
           return (
