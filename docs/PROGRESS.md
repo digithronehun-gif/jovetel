@@ -97,7 +97,7 @@ Tailwind 4.3.3 · Playwright 1.56.1 (a gépen lévő Chromium-buildhez illeszked
 |---|---|---|---|---|
 | F0 | Projekt-alap és design rendszer | ✅ | `fazis-00` (c34eb0b) | 61 unit teszt · build zöld · ő/ű: 1 font/mondat |
 | F1 | Adatbázis, seed, névnaptár | ✅ | `fazis-01` (0583ac7) | 41 DB-teszt · névkeresés p95 20,7 ms / 50 000 termék |
-| F2 | Landing, várólista, jogi oldalak, hozzájárulás | ✅ | `fazis-02` (HASH_F2) | Lighthouse mobil 96/100/100/100 (h2) · 90/100/100/100 (h1) · 21 e2e |
+| F2 | Landing, várólista, jogi oldalak, hozzájárulás | ✅ | `fazis-02` (9c69ba8) | Lighthouse mobil 96/100/100/100 (h2) · 90/100/100/100 (h1) · 21 e2e |
 | F3 | Feed-import és napi árgyűjtő | ⏳ | | |
 | F4 | Keresés, kategóriák, útmutatók | ⏳ | | |
 | F5 | Termékoldal, teljes költség, ártörténet, „Valódi akció?” | ⏳ | | |
