@@ -31,6 +31,18 @@ export interface PriceSeries {
 // Szövegszín-tokenek: jól elkülönülnek, és a sötét módban is olvashatók
 const SERIES_COLORS = ['var(--ink)', 'var(--sky-deep)', 'var(--amber-deep)', 'var(--ink-muted)']
 
+/** „Kerek” y-tengely: 500/1000/2000/5000 Ft-os lépésköz, 3–5 osztás, a tartomány a lépésköz többszöröse. */
+export function priceAxis(lo: number, hi: number): { domain: [number, number]; ticks: number[] } {
+  const span = Math.max(hi - lo, 1)
+  const step = [250, 500, 1000, 2000, 2500, 5000, 10000, 20000, 50000].find((s) => span / s <= 4) ?? 100000
+  const min = Math.max(0, Math.floor(lo / step) * step - (lo % step === 0 ? step : 0))
+  let max = Math.ceil(hi / step) * step + (hi % step === 0 ? step : 0)
+  while ((max - min) / step < 2) max += step
+  const ticks: number[] = []
+  for (let v = min; v <= max; v += step) ticks.push(v)
+  return { domain: [min, max], ticks }
+}
+
 function axisLabel(v: number): string {
   // tengelyfelirat ezrekben, „Ft” nélkül (az ár szövegként csak a PriceBlock-ból jelenhet meg)
   return `${(v / 1000).toLocaleString('hu-HU', { maximumFractionDigits: 1 })}e`
@@ -95,9 +107,7 @@ export function PriceHistoryChart({
 
   const last = data.at(-1)
   const values = data.flatMap((r) => series.map((_, i) => r[`s${i}`])).filter((v): v is number => typeof v === 'number')
-  const lo = Math.min(...values, min30Huf ?? Infinity)
-  const hi = Math.max(...values)
-  const pad = Math.max(200, Math.round((hi - lo) * 0.15))
+  const axis = priceAxis(Math.min(...values, min30Huf ?? Infinity), Math.max(...values))
 
   return (
     <figure className={cn('flex flex-col gap-3', className)} data-price-history>
@@ -135,7 +145,8 @@ export function PriceHistoryChart({
               minTickGap={32}
             />
             <YAxis
-              domain={[lo - pad, hi + pad]}
+              domain={axis.domain}
+              ticks={axis.ticks}
               tickFormatter={axisLabel}
               tick={{ fill: 'var(--ink-muted)', fontSize: 12 }}
               tickLine={false}

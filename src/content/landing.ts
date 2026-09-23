@@ -35,6 +35,9 @@ export const PROMISES = [
   },
 ] as const
 
+/** Az ajándék-radar demó: ennyi nap van hátra Anyu névnapjáig (a címmel egyezik). */
+export const DEMO_RADAR_DAYS = 10
+
 export const DEMOS = {
   radar: {
     eyebrow: 'Ajándék-radar',
@@ -127,7 +130,7 @@ export const DEMO_IDEAS = [
 ] as const
 
 /** 30 nap szintetikus ár a „Valódi akció” demóhoz: stabil ár, a végén valódi esés. */
-export function demoPriceSeries(today = new Date('2026-09-22T12:00:00Z')) {
+export function demoPriceSeries(today: Date) {
   const points: { day: string; priceHuf: number }[] = []
   for (let i = 29; i >= 0; i--) {
     const d = new Date(today.getTime() - i * 864e5)

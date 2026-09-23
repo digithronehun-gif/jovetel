@@ -6,12 +6,18 @@ import { ShelfItem } from '@/components/app/ShelfItem'
 import { VerdictBadge } from '@/components/app/VerdictBadge'
 import { Button } from '@/components/ui/Button'
 import { SectionHeader } from '@/components/ui/SectionHeader'
-import { DEMO_IDEAS, DEMOS, demoPriceSeries } from '@/content/landing'
+import { DEMO_IDEAS, DEMO_RADAR_DAYS, DEMOS, demoPriceSeries } from '@/content/landing'
+import { formatDate } from '@/lib/format/date'
 import { Band, DemoFrame } from './Band'
 
 /** Élő bemutatók (PRODUCT_SPEC 3.4) és a kívánságlista (3.5): valódi komponensek minta-adattal. */
 export function Demos({ startHref }: { startHref: string }) {
-  const chart = demoPriceSeries()
+  // szerverkomponens, kérésenként renderelődik: a minta dátumai a mai naphoz igazodnak
+  const today = new Date()
+  const chart = demoPriceSeries(today)
+  // a „10 nap múlva” mindig igaz: a dátum a mai naphoz képest számolt (a név szándékosan nincs kiírva,
+  // hogy a minta ne állítson hamis névnap-dátumot)
+  const radarDate = formatDate(new Date(today.getTime() + DEMO_RADAR_DAYS * 864e5), 'monthDay')
   return (
     <div id="hogyan" className="flex scroll-mt-20 flex-col gap-16 md:gap-24">
       <Band slot="landing.ajandekRadar">
@@ -29,8 +35,7 @@ export function Demos({ startHref }: { startHref: string }) {
           <LovedOneCard
             nickname="Anyu"
             relationLabel="Anya"
-            firstName="Katalin"
-            nextOccasion={{ label: 'névnap', dateLabel: 'november 25.', daysLeft: 10 }}
+            nextOccasion={{ label: 'névnap', dateLabel: radarDate, daysLeft: DEMO_RADAR_DAYS }}
             budgetLabel="5–15 ezer"
           />
           <ul className="-mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0" aria-label="Három ötlet Anyunak">
