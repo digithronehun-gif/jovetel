@@ -50,7 +50,7 @@ jobs:
           esac
           if [ "$offset" = "$want" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; else echo "run=false" >> "$GITHUB_OUTPUT"; echo "Ez a bejegyzés most nem Budapest 04:00/16:00 ($offset) — kihagyva."; fi
 
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: steps.slot.outputs.run == 'true'
       - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
         if: steps.slot.outputs.run == 'true'
