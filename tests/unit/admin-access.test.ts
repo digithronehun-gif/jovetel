@@ -23,8 +23,8 @@ describe('ingest workflow ütemezése', () => {
     const hours = crons.map((c) => Number(c.split(' ')[1]))
     const summer = hours.filter((h) => [4, 16].includes(h + 2))
     const winter = hours.filter((h) => [4, 16].includes(h + 1))
-    expect(summer.sort()).toEqual([2, 14])
-    expect(winter.sort()).toEqual([3, 15])
+    expect(summer.sort((a, b) => a - b)).toEqual([2, 14])
+    expect(winter.sort((a, b) => a - b)).toEqual([3, 15])
   })
   it('a kiválasztó lépés a nyári bejegyzéshez +0200-t, a télihez +0100-t vár', () => {
     expect(yml).toMatch(/'0 2 \* \* \*'\|'0 14 \* \* \*'\) want='\+0200'/)
