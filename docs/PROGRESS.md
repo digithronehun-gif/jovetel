@@ -4,8 +4,8 @@
 > A tulajdonos innen követi, hol tart a fejlesztés.
 
 ## Aktuális állapot
-- **Jelenlegi fázis:** F4 — Keresés, kategóriák, útmutatók (🔨)
-- **Utolsó frissítés:** 2026-09-23
+- **Jelenlegi fázis:** F5 — Termékoldal, teljes költség, ártörténet, „Valódi akció?” (🔨)
+- **Utolsó frissítés:** 2026-09-27
 - **Mérföldkő / teendő a tulajdonosnak:** **2. mérföldkő: az árgyűjtő élesítése — határidő 2026. október 28.** (lent),
   és az 1. mérföldkő (a landing waitlist módban) továbbra is érvényes.
 
@@ -137,7 +137,7 @@ Tailwind 4.3.3 · Playwright 1.56.1 (a gépen lévő Chromium-buildhez illeszked
 | F1 | Adatbázis, seed, névnaptár | ✅ | `fazis-01` (0583ac7) | 41 DB-teszt · névkeresés p95 20,7 ms / 50 000 termék |
 | F2 | Landing, várólista, jogi oldalak, hozzájárulás | ✅ | `fazis-02` (9c69ba8) | Lighthouse mobil 96/100/100/100 (h2) · 90/100/100/100 (h1) · 21 e2e |
 | F3 | Feed-import és napi árgyűjtő | ✅ | `fazis-03` (acea1bd) | 50 000 sor 17,7 s · újrafuttatás 0 írás · 7 adapter · átnézés: 2 BLOCKER + 7 SHOULD-FIX javítva · 26 e2e |
-| F4 | Keresés, kategóriák, útmutatók | 🔨 | | |
+| F4 | Keresés, kategóriák, útmutatók | ✅ | `fazis-04` (HASH_F4) | 50/50 top 5 · p95 159 ms / 50 000 termék · 38 e2e |
 | F5 | Termékoldal, teljes költség, ártörténet, „Valódi akció?” | ⏳ | | |
 | F6 | Követett kattintás, jelölés, konverziók | ⏳ | | |
 | F7 | Belépés, onboarding, beállítások | ⏳ | | |
@@ -448,3 +448,44 @@ számít az ítéletbe, a letöltés SSRF-védett, titok nem kerül naplóba, Po
    `/admin/utmutatok` szerkesztő (`requireAdmin`, `audit_log`).
 7. Mérés: 50 lekérdezés (`tests/fixtures/search-queries.json`) top 5 ≥ 80%; p95 < 300 ms 50 000 terméken
    szűrőkkel és facetekkel együtt. Kockázat: a facetek a 40 000 termékes főkategórián — ezért előaggregált stats-tábla.
+
+**Kész (2026-09-27):**
+- `lib/pricing`: `totalCost()` és `verdict()` / `verdictFromStats()` egész számos küszöbökkel; az SQL-párjuk a 0009
+  migrációban (`offer_stats`, `product_stats`, `refresh_catalog_stats()`), minden ingest és a seed végén frissül.
+- `lib/search`: `SearchProvider` (`search`, `count`, `suggestRelaxation`) + `PostgresSearch`; URL-állapot Zoddal
+  (`q`, `kategoria`, `marka`, `bolt`, `ar_min`, `ar_max`, `keszleten`, `akcio`, `bor`, `mentes`, `rendezes`, `oldal`);
+  „Miért neked” címkék (7.1) determinisztikusan; `GET /api/search` rate limittel (120/perc/IP-hash).
+- `/kereses`: mobilon alsó lapos szűrő, desktopon szűrőoszlop, aktív szűrő-chipek, 4 rendezés, lapozás, üres állapot a
+  legszűkebb szűrő lazításával; minden szűrő link (JavaScript nélkül is működik).
+- `/kategoria` áttekintő és `/kategoria/[...path]` képhelyes fejléccel, morzsamenüvel, alkategória-chipekkel.
+- `/utmutatok`, `/utmutatok/[slug]` + `/admin/utmutatok` szerkesztő (létrehozás, szöveg, borító-képhely, tételek
+  keresésből, megjegyzés, sorrend, közzététel, törlés), minden írás `audit_log`-ba; indexelhetőség automatikusan.
+- Fejléc: kereső ikon; „Ajándékötletek” → `/utmutatok` (F10-ig). Lábléc: Kategóriák · Útmutatók · Keresés.
+
+**Mért számok (50 000 generált + 25 egyedi termék, `tests/db/search-quality.test.ts`, `tests/.artifacts/perf/search-50k.json`):**
+- **50 tesztlekérdezés (elírással, ékezet nélkül): 50/50 = 100% a várt termék a top 5-ben** (határ: 80%).
+- **p95 159 ms** (határ: 300 ms), p50 20 ms, 282 keresés találatokkal és facetekkel együtt. Forgatókönyvenként p95:
+  szöveg 111 ms · szöveg + szűrők 119 ms · kategória-böngészés 156 ms · teljes katalógus 177 ms · csak bolt-szűrő a
+  teljes katalógusra 311 ms (ez a leglassabb eset; a facetek miatt; ha élesben számít, a facetek gyorsítótárazhatók).
+- A javítás menete (mérve): első változat p95 ~520 ms → a termékek széles sorainak olvasása és a kettős
+  materializálás megszüntetése, a join csak a kiválasztott 24 sorra → 196 ms → csak az aktív szűrők a feltételben
+  (rossz sorbecslés és egyesével olvasó terv helyett) → 159 ms.
+- Paritás: 310 ajánlaton (300 véletlen + 10 határeset) az SQL és a TS ítélete, teljes ára, ablaka és kedvezménye egyezik.
+- Tesztek: unit 262 (+39), DB 10 fájl / 72 (+17), e2e 38 (+12: keresés, alsó lapos szűrő, rendezés, akció- és
+  ársáv-szűrő, üres állapot + lazítás, lapozás, hibás paraméterek, desktop-oszlop és noindex, API, kategóriák,
+  390 px túllógás, útmutató-szerkesztő végig a nyilvános oldalig + audit_log, jogosultság). `pnpm verify` zöld.
+- Képernyőképek: `/kereses` (szűrővel, üres állapottal), `/kategoria`, `/kategoria/…/arcapolas`, `/utmutatok`,
+  `/utmutatok/[slug]`, `/admin/utmutatok`, `/admin/utmutatok/[id]` × 390/1440 × világos/sötét
+  (`tests/.artifacts/screens/f4/`), átnézve; javítva: 390 px-en a natív rendezés-választó kitolta az oldalt
+  (484 px) → korlátozott szélesség, e2e őrzi; az ártartomány-űrlap a keskeny oszlopban tört → két oszlop.
+
+**Eltérés a spectől és miért:** PRODUCT_SPEC 5.2 és 9. „Megvalósítás (F4)”, ARCHITECTURE 2. pont, DATA_MODEL 9. pont —
+röviden: csak friss (≤ 48 órás) árú termék listázódik; kevés találatnál lazított egyezés jelzéssel; a bolt-facet az
+ár-/készlet-/akciószűrőt nem ajánlatonként alkalmazza (sebesség); „Legnagyobb valódi kedvezmény” = a 30 napos
+mediánhoz mért %, csak valódi akciónál; az útmutató indexelhetősége automatikus; a fejlécbe kereső ikon került.
+A keresésben csak `is_comparison_allowed = true` kereskedő ajánlata jelenik meg (az alapérték `false`: élesítéskor a
+program feltételei szerint be kell kapcsolni — 2. mérföldkő, 2. lépés). A termékkártyák a `/termek/[slug]`-ra
+mutatnak, ami az F5-ben készül el (addig 404); a kártya ezért nem tölt elő.
+
+**Nyitott kérdések:** #3, #4 (feedek: valódi adat nélkül a keresés a [DEMO] katalóguson mérve).
+**Következő:** F5 — termékoldal, teljes költség, ártörténet, „Valódi akció?”.

@@ -220,3 +220,17 @@ A meglévő oszlopok jelentése pontosodott:
 | `product_tags` (`source = rule`) | a szótár a profiléval közös: `skin_type:*` = `SKIN_TYPES`, `concern:*` = `SKIN_CONCERNS`, `free_from:*` = `AVOID_INGREDIENTS`, plusz `interest:*` a kategóriából | a profil-egyezés (PRODUCT_SPEC 7.2) közvetlenül összevethető |
 | `feed_runs.error_sample` | legfeljebb 20 elutasított sor: ok, mező, cikkszám, tisztított részlet (max. 160 karakter) | az admin hibaminta sosem nyers HTML |
 | `feed_runs.stats` | elutasítási okok, jelzések (pl. `prompt_injection`), leképezetlen kategóriák (top 20), nyers méret, publikálási számok, időtartam | |
+
+## 9. Megvalósítás (F4, keresés) — 0009 `search_stats`
+
+| Hol | Mi | Miért |
+|---|---|---|
+| `products.search_text` | generált: `f_normalize(brand_name || ' ' || name)`, trigram GIN-index | elírás-toleráns egyezés a márkanévre is |
+| `offer_stats` (ajánlatonként) | `total_huf` (+ szállítás, vám), 30 napos ablak: `days_tracked`, `min30_huf`, `med30_twice` (a medián kétszerese, egész), `verdict`, `feed_discount_note`, `real_discount_pct`; `feed_id`, `seen_at`, `missed_runs` a lekérdezéskori frissességhez | a „Valódi akció” szűrő és a „Legnagyobb valódi kedvezmény” rendezés 50 000 terméken is gyors legyen |
+| `product_stats` (termékenként) | a legjobb friss, listázható ajánlat (`best_*`: készleten lévő előbb, azon belül legalacsonyabb teljes ár), `offer_count`, `merchant_ids`, jóváhagyott `tags`, `category_path`, `brand_id`, `product_created_at` | szűrők, facetek, rangsor egy táblából |
+| `refresh_catalog_stats(now)` | minden ingest és a seed végén fut; csak az eltérő sorokat írja (`is distinct from`); listázható = aktív ajánlat, aktív kereskedő, `is_comparison_allowed` | a 30 napos ablak naponta gördül; változatlan adatnál 0 írás |
+| `offer_shipping_huf()` | a teljes költség szállítási része (PRODUCT_SPEC 7.4) | a TS-pár (`lib/pricing/totalCost.ts`) ugyanezt számolja — paritásteszt: `tests/db/stats.test.ts` |
+| `search_tsquery_words()`, `search_tsquery_any()`, `search_match(q)` | szavankénti lekérdezések; teljes egyezéshalmaz relevanciával (ÉS: 0,4–1; lazított: 0–0,4) | a facetekhez a teljes halmaz kell, nem csak a top 24 |
+| RLS | mindkét táblán bekapcsolva, policy nélkül | mint az `offers`: a publikus kulccsal nem olvasható |
+
+A jutalék mértéke egyik táblában sem szerepel (3. vasszabály; egy unit teszt a keresés kódját és a migrációt is ellenőrzi).

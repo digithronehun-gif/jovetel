@@ -216,6 +216,32 @@ termékedet a polcra” · „Próbáld ki az ajándék-varázslót”.
 - Üres találat: „Erre nem találtunk terméket.” + a legszűkebb szűrő lazításának javaslata +
   „Kérdezd a tanácsadót” gomb.
 
+**Megvalósítás (F4) — pontosítások:**
+- **Találati halmaz:** csak olyan termék jelenik meg a keresésben és a kategóriaoldalon, amelynek van friss (≤ 48 órás),
+  listázható ajánlata (aktív kereskedő, a program engedi az összehasonlítást). Régi árú termék így nem kerül a listába
+  (6. vasszabály); a termékoldala közvetlen linken elérhető marad.
+- **Szöveg:** minden szó egyezik (magyar szótő vagy ékezetmentes előtag). Ha így 5-nél kevesebb a találat, a „lazított”
+  találatok (bármelyik szó, vagy a márka + név elírás-toleráns hasonlósága) is megjelennek, mindig a teljes egyezés
+  mögött, és a lista felett ezt jelezzük: „Minden szóra illő terméket nem találtunk, ezért a hasonló találatokat is mutatjuk.”
+- **Szűrők:** bőrtípus, márka, bolt: VAGY a csoporton belül; „Mentes”: ÉS (minden kiválasztottól mentes); az ár a
+  megjelenített ajánlat **teljes árára** vonatkozik. Bolt-szűrőnél a megjelenített ajánlat a kiválasztott boltok legjobb
+  friss ajánlata. Ársávok = a „Kényelmes keret” sávjai (5 000 Ft alatt · 5 000–14 999 · 15 000–29 999 · 30 000 felett),
+  mellettük egyéni tól–ig mező.
+- **Facetek:** egy csoport számai a többi csoport szűrőivel (diszjunktív). A bolt-facet a bolt kínálatát mutatja a
+  szöveg-, kategória- és címkeszűrőkkel; az ár-, készlet- és akciószűrőt ott nem ajánlatonként alkalmazzuk (mért ok: a
+  teljes katalógusra ajánlatonként ~0,3 s lenne).
+- **Rangsor (7.2):** a relevancia a találati halmaz legjobb egyezéséhez normálva (0–1); a „Gyűjtjük” ítélet 0,5 (mint a
+  szokásos ár); keret (ár-szűrő felső határa vagy a profil kerete) nélkül az ár-érték 0 minden terméknél, így a sorrendet
+  nem befolyásolja; frissesség: 12 órán belül 1, egyébként 0,5 (48 óra felett a termék nem jelenik meg).
+- **„Legnagyobb valódi kedvezmény”:** csak a „Valódi akció” ítéletű ajánlatok, a saját 30 napos medián árhoz mért
+  kedvezmény (egész %, lefelé kerekítve) szerint; utánuk a többi teljes ár szerint. A feed régi ára itt sem számít.
+- **Üres találat:** a javasolt lazítás az a szűrőcsoport, amelynek elhagyásával a legtöbb találat lenne (a gombon a
+  számmal: „Az ár-szűrő nélkül: 14 termék”). A „Kérdezd a tanácsadót” gomb az F10-től jelenik meg; addig a kategóriák.
+- **Lapozás:** 24 termék oldalanként, legfeljebb 50 oldal. **SEO:** a `/kereses` nem indexelődik; a kategóriaoldal
+  szűrve / rendezve / lapozva `noindex`, a kanonikus URL a szűretlen kategória. A szűrőlinkek `nofollow`-k.
+- **Fejléc:** a 3.1 elemei mellett kereső ikon; az „Ajándékötletek” az ajándék-varázslóig (F10) a `/utmutatok`-ra visz.
+  A lábléc „Böngészés” csoportja: Kategóriák · Útmutatók · Keresés.
+
 ### 5.3 Termékoldal (`/termek/[slug]`)
 - Galéria (feedkép), márka, név, kiszerelés
 - **„Miért neked”** címkék (belépve, lásd 7.1)
@@ -411,6 +437,12 @@ vagy saját), tételek szerkesztői megjegyzéssel. Induláskor 10 útmutató (a
 Indexelés csak, ha ≥ 5 tétel és ≥ 150 szó szerkesztői szöveg.
 
 ---
+
+**Megvalósítás (F4):** az indexelhetőség automatikus: legalább 5 tétel és legalább 150 szó a bevezetőben és a tételek
+szerkesztői megjegyzéseiben együtt, és nem maradhat benne „[KITÖLTENDŐ]” helyőrző (`lib/content/guides.ts`; a
+`lists.is_indexable` minden szerkesztői mentéskor frissül). A borítókép csak képhelyről jön (`lists.cover_slot`,
+7. vasszabály); a `cover_image_url` V1-ben nincs használatban. Vázlat: `visibility = 'private'`; közzététel:
+`visibility = 'public'` + `published_at`. A szerkesztői szöveg csak szövegként jelenik meg.
 
 ## 10. Admin (`/admin`, minimális)
 Feedek és futások (állapot, tételszám, hibák, [Futtatás most]) · Kereskedők (szállítási szabályok,

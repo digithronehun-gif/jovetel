@@ -37,6 +37,15 @@ GitHub Actions cron ──► scripts/ingest.ts ──► feedek letöltése ─
 - **Keresés (`src/lib/search`):** `SearchProvider` interfész (`search(query, filters, sort, page)`,
   `candidatesForWizard(state)`), egy implementáció: `PostgresSearch`. Hibrid: `websearch_to_tsquery('hu_unaccent', q)`
   + `similarity(name_normalized, q)` a trigrammal, súlyozott összeg; facetek külön aggregáló lekérdezéssel.
+  **Megvalósítás (F4):** `SearchProvider` = `search(state)` + `count(state)` + `suggestRelaxation(state)`
+  (`candidatesForWizard()` az F10-ben). A szöveg-egyezéshalmazt a `search_match(q)` SQL-függvény adja (ÉS, kevés
+  találatnál lazított VAGY + márka + név trigram). A szűrők és a rangsor a származtatott `product_stats` / `offer_stats`
+  táblából dolgoznak (legjobb friss ajánlat, teljes ár, ítélet — 0009 migráció, DATA_MODEL 9. pont), így a termékek
+  széles sorait és az ártörténetet a keresés nem olvassa. Egy keresés két párhuzamos lekérdezés: találatok (a termék- és
+  bolt-join csak a kiválasztott 24 sorra) és facetek (egyetlen aggregáló menet + márka, kategória, bolt). Csak az aktív
+  szűrők kerülnek a feltételbe (a mindig igaz jelzőoszlop rossz tervet adna). Bolt-szűrőnél tranzakción belül
+  `set local work_mem = '32MB'`. Mért (50 000 + 25 termék, `tests/db/search-quality.test.ts`): p50 20 ms, p95 159 ms,
+  a legrosszabb forgatókönyv (csak bolt-szűrő a teljes katalógusra) 311 ms. Az URL-állapot: `lib/search/state.ts`.
 - **Árazás (`src/lib/pricing`):** `totalCost()`, `verdict()`, `formatHuf()`, `bestOffer()`.
   Egységtesztekkel lefedve (határesetek: pont a küszöbön, n = 13/14 nap, hiányzó napok).
 - **AI (`src/lib/ai`):** lásd 5. pont.
