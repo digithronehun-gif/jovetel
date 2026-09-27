@@ -185,3 +185,4 @@ export function imageServingRules(allowDevImages: boolean): {
     ],
   }
 }
+export { asSlotId } from './slot'

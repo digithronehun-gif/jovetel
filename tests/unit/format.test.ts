@@ -91,3 +91,15 @@ describe('formatHufAxis', () => {
     expect(formatHufAxis(9500)).toBe('9,5e')
   })
 })
+
+describe('displayProductName', async () => {
+  const { displayProductName } = await import('@/lib/format')
+  it('a név elejéről leveszi a márkát (kis-nagybetűtől függetlenül), egyébként változatlan', () => {
+    expect(displayProductName('Hajnalpír Rózsavizes arctonik 200 ml', 'Hajnalpír')).toBe('Rózsavizes arctonik 200 ml')
+    expect(displayProductName('HAJNALPÍR rózsavizes arctonik', 'Hajnalpír')).toBe('Rózsavizes arctonik')
+    expect(displayProductName('Rózsavizes arctonik', 'Hajnalpír')).toBe('Rózsavizes arctonik')
+    expect(displayProductName('Hajnalpír', 'Hajnalpír')).toBe('Hajnalpír')
+    expect(displayProductName('Hajnalpírás krém', 'Hajnalpír')).toBe('Hajnalpírás krém')
+    expect(displayProductName('Krém', null)).toBe('Krém')
+  })
+})
