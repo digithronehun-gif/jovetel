@@ -158,11 +158,14 @@ create table public.product_stats (
   days_tracked smallint,
   -- jóváhagyott címkék (szűrők, facetek, „Miért neked”)
   tags text[] not null default '{}',
+  -- a „Legújabb” rendezéshez (a products tábla széles sorait így a keresésnek nem kell olvasnia)
+  product_created_at timestamptz not null,
   updated_at timestamptz not null default now()
 );
 create index product_stats_category_idx on public.product_stats (category_path text_pattern_ops);
 create index product_stats_tags_idx on public.product_stats using gin (tags);
 create index product_stats_best_total_idx on public.product_stats (best_total_huf) where best_offer_id is not null;
+create index product_stats_brand_idx on public.product_stats (brand_id);
 
 -- Szerveroldali, nem nyilvános (mint az offers): RLS policy nélkül a publikus kulccsal nem olvasható
 alter table public.offer_stats enable row level security;
@@ -258,11 +261,12 @@ begin
   ), upserted as (
     insert into public.product_stats as ps (product_id, category_id, category_path, brand_id, offer_count, merchant_ids,
       best_offer_id, best_merchant_id, best_feed_id, best_seen_at, best_missed_runs, best_price_huf, best_shipping_huf,
-      best_customs_huf, best_total_huf, best_in_stock, best_quality, verdict, real_discount_pct, days_tracked, tags)
+      best_customs_huf, best_total_huf, best_in_stock, best_quality, verdict, real_discount_pct, days_tracked, tags,
+      product_created_at)
     select p.id, p.category_id, c.path, p.brand_id, coalesce(a.offer_count, 0), coalesce(a.merchant_ids, '{}'),
       b.offer_id, b.merchant_id, b.feed_id, b.seen_at, b.missed_runs, b.price_huf, b.shipping_huf, b.customs_huf,
       b.total_huf, coalesce(b.in_stock, false), b.quality_score, b.verdict, b.real_discount_pct, b.days_tracked,
-      coalesce(t.tags, '{}')
+      coalesce(t.tags, '{}'), p.created_at
     from public.products p
     left join public.categories c on c.id = p.category_id
     left join best b on b.product_id = p.id
@@ -277,16 +281,16 @@ begin
       best_customs_huf = excluded.best_customs_huf, best_total_huf = excluded.best_total_huf,
       best_in_stock = excluded.best_in_stock, best_quality = excluded.best_quality, verdict = excluded.verdict,
       real_discount_pct = excluded.real_discount_pct, days_tracked = excluded.days_tracked, tags = excluded.tags,
-      updated_at = now()
+      product_created_at = excluded.product_created_at, updated_at = now()
     where (ps.category_id, ps.category_path, ps.brand_id, ps.offer_count, ps.merchant_ids, ps.best_offer_id,
         ps.best_merchant_id, ps.best_feed_id, ps.best_seen_at, ps.best_missed_runs, ps.best_price_huf,
         ps.best_shipping_huf, ps.best_customs_huf, ps.best_total_huf, ps.best_in_stock, ps.best_quality, ps.verdict,
-        ps.real_discount_pct, ps.days_tracked, ps.tags)
+        ps.real_discount_pct, ps.days_tracked, ps.tags, ps.product_created_at)
       is distinct from (excluded.category_id, excluded.category_path, excluded.brand_id, excluded.offer_count,
         excluded.merchant_ids, excluded.best_offer_id, excluded.best_merchant_id, excluded.best_feed_id,
         excluded.best_seen_at, excluded.best_missed_runs, excluded.best_price_huf, excluded.best_shipping_huf,
         excluded.best_customs_huf, excluded.best_total_huf, excluded.best_in_stock, excluded.best_quality,
-        excluded.verdict, excluded.real_discount_pct, excluded.days_tracked, excluded.tags)
+        excluded.verdict, excluded.real_discount_pct, excluded.days_tracked, excluded.tags, excluded.product_created_at)
     returning 1
   )
   select count(*) into pw from upserted;

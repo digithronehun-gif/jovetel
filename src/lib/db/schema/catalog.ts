@@ -357,5 +357,6 @@ export const productStats = pgTable('product_stats', {
     .array()
     .notNull()
     .default(sql`'{}'`),
+  productCreatedAt: timestamp('product_created_at', { withTimezone: true }).notNull(),
   updatedAt: updatedAt(),
 })
