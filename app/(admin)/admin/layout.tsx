@@ -25,6 +25,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <Link href="/admin/feedek" className="rounded-full px-3 py-1.5 text-ink hover:bg-stone">
               Feedek
             </Link>
+            <Link href="/admin/utmutatok" className="rounded-full px-3 py-1.5 text-ink hover:bg-stone">
+              Útmutatók
+            </Link>
           </nav>
         </div>
       </header>
