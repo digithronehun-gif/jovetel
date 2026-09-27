@@ -96,7 +96,18 @@ export interface SearchResult {
   tookMs: number
 }
 
+export type RelaxGroup = 'brands' | 'merchants' | 'price' | 'inStock' | 'deal' | 'skin' | 'free'
+export interface RelaxSuggestion {
+  group: RelaxGroup
+  /** az állapot a szűrőcsoport nélkül */
+  state: SearchState
+  count: number
+}
+
 /** A keresőszolgáltatás (ARCHITECTURE 2. pont). Egy megvalósítás: `PostgresSearch`. A varázsló (F10) is erre épül. */
 export interface SearchProvider {
   search(state: SearchState, opts?: { profile?: SearchProfile | null; now?: Date }): Promise<SearchResult>
+  count(state: SearchState, opts?: { now?: Date }): Promise<number>
+  /** üres találatnál: melyik szűrőcsoport elhagyása adná a legtöbb találatot */
+  suggestRelaxation(state: SearchState, opts?: { now?: Date }): Promise<RelaxSuggestion | null>
 }

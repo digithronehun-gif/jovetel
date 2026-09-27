@@ -11,6 +11,8 @@ import {
   type FacetValue,
   type Facets,
   type PriceBand,
+  type RelaxGroup,
+  type RelaxSuggestion,
   type SearchHit,
   type SearchProfile,
   type SearchProvider,
@@ -289,7 +291,46 @@ export class PostgresSearch implements SearchProvider {
       ${selectedBrands}
       ${selectedMerchants}`
 
-    return { hitsQuery, facetsQuery, profile }
+    const countQuery = sql<{ n: number }[]>`
+      with ${matchCte} ${base(false)} ${merchantCtes}
+      select count(*)::int as n from ${B} t where ${all}`
+
+    return { hitsQuery, facetsQuery, countQuery, profile }
+  }
+
+  /** Csak a találatok száma (az üres találat „szűrő lazítása” javaslatához). */
+  async count(state: SearchState, opts: { now?: Date } = {}): Promise<number> {
+    const { countQuery } = this.build(state, opts)
+    const [r] = state.merchants.length
+      ? await this.sql.begin(async (tx) => {
+          await tx`set local work_mem = '32MB'`
+          return tx<{ n: number }[]>`${countQuery}`
+        })
+      : await countQuery
+    return r?.n ?? 0
+  }
+
+  /**
+   * Üres találatnál (PRODUCT_SPEC 5.2): melyik szűrő elhagyásával lenne a legtöbb találat. Egyenként elhagyja az
+   * aktív szűrőcsoportokat (a kereső szövegét és a kategóriát nem), és a legjobbat adja vissza, ha van találat.
+   */
+  async suggestRelaxation(state: SearchState, opts: { now?: Date } = {}): Promise<RelaxSuggestion | null> {
+    const options: { group: RelaxGroup; state: SearchState }[] = []
+    const base = { ...state, page: 1 }
+    if (state.brands.length) options.push({ group: 'brands', state: { ...base, brands: [] } })
+    if (state.merchants.length) options.push({ group: 'merchants', state: { ...base, merchants: [] } })
+    if (state.priceMin !== null || state.priceMax !== null) options.push({ group: 'price', state: { ...base, priceMin: null, priceMax: null } })
+    if (state.inStock) options.push({ group: 'inStock', state: { ...base, inStock: false } })
+    if (state.deal) options.push({ group: 'deal', state: { ...base, deal: false } })
+    if (state.skin.length) options.push({ group: 'skin', state: { ...base, skin: [] } })
+    if (state.free.length) options.push({ group: 'free', state: { ...base, free: [] } })
+    if (options.length === 0) return null
+    const counts = await Promise.all(options.map((o) => this.count(o.state, opts)))
+    let best = -1
+    counts.forEach((n, i) => {
+      if (n > 0 && (best < 0 || n > counts[best]!)) best = i
+    })
+    return best < 0 ? null : { group: options[best]!.group, state: options[best]!.state, count: counts[best]! }
   }
 
   private toResult(state: SearchState, rows: HitRow[], facetRows: FacetRow[], profile: SearchProfile | null, t0: number): SearchResult {
