@@ -17,3 +17,25 @@ describe('rangsor-súlyok (PRODUCT_SPEC 7.2, 3. vasszabály)', () => {
     expect(RANKING_FACTORS.map((f) => f.key).sort()).toEqual(Object.keys(RANKING_WEIGHTS).sort())
   })
 })
+
+describe('a keresés SQL-je nem néz jutalékot (3. vasszabály)', () => {
+  it('a keresőmodul és a 0009 migráció egyetlen jutalék-jellegű oszlopot vagy táblát sem említ', async () => {
+    const { readFileSync, readdirSync } = await import('node:fs')
+    const { join } = await import('node:path')
+    const root = join(import.meta.dirname, '../..')
+    const files = [
+      ...readdirSync(join(root, 'src/lib/search')).filter((f) => f.endsWith('.ts')).map((f) => join(root, 'src/lib/search', f)),
+      join(root, 'src/lib/db/migrations/0009_search_stats.up.sql'),
+    ]
+    for (const f of files) {
+      // a megjegyzésekben szerepelhet a tilalom („a jutalék nem szempont”), a kódban nem
+      const code = readFileSync(f, 'utf8')
+        .split('\n')
+        .filter((l) => !/^\s*(\/\/|\*|\/\*\*|--)/.test(l))
+        .join('\n')
+        .replace(/\/\/.*$/gm, '')
+        .replace(/--.*$/gm, '')
+      expect(code, f).not.toMatch(/commission|conversions|clicks|epc|payout|jutal/i)
+    }
+  })
+})
