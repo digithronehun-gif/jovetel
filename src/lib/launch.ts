@@ -9,7 +9,7 @@ export const ROUTE_READY = {
   /** F7 */
   belepes: false,
   /** F4 */
-  kereses: false,
+  kereses: true,
   /** F10 */
   ajandek: false,
   /** F8 */

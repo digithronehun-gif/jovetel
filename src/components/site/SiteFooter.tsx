@@ -12,6 +12,13 @@ const LEGAL = [
   { href: '/rolunk', label: 'Rólunk' },
 ] as const
 
+/** A nyilvános katalógus belépői (a keresők és a partnerprogramok jóváhagyói is innen találják meg). */
+const BROWSE = [
+  { href: '/kategoria', label: 'Kategóriák' },
+  { href: '/utmutatok', label: 'Útmutatók' },
+  { href: '/kereses', label: 'Keresés' },
+] as const
+
 /** Lábléc (PRODUCT_SPEC 3.10): jogi linkek, jelölés, © 2026 JóVétel. */
 export function SiteFooter() {
   return (
@@ -25,6 +32,13 @@ export function SiteFooter() {
             befolyásolja a sorrendet.
           </p>
         </div>
+        <nav aria-label="Böngészés" className="flex flex-col gap-2">
+          {BROWSE.map((l) => (
+            <Link key={l.href} href={l.href} className="text-small text-ink-muted hover:text-ink">
+              {l.label}
+            </Link>
+          ))}
+        </nav>
         <nav aria-label="Jogi információk" className="grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-2">
           {LEGAL.map((l) => (
             <Link key={l.href} href={l.href} className="text-small text-ink-muted hover:text-ink">

@@ -64,7 +64,8 @@ export function ProductCard({
       <div className={cn('flex min-w-0 flex-1 flex-col', compact ? 'gap-1' : 'gap-2')}>
         {product.brandName ? <p className="truncate text-xs font-semibold text-ink-muted">{product.brandName}</p> : null}
         <h3 className={cn('line-clamp-2 text-ink', compact ? 'text-small' : 'text-body font-semibold')}>
-          <Link href={link} className="after:absolute after:inset-0 after:rounded-lg focus-visible:outline-none">
+          {/* találati rácsban 24 kártya: előtöltés nélkül (a termékoldal kattintásra töltődik) */}
+          <Link href={link} prefetch={false} className="after:absolute after:inset-0 after:rounded-lg focus-visible:outline-none">
             {product.name}
           </Link>
         </h3>
