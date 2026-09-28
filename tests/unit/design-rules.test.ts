@@ -73,4 +73,17 @@ describe('design- és biztonsági szabályok a teljes kódon', () => {
         expect(c, f.path).toMatch(/subsets:\s*\[\s*'latin',\s*'latin-ext'\s*\]/)
     }
   })
+  it('minden fájl, ami boltba vivő gombot épít (goHref), a Disclosure-t is rendereli (3. vasszabály)', () => {
+    const builders = all.filter((f) => /\bgoHref\(/.test(f.text) && !f.path.startsWith('src/lib/tracking'))
+    expect(builders.length).toBeGreaterThan(0)
+    const offenders = builders.filter((f) => !/<Disclosure\b/.test(f.text)).map((f) => f.path)
+    expect(offenders).toEqual([])
+  })
+  it('boltba vivő link csak a /go átirányítón át (nincs közvetlen bolt-URL a komponensekben)', () => {
+    const offenders = all
+      .filter((f) => /\.tsx$/.test(f.path))
+      .filter((f) => /href=\{?[^}\n]*\b(offer|o)\.(url|trackingUrl|deeplink)/.test(f.text))
+      .map((f) => f.path)
+    expect(offenders).toEqual([])
+  })
 })

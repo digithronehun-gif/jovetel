@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { VerdictBadge } from '@/components/app/VerdictBadge'
 import { WhyTag } from '@/components/app/WhyTag'
 import { LegalPage, LegalSection } from '@/components/site/LegalPage'
+import { STALE_AFTER_HOURS } from '@/lib/pricing/freshness'
 import { RANKING_FACTORS, RANKING_WEIGHTS } from '@/lib/search/weights'
 
 export const metadata: Metadata = {
@@ -18,7 +19,7 @@ export default function RankingPage() {
   return (
     <LegalPage
       title="Így rangsorolunk"
-      updated="2026-09-22"
+      updated="2026-09-28"
       draft={false}
       intro="A sorrendet a te szempontjaid döntik el. A jutalék mértéke nem szempont — ezt a kód szintjén is így építettük."
     >
@@ -44,6 +45,25 @@ export default function RankingPage() {
         <p>
           Mindig a teljes költséget hasonlítjuk össze: ár + szállítás (ha a rendelés nem éri el a bolt ingyenes szállítási
           küszöbét), EU-n kívüli boltnál + vám. A bontást minden ár mellett látod.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="A legjobb ajánlat egy terméknél">
+        <p>Ha egy terméket több bolt is árul, a „Legjobb ajánlat” mindig ugyanazzal a szabállyal dől el:</p>
+        <ol>
+          <li>Csak friss árat veszünk figyelembe: amit az elmúlt {STALE_AFTER_HOURS} órában ellenőriztünk.</li>
+          <li>A készleten lévő ajánlat megelőzi az elfogyottat.</li>
+          <li>Utána a legalacsonyabb teljes ár nyer (ár + szállítás + vám).</li>
+          <li>Azonos teljes árnál a bolt megbízhatósága dönt (kézzel beállított érték a szállítási idő és a visszaküldési feltételek alapján).</li>
+        </ol>
+        <p>Az összes ajánlat listája is teljes ár szerint rendezett; a {STALE_AFTER_HOURS} óránál régebbi ár a lista végére kerül, „Az ár nem friss” jelöléssel.</p>
+      </LegalSection>
+
+      <LegalSection title="Frissesség">
+        <p>
+          Minden ár mellett látod, mikor ellenőriztük („ár ellenőrizve 2 órája”). A boltok hivatalos termékadatait naponta
+          kétszer töltjük le. Ami {STALE_AFTER_HOURS} óránál régebbi, azt nem mutatjuk legjobb ajánlatként, és a keresésben sem
+          jelenik meg.
         </p>
       </LegalSection>
 
@@ -81,7 +101,32 @@ export default function RankingPage() {
 
       <LegalSection title="Partnerlinkek">
         <p>
-          Minden boltba vivő gomb mellett jelöljük, hogy partnerlink. Részletek: <Link href="/affiliate-tajekoztato">affiliate-tájékoztató</Link>.
+          Minden boltba vivő gomb mellett jelöljük, hogy partnerlink: ha vásárolsz, a bolt jutalékot fizethet nekünk. Neked ez
+          semmibe nem kerül, és az árat sem változtatja meg. Részletek: <Link href="/affiliate-tajekoztato">affiliate-tájékoztató</Link>.
+        </p>
+        <p>
+          Csak olyan bolt szerepel, amelynek partnerprogramja engedi az árösszehasonlítást. Helyet a listában venni nem lehet:
+          a jutalék mértéke, a bolt fizetése vagy bármilyen üzleti megállapodás nem változtat a sorrenden.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="Mit rögzítünk, amikor a boltba kattintasz?">
+        <p>
+          A „Megnézem a boltban” gomb a saját átirányítónkon át visz a boltba. Ilyenkor egy véletlen kattintás-azonosítót adunk
+          át a partnerhálózatnak, hogy a vásárlás utáni jutalékot hozzánk tudja rendelni. A boltnak rólad ennél többet nem
+          küldünk.
+        </p>
+        <p>
+          Nálunk ennyi marad meg: melyik ajánlatra és az oldal melyik részén kattintottál, mikor, és a böngésződ adatai csak
+          visszafejthetetlen (sózott) kivonatként. Belépve a fiókodhoz is kötjük, hogy lásd, mit néztél meg; a fiókod törlésekor
+          ez a kapcsolat megszűnik. A kattintásnaplót 24 hónap után összesítjük és töröljük.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="Szponzorált elemek">
+        <p>
+          Jelenleg nincs fizetett elhelyezés. Ha lesz, mindig „Szponzorált” címkét kap, és soha nem keveredik a fenti
+          szabályok szerinti sorrendbe.
         </p>
       </LegalSection>
     </LegalPage>
