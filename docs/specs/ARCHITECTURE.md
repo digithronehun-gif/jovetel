@@ -46,6 +46,8 @@ GitHub Actions cron ──► scripts/ingest.ts ──► feedek letöltése ─
   szűrők kerülnek a feltételbe (a mindig igaz jelzőoszlop rossz tervet adna). Bolt-szűrőnél tranzakción belül
   `set local work_mem = '32MB'`. Mért (50 000 + 25 termék, `tests/db/search-quality.test.ts`): p50 20 ms, p95 159 ms,
   a legrosszabb forgatókönyv (csak bolt-szűrő a teljes katalógusra) 311 ms. Az URL-állapot: `lib/search/state.ts`.
+- **Kattintáskövetés (`src/lib/tracking`):** `click_id`, `placement`/`ref` engedélylista (`goHref()`), botszűrés, a
+  `/go` céljának ellenőrzése, konverzió-szinkron (4. pont és 3. pont vége).
 - **Árazás (`src/lib/pricing`):** `totalCost()`, `verdict()`, `formatHuf()`, `bestOffer()`.
   Egységtesztekkel lefedve (határesetek: pont a küszöbön, n = 13/14 nap, hiányzó napok).
   **Megvalósítás (F5):** `bestOffer()` / `rankOffers()` a `product_stats` SQL-szabályának TS-párja; a
@@ -127,6 +129,13 @@ Adapterek V1-ben: `generic-csv`, `generic-xml` (Google Merchant-szerű), `awin`,
 
 **Konverzió-szinkron (`scripts/sync-conversions.ts`):** naponta, hálózatonként a tranzakciós API-ból
 az elmúlt 60 nap, upsert `conversions`-be, `click_id` a subID mezőből.
+**Megvalósítás (F6):** `src/lib/tracking/conversions/` — hálózatonként lekérő + Zod-os elemző (Awin Publisher API,
+CJ Commission Detail GraphQL, Admitad Statistics, Dognet: exportcím a `DOGNET_CONVERSIONS_URL`-ből); a 31 napos ablakkorlát
+szerint darabolva, lapozva. A `click_id` csak a saját formátumunkban (base62, 12) fogadható el; a kereskedő a
+kattintásból, annak hiányában a hálózat program-azonosítójából (`merchants.program_id`). Összeg csak HUF-ban (más
+pénznemnél null, a pénznem a `raw`-ban). A `raw`-ba csak engedélyezett mezők kerülnek. Upsert csak eltérésnél
+(újrafuttatás = 0 írás). Kulcs nélkül a hálózat kimarad; egy hálózat hibája nem állítja meg a többit.
+`pnpm sync:conversions -- [--days 60] [--network awin] [--fixtures]`; GitHub Actions `conversions.yml`, 05:00 Budapest.
 
 ---
 
@@ -139,6 +148,23 @@ az elmúlt 60 nap, upsert `conversions`-be, `click_id` a subID mezőből.
 4. Kattintás naplózása **nem blokkolóan** (`after()` / `waitUntil`), botszűrés (UA-lista, rate limit IP-nként)
 5. `302`, `Cache-Control: no-store`, `Referrer-Policy: strict-origin-when-cross-origin`
 6. `placement` és `ref` query paraméterek csak naplózásra, whitelistelt értékekkel
+
+**Megvalósítás (F6):**
+- Modul: `src/lib/tracking/` (`clickId.ts`, `placements.ts`, `bots.ts`, `target.ts`, `conversions/`); a subID-es
+  cél-URL építése letöltő kód nélküli, tiszta modulban: `src/lib/ingestion/adapters/tracking.ts` (az adapterek is ezt
+  használják). Az adapter a feedből (`source_items → feeds.adapter`), hiányában a hálózat kódjából jön.
+- Egyetlen lekérdezés (`loadGoOffer`): ajánlat + termék slug + kereskedő + hálózat + feed. Nem uuid vagy nem létező
+  ajánlat → 404; inaktív ajánlat vagy nem `active` kereskedő → 302 a termékoldalra, **relatív** `Location`-nel (soha nem a
+  kérés Host fejlécéből). A felépített cél ellenőrzése: https a tracking-domainen, http/https a kereskedő domainjén (és
+  aldomainjén), felhasználónév és IP-literál nélkül. Ha a követett cél nem építhető (pl. hiányzó Awin publisher-azonosító,
+  Dognet-sablon) vagy nem engedélyezett hostra mutat, a bolt saját (engedélylistás) URL-je jutalék nélkül; ha az sem,
+  a termékoldal. A saját domainünkre mutató cél tiltott (láncolás ellen). Csak GET.
+- Rate limit 60/perc/IP-hash → 429 `Retry-After`-rel. Botszűrés: UA-lista, üres UA, előtöltés (`Sec-Purpose`); a bot is
+  átirányul, de `is_bot = true`. `X-Robots-Tag: noindex, nofollow`.
+- Napló `after()`-ben: `ip_hash`, `ua_hash` (sózott), `user_id` csak Supabase-session-süti esetén, szerveroldalon
+  ellenőrizve; `session_id` = `jv_anon` csak analitikai hozzájárulással.
+- Mért (helyi production build): 500 kérés/perc mellett p50 7,2 ms, p95 10,2 ms, p99 13,6 ms; 3000 kérés/percnél
+  p95 7,2 ms; minden kattintás naplózva (`scripts/perf/go-load.mjs`).
 
 ---
 

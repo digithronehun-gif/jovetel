@@ -136,6 +136,12 @@ unique(user_id, product_id)
 `session_id` · `placement` (pl. `product_best`, `wizard_result`, `shared_list`, `email_digest`) · `content_ref`
 (útmutató/lista id, kampánykód) · `ip_hash` · `ua_hash` · `is_bot boolean` · `created_at`
 Index: `created_at`, `merchant_id`, `user_id`.
+**Megvalósítás (F6):** `placement` engedélylista (`src/lib/tracking/placements.ts`): `product_best`, `product_offers`,
+`wizard_result`, `list`, `shared_list`, `shelf`, `for_you`, `email_digest`; ismeretlen érték → null. `content_ref`
+formája `{guide|list|campaign|digest}:{slug vagy uuid}` (max. 64), különben null. `session_id` csak analitikai
+hozzájárulással (a `jv_anon` süti). `is_bot`: UA-lista, üres UA vagy előtöltés. A konverzió `raw` mezője csak
+engedélyezett, személyes adatot nem tartalmazó mezőket őriz; a fejlesztői seed `raw.demo = true` jelölésű
+szintetikus kattintásokat és konverziókat is ír.
 
 **`conversions`** — `network_id` · `network_transaction_id` unique(network_id, …) · `click_id` (a subID-ból) ·
 `merchant_id` · `order_value_huf` · `commission_huf` · `status` (`pending`, `approved`, `rejected`) ·

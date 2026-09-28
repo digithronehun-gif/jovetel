@@ -35,7 +35,7 @@
 > | `NEXT_PUBLIC_SITE_URL` | `https://<domain>` (a riasztó levél linkje) |
 > | `RESEND_API_KEY`, `EMAIL_FROM` | mint az 1. mérföldkőben |
 > | `ADMIN_ALERT_EMAIL` | ide jön a levél, ha egy feed blokkolt (60% alatti tételszám / 20% feletti hiba) vagy hibás |
-> | `AWIN_API_TOKEN`, `AWIN_PUBLISHER_ID` (és a többi hálózaté, ha van) | a hálózati felületről |
+> | `AWIN_API_TOKEN`, `AWIN_PUBLISHER_ID` (és a többi hálózaté, ha van: CJ `CJ_API_TOKEN` + `CJ_PUBLISHER_ID`; Admitad `ADMITAD_CLIENT_ID` + `ADMITAD_CLIENT_SECRET`; Dognet `DOGNET_CONVERSIONS_URL` + `DOGNET_API_KEY`) | a hálózati felületről; a napi konverzió-szinkron (05:00, F6) is ezeket használja, kulcs nélkül a hálózat kimarad |
 > | `CRON_SECRET` | **ugyanaz** az érték, mint a Vercelen (legalább 32 véletlen karakter, pl. `openssl rand -hex 32`): ezzel írja alá az ingest a termékoldalak gyorsítótárának frissítését (F5). Nélküle az ár legfeljebb 1 órás késéssel jelenik meg |
 >
 > **4. Első futás kézzel:** GitHub → Actions → „Feed-import” → Run workflow. A zöld pipa és az admin felület

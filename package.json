@@ -38,6 +38,7 @@
     "screenshots": "tsx scripts/screenshots.ts",
     "perf:proxy": "node scripts/perf/h2-proxy.mjs",
     "perf:lighthouse": "node scripts/perf/lighthouse.mjs",
+    "perf:go": "node scripts/local-stack/with-env.mjs node scripts/perf/go-load.mjs",
     "dev:local": "node scripts/local-stack/with-env.mjs pnpm dev",
     "start:local": "node scripts/local-stack/with-env.mjs pnpm start",
     "test:e2e:local": "node scripts/local-stack/with-env.mjs pnpm test:e2e"
