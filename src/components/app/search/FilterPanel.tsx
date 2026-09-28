@@ -2,7 +2,8 @@ import { Check } from 'lucide-react'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { cn } from '@/components/ui/cn'
-import { PRICE_BANDS, toggle, withChange, type FacetValue, type SearchResult, type SearchState } from '@/lib/search'
+import { PRICE_BANDS, toggle, withChange, type FacetValue, type PriceBand, type SearchResult, type SearchState } from '@/lib/search'
+import { PriceBandLabel } from './PriceBandLabel'
 import { PriceRangeForm } from './PriceRangeForm'
 
 export type HrefFor = (state: SearchState) => string
@@ -51,6 +52,7 @@ export function FilterPanel({
       <Group title="Teljes ár" hint="szállítással együtt">
         <OptionList
           options={facets.priceBands}
+          renderLabel={(o) => <PriceBandLabel band={o.value as PriceBand} />}
           hrefFor={(v) => {
             const band = PRICE_BANDS[v as keyof typeof PRICE_BANDS]
             const active = facets.priceBands.find((b) => b.value === v)?.selected
@@ -112,7 +114,15 @@ function Count({ n }: { n: number }) {
   return <span className="text-small text-ink-muted tabular-nums">{n.toLocaleString('hu-HU')}</span>
 }
 
-function OptionList({ options, hrefFor }: { options: FacetValue[]; hrefFor: (value: string) => string }) {
+function OptionList({
+  options,
+  hrefFor,
+  renderLabel,
+}: {
+  options: FacetValue[]
+  hrefFor: (value: string) => string
+  renderLabel?: (o: FacetValue) => ReactNode
+}) {
   return (
     <ul className="flex flex-col">
       {options.map((o) => {
@@ -129,7 +139,7 @@ function OptionList({ options, hrefFor }: { options: FacetValue[]; hrefFor: (val
               >
                 {o.selected ? <Check className="size-3.5" /> : null}
               </span>
-              <span>{o.label}</span>
+              <span>{renderLabel ? renderLabel(o) : o.label}</span>
               {o.selected ? <span className="sr-only">(kiválasztva)</span> : null}
             </span>
             <Count n={o.count} />

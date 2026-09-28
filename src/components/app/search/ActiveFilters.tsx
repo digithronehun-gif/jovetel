@@ -3,8 +3,8 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { Price } from '@/components/app/PriceBlock'
 import { activeBand, hasFilters, withChange, type SearchResult, type SearchState } from '@/lib/search'
-import { PRICE_BAND_LABEL } from '@/content/labels'
 import type { HrefFor } from './FilterPanel'
+import { PriceBandLabel } from './PriceBandLabel'
 
 /** Aktív szűrők eltávolítható chipként (link: JavaScript nélkül is), és „Szűrők törlése”. */
 export function ActiveFilters({ result, hrefFor }: { result: SearchResult; hrefFor: HrefFor }) {
@@ -14,7 +14,7 @@ export function ActiveFilters({ result, hrefFor }: { result: SearchResult; hrefF
   const label = (list: { value: string; label: string }[], v: string) => list.find((x) => x.value === v)?.label ?? v
   const chips: { key: string; label: ReactNode; href: string }[] = []
   const band = activeBand(state)
-  if (band) chips.push({ key: 'ar', label: PRICE_BAND_LABEL[band], href: set({ priceMin: null, priceMax: null }) })
+  if (band) chips.push({ key: 'ar', label: <PriceBandLabel band={band} />, href: set({ priceMin: null, priceMax: null }) })
   else if (state.priceMin !== null || state.priceMax !== null) {
     chips.push({
       key: 'ar',
