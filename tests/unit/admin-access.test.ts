@@ -18,13 +18,22 @@ describe('adminAccess (4. vasszabály, route-réteg)', () => {
 describe('ingest workflow ütemezése', () => {
   const yml = readFileSync(join(import.meta.dirname, '../../.github/workflows/ingest.yml'), 'utf8')
   const crons = [...yml.matchAll(/cron: '([^']+)'/g)].map((m) => m[1]!)
-  it('négy UTC-bejegyzés, ami nyáron és télen is 04:00 és 16:00 Budapest', () => {
-    expect(crons).toHaveLength(4)
-    const hours = crons.map((c) => Number(c.split(' ')[1]))
+  const ingest = crons.filter((c) => c.startsWith('0 '))
+  const stats = crons.filter((c) => c.startsWith('5 '))
+  it('négy import-bejegyzés, ami nyáron és télen is 04:00 és 16:00 Budapest', () => {
+    expect(ingest).toHaveLength(4)
+    const hours = ingest.map((c) => Number(c.split(' ')[1]))
     const summer = hours.filter((h) => [4, 16].includes(h + 2))
     const winter = hours.filter((h) => [4, 16].includes(h + 1))
     expect(summer.sort((a, b) => a - b)).toEqual([2, 14])
     expect(winter.sort((a, b) => a - b)).toEqual([3, 15])
+  })
+  it('két statisztika-bejegyzés 00:05 Budapest (nyáron 22:05, télen 23:05 UTC), „stats” módban', () => {
+    expect(crons).toHaveLength(6)
+    expect(stats.sort()).toEqual(['5 22 * * *', '5 23 * * *'])
+    expect(yml).toMatch(/'5 22 \* \* \*'\) want='\+0200'; mode=stats/)
+    expect(yml).toMatch(/'5 23 \* \* \*'\) want='\+0100'; mode=stats/)
+    expect(yml).toMatch(/pnpm ingest -- --stats-only/)
   })
   it('a kiválasztó lépés a nyári bejegyzéshez +0200-t, a télihez +0100-t vár', () => {
     expect(yml).toMatch(/'0 2 \* \* \*'\|'0 14 \* \* \*'\) want='\+0200'/)

@@ -4,7 +4,7 @@
  *
  * Szerializálás `<script type="application/ld+json">` gyermekeként (React 19 SSR nyersen írja): a `<`, `>` és `&`
  * \\uXXXX-ként kerül ki, így a feedből jövő szöveg sem zárhatja le a scriptet, és markup sem lehet belőle
- * (2. vasszabály — `dangerouslySetInnerHTML` nélkül).
+ * (2. vasszabály — nyers HTML-beillesztés nélkül).
  */
 export function serializeJsonLd(data: unknown): string {
   return JSON.stringify(data)
