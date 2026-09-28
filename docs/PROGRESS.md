@@ -4,8 +4,8 @@
 > A tulajdonos innen követi, hol tart a fejlesztés.
 
 ## Aktuális állapot
-- **Jelenlegi fázis:** F5 — Termékoldal, teljes költség, ártörténet, „Valódi akció?” (🔨)
-- **Utolsó frissítés:** 2026-09-27
+- **Jelenlegi fázis:** F6 — Követett kattintás, jelölés, konverziók (🔨)
+- **Utolsó frissítés:** 2026-09-28
 - **Mérföldkő / teendő a tulajdonosnak:** **2. mérföldkő: az árgyűjtő élesítése — határidő 2026. október 28.** (lent),
   és az 1. mérföldkő (a landing waitlist módban) továbbra is érvényes.
 
@@ -36,9 +36,11 @@
 > | `RESEND_API_KEY`, `EMAIL_FROM` | mint az 1. mérföldkőben |
 > | `ADMIN_ALERT_EMAIL` | ide jön a levél, ha egy feed blokkolt (60% alatti tételszám / 20% feletti hiba) vagy hibás |
 > | `AWIN_API_TOKEN`, `AWIN_PUBLISHER_ID` (és a többi hálózaté, ha van) | a hálózati felületről |
+> | `CRON_SECRET` | **ugyanaz** az érték, mint a Vercelen (legalább 32 véletlen karakter, pl. `openssl rand -hex 32`): ezzel írja alá az ingest a termékoldalak gyorsítótárának frissítését (F5). Nélküle az ár legfeljebb 1 órás késéssel jelenik meg |
 >
 > **4. Első futás kézzel:** GitHub → Actions → „Feed-import” → Run workflow. A zöld pipa és az admin felület
-> (`/admin/feedek`) „Sikeres” jelvénye után a cron magától fut naponta 04:00-kor és 16:00-kor.
+> (`/admin/feedek`) „Sikeres” jelvénye után a cron magától fut naponta 04:00-kor és 16:00-kor, 00:05-kor pedig
+> csak az ár-statisztika (a napváltáskor frissülő „Valódi akció” ítélethez).
 >
 > **5. (Opcionális) [Futtatás most] az adminban:** Vercel env: `INGEST_DISPATCH_TOKEN` (GitHub finomhangolt token,
 > csak ehhez a repóhoz, *Actions: read and write*), `INGEST_DISPATCH_REPO` (`tulajdonos/repo`) — OPEN_QUESTIONS #17.
@@ -138,7 +140,7 @@ Tailwind 4.3.3 · Playwright 1.56.1 (a gépen lévő Chromium-buildhez illeszked
 | F2 | Landing, várólista, jogi oldalak, hozzájárulás | ✅ | `fazis-02` (9c69ba8) | Lighthouse mobil 96/100/100/100 (h2) · 90/100/100/100 (h1) · 21 e2e |
 | F3 | Feed-import és napi árgyűjtő | ✅ | `fazis-03` (acea1bd) | 50 000 sor 17,7 s · újrafuttatás 0 írás · 7 adapter · átnézés: 2 BLOCKER + 7 SHOULD-FIX javítva · 26 e2e |
 | F4 | Keresés, kategóriák, útmutatók | ✅ | `fazis-04` (4c65804) | 50/50 top 5 · p95 159 ms / 50 000 termék · 38 e2e |
-| F5 | Termékoldal, teljes költség, ártörténet, „Valódi akció?” | 🔨 | | |
+| F5 | Termékoldal, teljes költség, ártörténet, „Valódi akció?” | ✅ | `fazis-05` (HASH) | 20/20 legjobb ár (TS + SQL) · mobil LCP 1,97 s (h2, 5 futás mediánja) · Lighthouse 98/100/100/100 · 46 e2e |
 | F6 | Követett kattintás, jelölés, konverziók | ⏳ | | |
 | F7 | Belépés, onboarding, beállítások | ⏳ | | |
 | F8 | App-keret, listák, megosztás, foglalás, árfigyelő | ⏳ | | |
@@ -507,3 +509,57 @@ mutatnak, ami az F5-ben készül el (addig 404); a kártya ezért nem tölt elő
    `returnTo` + `pendingAction` paraméterrel (belépés előtt, waitlist módban a várólistára).
 5. Mérés: 20 kézi eset, mobil LCP (Lighthouse), e2e: minden „Ft” szöveg `PriceBlock`-ban (termék-, kereső-, kategória-
    és útmutatóoldalon), képernyőképek. Kockázat: a `/go` az F6-ban készül; addig a bolt-gomb célja még nem él.
+
+**Kész (2026-09-28):**
+- `lib/pricing`: `bestOffer()` / `rankOffers()` (friss és listázható ajánlatok; készleten lévő előbb; legalacsonyabb
+  teljes ár; bolt-minőség; azonosító) — a `product_stats` SQL-szabályának TS-párja; a `verdict()` hiányzó napos ága tesztelve.
+- Adatréteg: `loadProductPage()` / `getProductPage()` (termék, listázható ajánlatok szállítási szabályokkal és
+  „ár ellenőrizve” idővel, 90 napos ártörténet, 4 kapcsolódó termék), `unstable_cache` 1 órára, `catalog` és
+  `product:{slug}` tag-gel.
+- Célzott érvénytelenítés: `POST /api/revalidate` (HMAC-SHA256 + időbélyeg, ±300 s, Zod-dal ellenőrzött tag-lista), az
+  ingest a statisztika-frissítés után a megváltozott termékeket küldi; új `--stats-only` mód és 00:05-ös napi futás
+  (az éjfél utáni ítélet-váltás miatt).
+- `/termek/[slug]`: morzsamenü, feedkép (vagy semleges helykitöltő), márka, név, kiszerelés, „Miért neked”, legjobb
+  ajánlat blokk (teljes ár nagyban, bontás, bolt, szállítási idő, frissesség, [Megnézem a boltban] + `Disclosure`,
+  `VerdictBadge` magyarázattal), műveletek, ártörténet (30/90 nap, boltonként, 30 napos minimum), összes ajánlat
+  (`OfferRow`, teljes ár szerint, a nem friss a végén), leírás, jellemzők, hasonló termékek; JSON-LD csak valós
+  mezőkből (React-gyerekként, `<`/`>`/`&` escape-pel); `noindex`, ha nincs friss ajánlat vagy érdemi tartalom; 404.
+- Műveletek: „Szólj, ha olcsóbb lesz” (−5/−10/−20%/egyéni célár a teljes árból), „Listára”, „Polcra teszem”;
+  vendégnél `loginHref(returnTo, pendingAction)` → élő módban `/belepes?…`, waitlist módban a várólista.
+- Keresés: az ársáv-címkék („5 000 Ft alatt”) is `PriceBlock`-os `Price`-szal (a „Ft” szabály miatt).
+- Teljesítmény: a célár-választó (Radix Dialog) és a süti-sáv kapcsolói (Radix Switch) csak igény szerint töltődnek
+  le (a süti-sáv minden oldalt érint); a `Disclosure` „Így rangsorolunk” linkje aláhúzott (akadálymentesség 96 → 100).
+
+**Mért számok (production build, `next start`, helyi stack):**
+- **A legjobb teljes ár 20/20 kézi tesztesetben helyes** a TS-ben (`tests/unit/best-offer.test.ts`) és az SQL-ben
+  (`tests/db/best-offer.test.ts`) is, ugyanabból a fixture-ből (`tests/fixtures/best-offer-cases.json`: küszöbön lévő
+  ár, 1 Ft-tal alatta, vám, készlethiány, 48/49 órás ár, szüneteltetett és összehasonlítást nem engedő bolt, inaktív
+  ajánlat, döntetlen minőség és azonosító szerint).
+- **Mobil LCP, Lighthouse 5 futás mediánja, `/termek/[slug]`, HTTP/2 + brotli: 1 972 ms** (határ: 2 500 ms;
+  futások: 1 972 · 2 431 · 2 417 · 1 965 · 1 963); **teljesítmény 98 · akadálymentesség 100 · bevált gyakorlatok 100 ·
+  SEO 100**, TBT 121 ms, CLS 0. Közvetlen HTTP/1.1: 92 · 100 · 100 · 100, LCP 3 338 ms (az F2-ben leírt okból
+  pesszimista: HTTP/1.1-en 6 párhuzamos kapcsolat, tömörítés nélkül). A lazy betöltés előtt ugyanez h2-n 87 pont,
+  LCP 2 421 ms, TBT 437 ms volt. A landing (h2, 3 futás) 95 · 100 · 100 · 100, LCP 2,74 s (az F2-vel egyező).
+  Az LCP-elem a seed termékeinél a H1 (nincs feedkép); valódi feedképnél a kép `priority`-vel töltődik, de a
+  kereskedő CDN-jétől függ.
+- **„Ft” csak `PriceBlock`-ban:** e2e bejárja a landingot, 3 keresést (ársávval is), a kategória-, útmutató-,
+  termék- és „Így rangsorolunk” oldalt — minden „szám + Ft” szöveg `[data-price-block]`-on belül van.
+- Tesztek: unit 302 (+40), DB 12 fájl / 92 + 1 kihagyott (+20), e2e 46 (+8: legjobb ajánlat bontással és ítélettel,
+  összes ajánlat sorrendje és a nem friss jelölés, ártörténet-váltó, célár-választó és vendég-cél, JSON-LD, 404 és
+  390 px, „Ft” szabály 8 oldalon, süti-beállítások igény szerinti betöltése). `pnpm verify` zöld.
+- Képernyőképek: `/termek/sovirag-retinolos-arcszerum-50-ml` (3 bolt, valódi akció) × 390/1440 × világos/sötét,
+  teljes oldal és első képernyő (`tests/.artifacts/screens/f5/`), átnézve; javítva: mobilon a helykitöltő kép a
+  teljes szélességet elfoglalta, és a legjobb ajánlat a hajtás alá került → keskenyebb kép (3/5).
+
+**Eltérés a spectől és miért:** PRODUCT_SPEC 5.3 „Megvalósítás (F5)” és ARCHITECTURE 2. pont:
+- **ISR helyett adat-szintű gyorsítótár** (1 óra + célzott tag-érvénytelenítés): a nonce-os CSP miatt az oldal nem
+  lehet statikus. A hatás ugyanaz (a DB-t termékenként óránként legfeljebb egyszer kérdezi, az ingest után azonnal
+  frissül), és a „ár ellenőrizve” mindig a renderelés idejéhez számol.
+- 00:05-ös statisztika-futás (nem volt a specben): az ítélet ablaka napváltáskor tolódik.
+- Indexelési szabály pontosítva (friss ajánlat + `is_indexable` vagy ≥ 120 karakteres leírás); a „Kinek ajánljuk”
+  szerkesztői adat nélkül elmarad; a „Polcra teszem” csak szépségápolási terméknél.
+
+**Nyitott kérdések:** nincs új. A bolt-gomb célja (`/go/…`) az F6-ban készül el (addig 404); a termékkártya
+szív-művelete az F8-ban.
+**Következő:** F6 — követett kattintás (`/go/[offerId]`), subID, konverzió-szinkron, `/admin/kattintasok`, majd
+független vasszabály-átnézés.

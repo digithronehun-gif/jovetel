@@ -48,6 +48,16 @@ GitHub Actions cron ──► scripts/ingest.ts ──► feedek letöltése ─
   a legrosszabb forgatókönyv (csak bolt-szűrő a teljes katalógusra) 311 ms. Az URL-állapot: `lib/search/state.ts`.
 - **Árazás (`src/lib/pricing`):** `totalCost()`, `verdict()`, `formatHuf()`, `bestOffer()`.
   Egységtesztekkel lefedve (határesetek: pont a küszöbön, n = 13/14 nap, hiányzó napok).
+  **Megvalósítás (F5):** `bestOffer()` / `rankOffers()` a `product_stats` SQL-szabályának TS-párja; a
+  `tests/fixtures/best-offer-cases.json` 20 esete a TS unit tesztben és az SQL DB-tesztben is fut.
+- **Termékoldal-gyorsítótár (F5):** oldal-szintű ISR helyett **adat-szintű** gyorsítótár, mert a nonce-os CSP
+  (`proxy.ts`) miatt minden oldal dinamikusan renderelődik. A `getProductPage(slug)` `unstable_cache`-sel 1 órára
+  tárol, `catalog` és `product:{slug}` tag-gel; a frissesség („ár ellenőrizve”, 48 órás határ) mindig a renderelés
+  idejéhez számol. Az ingest a statisztika-frissítés után aláírt kérést küld a `POST /api/revalidate`-re
+  (`X-JV-Timestamp` + `X-JV-Signature` = HMAC-SHA256 a `{timestamp}.{body}` szövegen a `CRON_SECRET`-tel, ±300 s;
+  `lib/security/hmac.ts`),
+  a megváltozott `product_stats` sorok termékeire (1000-es kötegekben; 2000 fölött egyetlen `catalog` tag).
+  Az éjfél utáni ítélet-váltás miatt 00:05-kor (Budapest) csak a statisztika fut (`pnpm ingest -- --stats-only`).
 - **AI (`src/lib/ai`):** lásd 5. pont.
 - **Értesítések (`src/lib/notifications`):** triggerek → `notifications` sorok (dedupe kulccsal) →
   napi összesítő levél felhasználónként.
@@ -170,6 +180,7 @@ Leiratkozás: aláírt token típusonként (`/leiratkozas?t=…`), egy kattintá
 | Feladat | Ütemező | Mikor | Mit csinál |
 |---|---|---|---|
 | Feed-import + árgyűjtés | GitHub Actions | 04:00, 16:00 | `pnpm ingest --all` |
+| Ár-statisztika (napváltás) | GitHub Actions | 00:05 | `pnpm ingest -- --stats-only` (ítélet, legjobb ajánlat, célzott revalidáció) |
 | Konverzió-szinkron | GitHub Actions | 05:00 | `pnpm sync:conversions` |
 | Értesítés-generálás | Vercel Cron | 06:30 | triggerek kiértékelése → `notifications` |
 | Napi összesítő küldése | Vercel Cron | 07:30 (és óránként a eltérő `digest_time`-okra) | levelek összeállítása és küldése |

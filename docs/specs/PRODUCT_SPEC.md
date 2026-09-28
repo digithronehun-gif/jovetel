@@ -256,6 +256,29 @@ termékedet a polcra” · „Próbáld ki az ajándék-varázslót”.
 - Kapcsolódó termékek (ugyanaz a kategória, hasonló ársáv)
 - Strukturált adat: Product + AggregateOffer (JSON-LD), csak valós mezőkből
 
+**Megvalósítás (F5) — pontosítások:**
+- **Legjobb ajánlat** = `lib/pricing` `bestOffer()`: csak listázható (aktív ajánlat, aktív kereskedő,
+  `is_comparison_allowed`) és friss (≤ 48 órás) ajánlat közül; előbb a készleten lévő, aztán a legalacsonyabb teljes ár,
+  a jobb bolt-minőség, végül az azonosító. Ugyanez a szabály az SQL-ben (`product_stats`); 20 közös kézi eset őrzi.
+  Friss ajánlat nélkül nincs „legjobb ajánlat” blokk, csak a tényszerű „nincs friss árunk” szöveg.
+- **Összes ajánlat:** teljes ár szerint; a 48 óránál régebbi árú ajánlat a lista végén, „Az ár nem friss” jelöléssel,
+  a gombja és a jelölése megmarad. Minden sorban ott a `Disclosure`.
+- A bolt-gomb a `/go/{offerId}?placement=best_offer|offer_list` követett átirányítóra visz (F6), `rel="sponsored"`.
+- Az ítélet (`VerdictBadge` + magyarázat) a legjobb ajánlat saját napi ártörténetéből számol a renderelés napjával.
+- **„Miért neked”** vendégnél csak a nem személyes címke látszik (valódi akció); a bőrprofil-, keret- és
+  kedvencbolt-címkék belépve (F7, 7.1).
+- **Műveletek vendégnél:** élő módban `/belepes?returnTo=/termek/{slug}&pendingAction=…`, ahol a `pendingAction`
+  formája `price_alert:{slug}:pct:{5|10|20}`, `price_alert:{slug}:huf:{összeg}`, `list:{slug}` vagy `shelf:{slug}`
+  (`lib/auth/pendingAction.ts`, Zod-dal ellenőrizve; a `returnTo` csak belső útvonal lehet). Waitlist módban, és
+  amíg a belépés nem készült el, a műveletek a várólistára visznek. A célár-választó a teljes árból számol.
+- A „Polcra teszem” csak szépségápolási terméknél jelenik meg. A „Kinek ajánljuk” szerkesztői adat nélkül elmarad.
+- **Kapcsolódó termékek:** ugyanaz a kategória, a legjobb teljes ár 60–160%-a, friss ajánlattal; legfeljebb 4, a
+  legközelebbi ár szerint.
+- **Indexelés:** csak ha van legalább egy friss, listázható ajánlat, ÉS a termék `is_indexable`, vagy legalább
+  120 karakteres tisztított leírása van (`lib/content/products.ts`); különben `noindex, follow`.
+- **JSON-LD:** név, márka, GTIN (hossza szerint gtin8/12/13/14), kép, leírás (≤ 500 karakter), `AggregateOffer`
+  HUF-ban a friss listaárak minimumával/maximumával, számával és készlettel. Értékelés és vélemény soha.
+
 ### 5.4 Szeretteim (`/app/szeretteim`)
 **Lista nézet:** `LovedOneCard` rácsban: monogram-avatar, becenév, következő alkalom visszaszámlálóval,
 keret. Felül: **+ Új szerettünk**. Alatta idővonal: „Következő 60 nap” összes alkalma.
