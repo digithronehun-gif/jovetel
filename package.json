@@ -10,7 +10,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "tsx scripts/check-assets.ts --enforce && next build",
+    "build": "tsx scripts/check-assets.ts --enforce && tsx scripts/check-prod-env.ts && next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",

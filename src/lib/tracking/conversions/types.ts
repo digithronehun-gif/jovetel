@@ -44,7 +44,8 @@ export interface NetworkConversionSource {
 export function toHuf(amount: unknown, currency: unknown): number | null {
   if (typeof currency === 'string' && currency.toUpperCase() !== 'HUF') return null
   const n = typeof amount === 'string' ? Number(amount.replace(',', '.')) : typeof amount === 'number' ? amount : NaN
-  if (!Number.isFinite(n) || n < 0 || n > 1e10) return null
+  // a `conversions` oszlopai integer típusúak: a 2 milliárd feletti (hibás) összeg null, nem buktatja el a köteget
+  if (!Number.isFinite(n) || n < 0 || n > 2_000_000_000) return null
   return Math.round(n)
 }
 

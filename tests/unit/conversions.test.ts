@@ -56,6 +56,9 @@ describe('segédfüggvények', () => {
     expect(toHuf(-899, 'HUF')).toBeNull()
     expect(toHuf(12, 'EUR')).toBeNull()
     expect(toHuf('abc', 'HUF')).toBeNull()
+    // az integer oszlopba nem férő összeg null (egy hibás tétel nem buktatja el a hálózat szinkronját)
+    expect(toHuf(3e9, 'HUF')).toBeNull()
+    expect(toHuf(2_000_000_000, 'HUF')).toBe(2_000_000_000)
   })
   it('toDate: eltolás nélkül UTC; szóközös formátum; érvénytelen → null', () => {
     expect(toDate('2026-09-20 14:31:00')?.toISOString()).toBe('2026-09-20T14:31:00.000Z')

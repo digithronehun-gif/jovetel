@@ -1,10 +1,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { RateLimitedNotice } from '@/components/app/search/RateLimitedNotice'
 import { SearchForm } from '@/components/app/search/SearchForm'
 import { SearchView } from '@/components/app/search/SearchView'
 import { categoryTrail, listCategories } from '@/lib/db/queries/catalog/categories'
 import { parseSearchState, searchHref, withChange } from '@/lib/search'
 import { searchProvider } from '@/lib/search/provider'
+import { pageRateLimited } from '@/lib/security/pageLimit'
+import { RULES } from '@/lib/security/ratelimit'
 
 type Params = Promise<Record<string, string | string[] | undefined>>
 
@@ -19,6 +22,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Params 
 
 /** Keresés (PRODUCT_SPEC 5.2): szabad szöveg + szűrők, URL-ben tárolt állapot. Belépés nélkül is. */
 export default async function SearchPage({ searchParams }: { searchParams: Params }) {
+  if (await pageRateLimited(RULES.searchPage)) return <RateLimitedNotice />
   const state = parseSearchState(await searchParams)
   const now = new Date()
   const provider = searchProvider()

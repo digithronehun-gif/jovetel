@@ -21,6 +21,8 @@ export const RULES = {
   aiGuest: { name: 'ai-guest', limit: 10, windowSec: 3600 },
   aiMember: { name: 'ai-member', limit: 40, windowSec: 3600 },
   search: { name: 'search', limit: 120, windowSec: 60 },
+  /** a /kereses és /kategoria oldalak (egy oldal akár 9 lekérdezés; F6-átnézés) — ember ennyit nem kattint */
+  searchPage: { name: 'search-page', limit: 300, windowSec: 60 },
   consent: { name: 'consent', limit: 30, windowSec: 60 },
 } as const satisfies Record<string, LimitRule>
 

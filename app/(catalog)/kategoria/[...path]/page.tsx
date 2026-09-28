@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { RateLimitedNotice } from '@/components/app/search/RateLimitedNotice'
 import { notFound } from 'next/navigation'
 import { SearchView } from '@/components/app/search/SearchView'
 import { SlotImage } from '@/components/ui/SlotImage'
@@ -7,6 +8,8 @@ import { asSlotId } from '@/lib/assets'
 import { categorySlot, categoryTrail, childCategories, getCategoryByPath, listCategories } from '@/lib/db/queries/catalog/categories'
 import { DEFAULT_STATE, hasFilters, parseSearchState, searchHref, withChange, type SearchState } from '@/lib/search'
 import { searchProvider } from '@/lib/search/provider'
+import { pageRateLimited } from '@/lib/security/pageLimit'
+import { RULES } from '@/lib/security/ratelimit'
 
 type Props = { params: Promise<{ path: string[] }>; searchParams: Promise<Record<string, string | string[] | undefined>> }
 
@@ -31,6 +34,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
 /** Kategóriaoldal (PRODUCT_SPEC 2.): képhelyes fejléc, morzsamenü, alkategóriák, a keresés szűrőivel. */
 export default async function CategoryPage({ params, searchParams }: Props) {
+  if (await pageRateLimited(RULES.searchPage)) return <RateLimitedNotice />
   const path = pathOf((await params).path)
   const all = await listCategories()
   const cat = all.find((c) => c.path === path)

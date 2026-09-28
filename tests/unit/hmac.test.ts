@@ -31,3 +31,21 @@ describe('HMAC-aláírás (cron / revalidate)', () => {
     expect(verifySignedBody(SECRET, { timestamp: 'abc', signature: sig }, body, NOW)).toBe(false)
   })
 })
+
+describe('production-deploy előfeltételek (F6-átnézés)', async () => {
+  const { productionEnvProblems } = await import('@/lib/security/prodEnv')
+  it('nem productionben nincs követelmény', () => {
+    expect(productionEnvProblems({ NODE_ENV: 'development' })).toEqual([])
+  })
+  it('productionben a só, a CRON_SECRET és az Upstash kötelező; a titok legalább 16 karakter', () => {
+    expect(productionEnvProblems({ VERCEL_ENV: 'production' }).map((p) => p.name)).toEqual([
+      'IP_HASH_SALT',
+      'CRON_SECRET',
+      'UPSTASH_REDIS_REST_URL',
+      'UPSTASH_REDIS_REST_TOKEN',
+    ])
+    expect(productionEnvProblems({ APP_ENV: 'production', IP_HASH_SALT: 'rovid', CRON_SECRET: 'x'.repeat(32), UPSTASH_REDIS_REST_URL: 'https://u', UPSTASH_REDIS_REST_TOKEN: 't' })).toEqual([
+      { name: 'IP_HASH_SALT', problem: 'too_short' },
+    ])
+  })
+})
