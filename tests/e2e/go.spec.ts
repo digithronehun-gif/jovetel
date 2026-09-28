@@ -1,5 +1,6 @@
 import { expect, test, type APIRequestContext, type APIResponse } from '@playwright/test'
 import postgres from 'postgres'
+import { createTestUser, signIn } from './helpers/auth'
 
 /**
  * F6: a `/go/[offerId]` követett átirányító (ARCHITECTURE 4. pont, 5. vasszabály). Open redirect tesztcsomag:
@@ -52,6 +53,7 @@ test.beforeAll(async () => {
 })
 
 test.afterAll(async () => {
+  await sql`delete from public.conversions where network_transaction_id like ${`${slug}-%`}`
   await sql`delete from public.clicks where offer_id in (select id from public.offers where merchant_sku like ${`${slug}-%`})`
   await sql`delete from public.products where slug = ${slug}`
   await sql.end()
@@ -186,5 +188,49 @@ test.describe('open redirect tesztcsomag (5. vasszabály)', () => {
     let last = 0
     for (let i = 0; i < 61; i++) last = (await go(request, `/go/${ids.plain}`, { 'x-forwarded-for': ip })).status()
     expect(last).toBe(429)
+  })
+})
+
+test.describe('/admin/kattintasok', () => {
+  test('nem admin: 404', async ({ page, context, baseURL }) => {
+    expect((await page.goto('/admin/kattintasok'))?.status()).toBe(404)
+    const u = await createTestUser()
+    await signIn(context, baseURL!, u.session)
+    expect((await page.goto('/admin/kattintasok'))?.status()).toBe(404)
+  })
+
+  test('admin: napi oszlopok, bolt szerinti tábla, a /go kattintása és a hozzá tartozó konverzió megjelenik', async ({ page, context, baseURL, request }) => {
+    // egy valódi kattintás a /go-n át, majd a hálózat „visszaigazolja” (szintetikus konverzió a subID-vel)
+    const res = await go(request, `/go/${ids.tracked}?placement=product_best`)
+    const clickId = new URL(res.headers()['location']!).searchParams.get('clickref')!
+    await expect.poll(async () => (await sql`select 1 from public.clicks where click_id = ${clickId}`).length).toBe(1)
+    const [n] = await sql<{ id: string }[]>`select id from public.networks where code = 'awin'`
+    const [c] = await sql<{ merchant_id: string }[]>`select merchant_id from public.clicks where click_id = ${clickId}`
+    await sql`
+      insert into public.conversions (network_id, network_transaction_id, click_id, merchant_id, order_value_huf, commission_huf, status, occurred_at)
+      values (${n!.id}, ${`${slug}-tx1`}, ${clickId}, ${c!.merchant_id}, 12990, 1299, 'pending', now() + interval '1 hour')`
+
+    const u = await createTestUser({ admin: true, mfa: true })
+    await signIn(context, baseURL!, u.session)
+    await page.goto('/admin/kattintasok?napok=7')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Kattintások')
+    await expect(page.getByRole('link', { name: '7 nap' })).toHaveAttribute('aria-current', 'page')
+    await expect(page.locator('[data-daily-bars] ol > li')).toHaveCount(7)
+    await expect(page.locator('[data-stat]')).toHaveCount(5)
+    const merchantRow = page.locator('[data-admin-merchant-clicks] tbody tr', { hasText: '[DEMO] Napfény Drogéria' })
+    await expect(merchantRow).toBeVisible()
+    const latest = page.locator('[data-admin-conversions] tbody tr').first()
+    await expect(latest).toContainText('[DEMO] Napfény Drogéria')
+    await expect(latest).toContainText('Függő')
+    await expect(latest).toContainText('1 299 Ft')
+    await expect(latest).not.toContainText('kattintás nélkül')
+    // a diagram táblázatnézete a billentyűzettel is elérhető
+    await page.getByText('Táblázatként').click()
+    await expect(page.locator('[data-daily-bars] details table tbody tr')).toHaveCount(7)
+    // hibás időszak-paraméter: az alapértelmezett 30 nap
+    await page.goto('/admin/kattintasok?napok=abc')
+    await expect(page.getByRole('link', { name: '30 nap' })).toHaveAttribute('aria-current', 'page')
+    const { scroll, client } = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }))
+    expect(scroll).toBeLessThanOrEqual(client)
   })
 })

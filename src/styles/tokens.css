@@ -31,6 +31,7 @@
   --usual-bg: #efe7db;
   --pricier: #9c3f2c;
   --pricier-bg: #f5dfd6;
+  --chart-bar: #a8581a; /* egysoros oszlopdiagram (admin): a dataviz-validátorral ellenőrizve */
 
   /* Fedőréteg (dialog, alsó lap) */
   --overlay: rgb(23 18 15 / 0.42);
@@ -83,6 +84,7 @@
     --usual-bg: #2b231d;
     --pricier: #f0a08c;
     --pricier-bg: #3a231c;
+    --chart-bar: #c98035; /* egysoros oszlopdiagram (admin): a dataviz-validátorral ellenőrizve */
     --overlay: rgb(0 0 0 / 0.55);
     --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -12px rgb(0 0 0 / 0.5);
     --shadow-lift: 0 18px 48px -20px rgb(0 0 0 / 0.7);
@@ -112,6 +114,7 @@
   --usual-bg: #2b231d;
   --pricier: #f0a08c;
   --pricier-bg: #3a231c;
+  --chart-bar: #c98035; /* egysoros oszlopdiagram (admin): a dataviz-validátorral ellenőrizve */
   --overlay: rgb(0 0 0 / 0.55);
   --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -12px rgb(0 0 0 / 0.5);
   --shadow-lift: 0 18px 48px -20px rgb(0 0 0 / 0.7);

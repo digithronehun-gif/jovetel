@@ -107,3 +107,17 @@ export const WHY_LABEL = {
   deal: '30 napja nem volt ilyen olcsó',
   favoriteMerchant: 'A kedvenc boltodban',
 } as const
+
+/** A kattintás helye (lib/tracking/placements) az admin kimutatásban. */
+export const PLACEMENT_LABEL: Record<string, string> = {
+  product_best: 'Termékoldal · legjobb ajánlat',
+  product_offers: 'Termékoldal · összes ajánlat',
+  wizard_result: 'Ajándék-varázsló',
+  list: 'Saját lista',
+  shared_list: 'Megosztott lista',
+  shelf: 'Szépségpolc',
+  for_you: 'Neked most',
+  email_digest: 'Napi levél',
+}
+
+export const CONVERSION_STATUS_LABEL = { pending: 'Függő', approved: 'Jóváhagyott', rejected: 'Elutasított' } as const

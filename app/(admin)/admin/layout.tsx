@@ -16,17 +16,20 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh bg-paper">
       <header className="border-b border-line bg-surface">
-        <div className="mx-auto flex h-14 max-w-app items-center gap-6 px-4 sm:px-6">
-          <Link href="/admin/feedek" className="flex items-center gap-2 text-ink" aria-label="Admin kezdőlap">
+        <div className="mx-auto flex h-14 max-w-app items-center gap-3 px-4 sm:gap-6 sm:px-6">
+          <Link href="/admin/feedek" className="flex shrink-0 items-center gap-2 text-ink" aria-label="Admin kezdőlap">
             <Wordmark className="h-6" />
             <span className="text-xs font-bold tracking-wide text-ink-muted uppercase">Admin</span>
           </Link>
-          <nav aria-label="Admin navigáció" className="flex gap-1 text-small">
+          <nav aria-label="Admin navigáció" className="-mr-4 flex min-w-0 gap-1 overflow-x-auto pr-4 text-small whitespace-nowrap sm:mr-0 sm:pr-0">
             <Link href="/admin/feedek" className="rounded-full px-3 py-1.5 text-ink hover:bg-stone">
               Feedek
             </Link>
             <Link href="/admin/utmutatok" className="rounded-full px-3 py-1.5 text-ink hover:bg-stone">
               Útmutatók
+            </Link>
+            <Link href="/admin/kattintasok" className="rounded-full px-3 py-1.5 text-ink hover:bg-stone">
+              Kattintások
             </Link>
           </nav>
         </div>

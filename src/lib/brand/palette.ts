@@ -25,6 +25,7 @@ export const palette = {
     'usual-bg': '#efe7db',
     pricier: '#9c3f2c',
     'pricier-bg': '#f5dfd6',
+    'chart-bar': '#a8581a',
   },
   dark: {
     paper: '#17120f',
@@ -47,6 +48,7 @@ export const palette = {
     'usual-bg': '#2b231d',
     pricier: '#f0a08c',
     'pricier-bg': '#3a231c',
+    'chart-bar': '#c98035',
   },
 } as const
 

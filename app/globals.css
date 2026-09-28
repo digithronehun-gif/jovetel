@@ -41,6 +41,7 @@
   --color-usual-bg: var(--usual-bg);
   --color-pricier: var(--pricier);
   --color-pricier-bg: var(--pricier-bg);
+  --color-chart-bar: var(--chart-bar);
   --color-overlay: var(--overlay);
 
   --font-*: initial;

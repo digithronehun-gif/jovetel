@@ -50,6 +50,7 @@ a változókra hivatkozik (`bg-paper`, `text-ink`…). **Komponensben literál h
 | `--deal` / `--deal-bg` | `#3F6B3A` / `#E3EBD9` | `#A9CC98` / `#22301F` | Valódi akció, siker |
 | `--usual` / `--usual-bg` | `#6B5A4C` / `#EFE7DB` | `#CDBFB0` / `#2B231D` | Szokásos ár, semleges |
 | `--pricier` / `--pricier-bg` | `#9C3F2C` / `#F5DFD6` | `#F0A08C` / `#3A231C` | Most drágább, hiba |
+| `--chart-bar` | `#A8581A` | `#C98035` | Egysoros oszlopdiagram (admin); az OKLCH világosság- és kontrasztsávot mindkét módban teljesíti (F6) |
 
 Ellenőrzött kontrasztarányok (WCAG AA ≥ 4,5 : 1 szövegre): ink/paper 14,2 · muted/paper 5,9 ·
 amber-deep/paper 4,6 · fehér/amber-deep 5,2 · deal 5,1 · usual 5,4 · pricier 5,2 (sötétben mind ≥ 7).

@@ -92,6 +92,8 @@ export interface SeedOptions {
   adminEmail?: string | null
   log?: (m: string) => void
   withNamedays?: boolean
+  /** szintetikus [DEMO] kattintások és konverziók az admin kimutatáshoz (F6); alapból igen */
+  withDemoClicks?: boolean
 }
 
 function dayString(d: Date): string {
@@ -396,6 +398,68 @@ export async function seedUsersAndGuides(sql: Sql, opts: SeedOptions & { product
   return { adminId, guides: GUIDES.length }
 }
 
+const BASE62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+
+/**
+ * Szintetikus kattintások (30 nap, napi 20–60, ~10% bot) és konverziók (~4%) a [DEMO] ajánlatokra, hogy az
+ * `/admin/kattintasok` fejlesztés közben is mutasson valamit. Determinisztikus és idempotens (a `click_id` és a
+ * tranzakció-azonosító a seedből jön). Minden sor `raw.demo = true` jelölést kap.
+ */
+export async function seedDemoClicks(sql: Sql, opts: { offerIds: string[]; now?: Date; seed?: number }): Promise<{ clicks: number; conversions: number }> {
+  if (opts.offerIds.length === 0) return { clicks: 0, conversions: 0 }
+  const r = rng((opts.seed ?? 20260922) + 6)
+  const now = opts.now ?? new Date()
+  const offers = await sql<{ id: string; merchant_id: string; network_id: string; price_huf: number }[]>`
+    select o.id, o.merchant_id, m.network_id, o.price_huf from public.offers o join public.merchants m on m.id = o.merchant_id
+    where o.id = any(string_to_array(${opts.offerIds.slice(0, 400).join(',')}::text, ',')::uuid[])`
+  const clickRows: Record<string, unknown>[] = []
+  const convRows: Record<string, unknown>[] = []
+  for (let day = 29; day >= 0; day--) {
+    const n = r.int(20, 60)
+    for (let k = 0; k < n; k++) {
+      const o = r.pick(offers)
+      const clickId = Array.from({ length: 12 }, () => BASE62[r.int(0, 61)]).join('')
+      const at = new Date(now.getTime() - day * 864e5 - r.int(0, 86_000) * 1000)
+      if (at > now) continue
+      const isBot = r.chance(0.1)
+      clickRows.push({
+        click_id: clickId,
+        offer_id: o.id,
+        merchant_id: o.merchant_id,
+        placement: r.chance(0.6) ? 'product_best' : 'product_offers',
+        ip_hash: `demo-${r.int(1, 400)}`,
+        is_bot: isBot,
+        created_at: at.toISOString(),
+      })
+      if (!isBot && r.chance(0.04)) {
+        const age = (now.getTime() - at.getTime()) / 864e5
+        const status = age < 14 ? 'pending' : r.chance(0.85) ? 'approved' : 'rejected'
+        const order = o.price_huf * r.int(1, 2)
+        convRows.push({
+          network_id: o.network_id,
+          network_transaction_id: `demo-${clickId}`,
+          click_id: clickId,
+          merchant_id: o.merchant_id,
+          order_value_huf: order,
+          commission_huf: status === 'rejected' ? 0 : Math.round(order * 0.08),
+          status,
+          occurred_at: new Date(at.getTime() + r.int(60, 7200) * 1000).toISOString(),
+          raw: sql.json({ demo: true }),
+        })
+      }
+    }
+  }
+  for (let i = 0; i < clickRows.length; i += 1000) {
+    await sql`insert into public.clicks ${sql(clickRows.slice(i, i + 1000), 'click_id', 'offer_id', 'merchant_id', 'placement', 'ip_hash', 'is_bot', 'created_at')}
+      on conflict (click_id) do nothing`
+  }
+  if (convRows.length) {
+    await sql`insert into public.conversions ${sql(convRows, 'network_id', 'network_transaction_id', 'click_id', 'merchant_id', 'order_value_huf', 'commission_huf', 'status', 'occurred_at', 'raw')}
+      on conflict (network_id, network_transaction_id) do nothing`
+  }
+  return { clicks: clickRows.length, conversions: convRows.length }
+}
+
 /** A teljes fejlesztői seed. A hívó felelős a környezet-ellenőrzésért (scripts/db/seed.ts). */
 export async function runSeed(sql: Sql, opts: SeedOptions = {}) {
   const log = opts.log ?? (() => {})
@@ -410,6 +474,10 @@ export async function runSeed(sql: Sql, opts: SeedOptions = {}) {
   if (opts.withNamedays !== false) log(`névnaptár: ${await importNamedays(sql)} sor`)
   const catalog = await seedCatalog(sql, opts)
   const users = await seedUsersAndGuides(sql, { ...opts, productIds: catalog.productIds })
+  if (opts.withDemoClicks !== false) {
+    const demo = await seedDemoClicks(sql, { offerIds: catalog.offerIds, now: opts.now, seed: opts.seed })
+    log(`[DEMO] kattintások: ${demo.clicks}, konverziók: ${demo.conversions}`)
+  }
   // a keresés ár-statisztikája (élesben az ingest végén fut)
   await sql`select * from public.refresh_catalog_stats(${(opts.now ?? new Date()).toISOString()}::timestamptz)`
   log('ár-statisztika frissítve')
