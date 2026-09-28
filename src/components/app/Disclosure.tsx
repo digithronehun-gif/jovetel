@@ -13,7 +13,7 @@ export function Disclosure({ className }: { className?: string }) {
       {DISCLOSURE_TEXT}{' '}
       <Link
         href="/igy-rangsorolunk"
-        className="whitespace-nowrap text-amber-deep underline-offset-4 hover:underline"
+        className="whitespace-nowrap text-amber-deep underline underline-offset-4 hover:text-ink"
       >
         Így rangsorolunk
       </Link>

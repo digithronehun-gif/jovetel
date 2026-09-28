@@ -166,6 +166,27 @@ test.describe('hozzájárulás', () => {
     await expect(page.getByRole('dialog', { name: /süti/i })).toHaveCount(0)
     expect(hits).toHaveLength(0)
   })
+
+  test('„Beállítások”: a kapcsolók igény szerint töltődnek be; csak a marketing engedélyezve mentődik', async ({ page }) => {
+    await page.route(/posthog\.com/, (route) => route.fulfill({ status: 200, body: '{}' }))
+    await page.goto('/')
+    const banner = page.getByRole('dialog', { name: /süti/i })
+    await expect(banner.getByRole('switch')).toHaveCount(0)
+    await banner.getByRole('button', { name: 'Beállítások' }).click()
+    await expect(banner.getByRole('switch')).toHaveCount(3)
+    await expect(banner.getByRole('switch', { name: 'Szükséges' })).toBeDisabled()
+    await banner.getByRole('switch', { name: 'Marketing' }).click()
+    await banner.getByRole('button', { name: 'Kiválasztottak mentése' }).click()
+    await expect(banner).toBeHidden()
+    await expect
+      .poll(async () => {
+        const raw = (await page.context().cookies()).find((c) => c.name === 'jv_consent')?.value
+        let text = raw ?? ''
+        while (text.startsWith('%')) text = decodeURIComponent(text)
+        return text ? JSON.parse(text) : null
+      })
+      .toMatchObject({ analytics: false, marketing: true })
+  })
 })
 
 test.describe('jogi oldalak és 404', () => {

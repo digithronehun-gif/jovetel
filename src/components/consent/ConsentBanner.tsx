@@ -1,10 +1,16 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
-import { SwitchField } from '@/components/ui/Switch'
 import { useConsent } from './ConsentProvider'
+
+// A kapcsolók (Radix Switch) csak a „Beállítások” megnyitásakor töltődnek le: az első betöltésből kimaradnak.
+const ConsentSwitches = dynamic(() => import('./ConsentSwitches').then((m) => m.ConsentSwitches), {
+  ssr: false,
+  loading: () => <div className="mt-3 h-48 border-y border-line" aria-hidden />,
+})
 
 /**
  * Süti- és hozzájárulás-sáv (PRODUCT_SPEC F2): szükséges · analitika · marketing. Az elutasítás ugyanolyan
@@ -60,23 +66,7 @@ export function ConsentBanner() {
       </p>
 
       {settingsOpen ? (
-        <div className="mt-3 flex flex-col divide-y divide-line border-y border-line">
-          <SwitchField id="consent-necessary" label="Szükséges" description="Belépés, biztonság, a döntésed megjegyzése." checked disabled />
-          <SwitchField
-            id="consent-analytics"
-            label="Analitika"
-            description="Névtelen használati statisztika (PostHog, EU-szerver)."
-            checked={analytics}
-            onCheckedChange={setAnalytics}
-          />
-          <SwitchField
-            id="consent-marketing"
-            label="Marketing"
-            description="Kampányaink mérése (pl. melyik videóból érkeztél)."
-            checked={marketing}
-            onCheckedChange={setMarketing}
-          />
-        </div>
+        <ConsentSwitches analytics={analytics} marketing={marketing} onAnalytics={setAnalytics} onMarketing={setMarketing} />
       ) : null}
 
       <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-4 sm:flex sm:flex-wrap sm:justify-end">
