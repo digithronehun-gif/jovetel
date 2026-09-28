@@ -30,6 +30,13 @@ describe('safeReturnTo (open redirect ellen)', () => {
       expect(safeReturnTo(bad), String(bad)).toBeNull()
     }
   })
+  it('pont-szegmens, backslash, szóköz és vezérlőkarakter trükkök (F6-átnézés)', () => {
+    for (const bad of ['/.//evil.example', '/./..//evil.example', '/x/..//evil.example', '/a\\b', '/ //evil.example', '/x\t', '/\u0000x', `/${'a'.repeat(600)}`]) {
+      expect(safeReturnTo(bad), JSON.stringify(bad)).toBeNull()
+    }
+    expect(safeReturnTo('/termek/../kereses?q=1')).toBe('/kereses?q=1')
+    expect(safeReturnTo('/%2F%2Fevil.example')).toBe('/%2F%2Fevil.example')
+  })
 })
 
 describe('loginHref', () => {

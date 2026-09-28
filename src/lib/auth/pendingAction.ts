@@ -44,10 +44,13 @@ export function parsePendingAction(value: string | null | undefined): PendingAct
 /** A `returnTo` csak saját, relatív útvonal lehet (open redirect ellen, 5. vasszabály szellemében). */
 export function safeReturnTo(value: string | null | undefined): string | null {
   if (!value || value.length > 500) return null
-  if (!value.startsWith('/') || value.startsWith('//') || value.startsWith('/\\') || /[\r\n\t]/.test(value)) return null
+  if (!value.startsWith('/') || value.includes('\\') || /[\u0000-\u001f\u007f\s]/.test(value)) return null
   try {
     const u = new URL(value, 'https://jovetel.invalid')
-    return u.origin === 'https://jovetel.invalid' ? `${u.pathname}${u.search}` : null
+    if (u.origin !== 'https://jovetel.invalid') return null
+    // a pont-szegmensek feloldása után sem lehet protokoll-relatív (pl. „/.//evil.example” → „//evil.example”)
+    if (u.pathname.startsWith('//')) return null
+    return `${u.pathname}${u.search}`
   } catch {
     return null
   }
