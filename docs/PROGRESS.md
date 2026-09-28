@@ -141,7 +141,7 @@ Tailwind 4.3.3 · Playwright 1.56.1 (a gépen lévő Chromium-buildhez illeszked
 | F3 | Feed-import és napi árgyűjtő | ✅ | `fazis-03` (acea1bd) | 50 000 sor 17,7 s · újrafuttatás 0 írás · 7 adapter · átnézés: 2 BLOCKER + 7 SHOULD-FIX javítva · 26 e2e |
 | F4 | Keresés, kategóriák, útmutatók | ✅ | `fazis-04` (4c65804) | 50/50 top 5 · p95 159 ms / 50 000 termék · 38 e2e |
 | F5 | Termékoldal, teljes költség, ártörténet, „Valódi akció?” | ✅ | `fazis-05` (80730af) | 20/20 legjobb ár (TS + SQL) · mobil LCP 1,97 s (h2, 5 futás mediánja) · Lighthouse 98/100/100/100 · 46 e2e |
-| F6 | Követett kattintás, jelölés, konverziók | ⏳ | | |
+| F6 | Követett kattintás, jelölés, konverziók | 🔨 | | |
 | F7 | Belépés, onboarding, beállítások | ⏳ | | |
 | F8 | App-keret, listák, megosztás, foglalás, árfigyelő | ⏳ | | |
 | F9 | Szeretteim, alkalmak, értesítési motor | ⏳ | | |
@@ -563,3 +563,25 @@ mutatnak, ami az F5-ben készül el (addig 404); a kártya ezért nem tölt elő
 szív-művelete az F8-ban.
 **Következő:** F6 — követett kattintás (`/go/[offerId]`), subID, konverzió-szinkron, `/admin/kattintasok`, majd
 független vasszabály-átnézés.
+
+### F6 — Követett kattintás, jelölés, konverziók
+
+**Terv:**
+1. `lib/tracking`: `click_id` (base62, 12 karakter, `crypto`), `placement` / `ref` engedélylista, botszűrés (UA-lista,
+   előtöltés), a végső cél ellenőrzése (https/http, nincs felhasználónév, nincs IP-literál, a host a kereskedő
+   `domain_allowlist`-jén vagy a hálózat tracking-domainjein). A subID-építés kiemelve az adapterekből egy tiszta,
+   letöltő kód nélküli modulba (`adapters/tracking.ts`), a Dognet deeplink-sablonnal.
+2. `/go/[offerId]` (ARCHITECTURE 4.): uuid → egy lekérdezés (ajánlat + kereskedő + hálózat + feed-adapter), inaktív →
+   termékoldal, 302 `no-store`, `Referrer-Policy`, `X-Robots-Tag: noindex`; a naplózás `after()`-ben; rate limit
+   60/perc/IP-hash → 429. Cél-URL paraméterből soha.
+3. Minden „Megnézem a boltban” gomb: `goHref(offerId, placement, ref?)` típusos engedélylistával; a DATA_MODEL
+   elnevezése (`product_best`, `product_offers`, …).
+4. Konverzió-szinkron: hálózatonkénti elemző (Awin, CJ, Admitad, Dognet) közös alakra, lekérő (API-kulcs nélkül
+   kihagy), upsert `(network_id, network_transaction_id)`, `click_id` a subID-ból (formátum-ellenőrzéssel), kereskedő a
+   kattintásból vagy a program-azonosítóból; `raw` csak engedélyezett mezőkkel. `scripts/sync-conversions.ts` +
+   GitHub Actions 05:00 (Budapest, két UTC-bejegyzéssel). Fixture minden hálózatra.
+5. `/admin/kattintasok`: napi kattintás (botok nélkül), bolt szerint, konverziók, jutalék, EPC; 7/30/90 nap.
+   `/igy-rangsorolunk` véglegesítése (legjobb ajánlat szabálya, frissesség, kattintáskövetés, szponzorált elem).
+6. Mérés: open redirect tesztcsomag (abszolút, protokoll-relatív, kódolt, láncolt, idegen host a feedben), redirect
+   p95 500 kérés/perc mellett, subID hálózatonként, szintetikus konverzió párosítása, e2e: minden oldaltípuson minden
+   affiliate gomb mellett `Disclosure`. Utána független vasszabály-átnézés.
