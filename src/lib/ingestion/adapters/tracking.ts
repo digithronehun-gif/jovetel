@@ -29,11 +29,17 @@ export function withParam(url: string, key: string, value: string): string {
   return u.href
 }
 
-/** A subID a hálózat paraméternevével és hosszkorlátjával (a `networks` sorból; hiányában a hálózat alapértéke). */
+/**
+ * A subID a hálózat paraméternevével (a `networks` sorból; hiányában a hálózat alapértéke). A `click_id` 12 karakteres;
+ * ha a hálózat hosszkorlátja ennél rövidebb, a levágott azonosítót a konverzió-szinkron nem tudná párosítani — ezért
+ * ilyenkor hibát dobunk (a `/go` a bolt oldalára visz jutalék nélkül, és a hiba a naplóban látszik).
+ */
 export function subid(merchant: TrackingMerchant, clickId: string, fallbackParam: string): [string, string] {
   const param = merchant.subidParam || fallbackParam
-  const value = merchant.subidMaxLen ? clickId.slice(0, merchant.subidMaxLen) : clickId
-  return [param, value]
+  if (merchant.subidMaxLen != null && merchant.subidMaxLen < clickId.length) {
+    throw new Error(`A hálózat subID-korlátja (${merchant.subidMaxLen}) rövidebb a kattintás-azonosítónál.`)
+  }
+  return [param, clickId]
 }
 
 /** A hálózatok alapértelmezett subID-paramétere (OPEN_QUESTIONS #5: a `networks.subid_param` felülírja). */
@@ -67,7 +73,14 @@ const trackingOnly =
 export const TRACKING_BUILDERS: Record<string, TrackingBuilder> = {
   awin: (offer, clickId, merchant) => {
     const [p, v] = subid(merchant, clickId, DEFAULT_SUBID_PARAM.awin!)
-    if (offer.trackingUrl) return withParam(offer.trackingUrl, p, v)
+    if (offer.trackingUrl) {
+      // a feed linkje a MI publisher-azonosítónkkal (cread.php: awinaffid, pclick.php: a), különben a jutalék máshoz menne
+      const own = process.env.AWIN_PUBLISHER_ID
+      const u = new URL(offer.trackingUrl)
+      const aff = u.searchParams.get('awinaffid') ?? (u.pathname.endsWith('/pclick.php') ? u.searchParams.get('a') : null)
+      if (own && aff && aff !== own) throw new Error('Awin: a követő link más publisher-azonosítót tartalmaz.')
+      return withParam(offer.trackingUrl, p, v)
+    }
     // TODO(owner): AWIN_PUBLISHER_ID és a program azonosítója (merchants.program_id) kell a deeplinkhez (OPEN_QUESTIONS #3)
     const affId = process.env.AWIN_PUBLISHER_ID
     if (!affId || !merchant.programId) throw new Error('Awin deeplink: hiányzik a publisher- vagy programazonosító.')
@@ -78,7 +91,14 @@ export const TRACKING_BUILDERS: Record<string, TrackingBuilder> = {
     u.searchParams.set('ued', offer.url)
     return u.href
   },
-  cj: trackingOnly('cj', 'CJ'),
+  cj: (offer, clickId, merchant, feedConfig) => {
+    const url = trackingOnly('cj', 'CJ')(offer, clickId, merchant, feedConfig)
+    // CJ-link: /click-{PID}-{AID}; a PID a mi weboldal-azonosítónk (CJ_WEBSITE_ID), ha be van állítva
+    const own = process.env.CJ_WEBSITE_ID
+    const pid = new URL(url).pathname.match(/\/click-(\d+)-\d+/)?.[1]
+    if (own && pid && pid !== own) throw new Error('CJ: a követő link más weboldal-azonosítót tartalmaz.')
+    return url
+  },
   admitad: trackingOnly('admitad', 'Admitad'),
   dognet: (offer, clickId, merchant, feedConfig) => {
     const [p, v] = subid(merchant, clickId, DEFAULT_SUBID_PARAM.dognet!)

@@ -12,7 +12,7 @@ const sql = postgres(process.env.DATABASE_URL!, { max: 2, prepare: false, onnoti
 const slug = `e2e-go-${Date.now()}`
 const CHROME = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36'
 const AWIN_DEEPLINK = 'https://www.awin1.com/pclick.php?p=111&a=222&m=333'
-const ids: Record<'tracked' | 'foreignUrl' | 'foreignDeeplink' | 'inactive' | 'plain', string> = {} as never
+const ids: Record<'tracked' | 'foreignUrl' | 'foreignDeeplink' | 'inactive' | 'plain' | 'embeddedForeign', string> = {} as never
 
 let ipSeq = 0
 /** Tesztenként külön (kitalált) IP, hogy a rate limit ne keveredjen a tesztek között. */
@@ -50,6 +50,8 @@ test.beforeAll(async () => {
   ids.foreignDeeplink = await offer('c', 'https://napfeny-drogeria.example/termek/go-teszt-c', 'https://evil.example/pclick.php?p=1')
   ids.inactive = await offer('d', 'https://napfeny-drogeria.example/termek/go-teszt-d', AWIN_DEEPLINK, false)
   ids.plain = await offer('e', 'https://www.napfeny-drogeria.example/termek/go-teszt-e', null)
+  // az Awin átirányítójába ágyazott idegen cél (másodlagos open redirect, F6-átnézés)
+  ids.embeddedForeign = await offer('f', 'https://napfeny-drogeria.example/termek/go-teszt-f', 'https://www.awin1.com/cread.php?awinmid=1&awinaffid=2&ued=https%3A%2F%2Fevil.example%2F')
 })
 
 test.afterAll(async () => {
@@ -176,6 +178,21 @@ test.describe('open redirect tesztcsomag (5. vasszabály)', () => {
         expect(next.status(), `${p} → ${loc}`).toBe(404)
       }
     }
+  })
+
+  test('HEAD kérés: ugyanaz az átirányítás, de nem naplózott kattintás', async ({ request }) => {
+    const before = (await sql`select count(*)::int as n from public.clicks where offer_id = ${ids.plain}`)[0]!.n as number
+    const res = await request.head(`/go/${ids.plain}`, { maxRedirects: 0, headers: { 'user-agent': CHROME, 'x-forwarded-for': nextIp() } })
+    expect(res.status()).toBe(302)
+    expect(new URL(res.headers()['location']!).host).toBe('www.napfeny-drogeria.example')
+    await new Promise((r) => setTimeout(r, 500))
+    expect((await sql`select count(*)::int as n from public.clicks where offer_id = ${ids.plain}`)[0]!.n).toBe(before)
+  })
+
+  test('a feed követő linkjébe ágyazott idegen cél (Awin ued): a bolt saját oldalára, jutalék nélkül', async ({ request }) => {
+    const res = await go(request, `/go/${ids.embeddedForeign}`)
+    expect(res.status()).toBe(302)
+    expect(res.headers()['location']).toBe('https://napfeny-drogeria.example/termek/go-teszt-f')
   })
 
   test('csak GET: más metódus nem irányít át', async ({ request }) => {

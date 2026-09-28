@@ -3,7 +3,8 @@ import { normalizeGtin } from '@/lib/ingestion/normalize/gtin'
 import { parseHuf } from '@/lib/ingestion/normalize/price'
 import { extractSize } from '@/lib/ingestion/normalize/size'
 import { cleanLine, cleanText } from '@/lib/ingestion/normalize/text'
-import { checkImageUrl, checkUrl } from '@/lib/ingestion/normalize/url'
+import { normalizeItem } from '@/lib/ingestion/normalize/item'
+import { checkImageUrl, checkUrl, embeddedTargetsAllowed } from '@/lib/ingestion/normalize/url'
 import { ruleCategoryPath } from '@/lib/ingestion/normalize/category-rules'
 import { ruleTags } from '@/lib/ingestion/normalize/tags'
 import { evaluateGate } from '@/lib/ingestion/quality/gate'
@@ -117,6 +118,21 @@ describe('URL-ek', () => {
     expect(checkUrl('javascript:alert(1)', allow)).toEqual({ ok: false, reason: 'invalid_url' })
     expect(checkUrl('https://127.0.0.1/p', allow)).toEqual({ ok: false, reason: 'url_not_allowed' })
     expect(checkUrl('https://user:pw@bolt.example/p', allow)).toEqual({ ok: false, reason: 'invalid_url' })
+  })
+  it('a követő linkbe ágyazott céloldal is a kereskedő domainjén (F6-átnézés)', () => {
+    expect(embeddedTargetsAllowed('https://www.awin1.com/cread.php?ued=https%3A%2F%2Fbolt.example%2Fp', allow)).toBe(true)
+    expect(embeddedTargetsAllowed('https://www.awin1.com/cread.php?ued=https%3A%2F%2Fevil.example%2F', allow)).toBe(false)
+    expect(embeddedTargetsAllowed('https://www.awin1.com/pclick.php?p=1&a=2&m=3', allow)).toBe(true)
+    const ctx = {
+      merchantDomains: allow,
+      trackingDomains: ['www.awin1.com'],
+      categoryMappings: new Map<string, string>(),
+      categoryIdsByPath: new Map<string, string>(),
+      categoryPathsById: new Map<string, string>(),
+    }
+    const item = { sku: 'a1', name: 'Arcszérum 30 ml', price: '4990', url: 'https://bolt.example/p' }
+    expect(normalizeItem({ ...item, trackingUrl: 'https://www.awin1.com/cread.php?ued=https%3A%2F%2Fbolt.example%2Fp' }, ctx)).toMatchObject({ trackingUrl: expect.stringContaining('awin1.com') })
+    expect(normalizeItem({ ...item, trackingUrl: 'https://www.awin1.com/cread.php?ued=https%3A%2F%2Fevil.example%2F' }, ctx)).toMatchObject({ reason: 'url_not_allowed', field: 'trackingUrl' })
   })
   it('kép: csak https, IP nélkül', () => {
     expect(checkImageUrl('https://cdn.example/a.jpg')).toBe('https://cdn.example/a.jpg')

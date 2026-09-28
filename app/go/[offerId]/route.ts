@@ -82,6 +82,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ offerId: st
   const anon = req.cookies.get('jv_anon')?.value
   const sessionId = consent?.analytics && anon && /^[0-9a-f-]{36}$/.test(anon) ? anon : null
 
+  // HEAD (linkelőnézet, ellenőrző eszközök): ugyanaz a válasz, de nem kattintás — nem naplózzuk
+  if (req.method === 'HEAD') return redirect(target)
   after(async () => {
     const user = hasAuthCookie ? await getSessionUser().catch(() => null) : null
     await recordClick({

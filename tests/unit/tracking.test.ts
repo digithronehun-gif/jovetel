@@ -106,6 +106,19 @@ describe('a végső cél ellenőrzése (5. vasszabály)', () => {
   ])('%s → elutasítva', (_, url) => {
     expect(checkRedirectTarget(url, allow).ok).toBe(false)
   })
+  it.each([
+    ['Awin ued', 'https://www.awin1.com/cread.php?awinmid=1&awinaffid=2&ued=https%3A%2F%2Fevil.example%2F'],
+    ['nagybetűs kulcs', 'https://www.awin1.com/cread.php?UED=https%3A%2F%2Fevil.example%2F'],
+    ['url paraméter', 'https://www.awin1.com/x?url=https://evil.example/'],
+    ['ulp paraméter', 'https://www.awin1.com/x?ulp=//evil.example/'],
+    ['kétszer kódolt cél', 'https://www.awin1.com/x?ued=https%253A%252F%252Fbolt.example%252Fp'],
+    ['javascript cél', 'https://www.awin1.com/x?url=javascript:alert(1)'],
+  ])('a követő linkbe ágyazott idegen cél (%s) → elutasítva (másodlagos open redirect)', (_, url) => {
+    expect(checkRedirectTarget(url, allow).ok).toBe(false)
+  })
+  it('a követő linkbe ágyazott saját bolt-cél rendben', () => {
+    expect(checkRedirectTarget('https://www.awin1.com/cread.php?awinmid=1&ued=https%3A%2F%2Fbolt.example%2Fp', allow).ok).toBe(true)
+  })
   it('üres engedélylistával semmi nem mehet ki', () => {
     expect(checkRedirectTarget('https://bolt.example/', { merchantDomains: [], trackingDomains: [] }).ok).toBe(false)
   })
@@ -129,10 +142,39 @@ describe('subID hálózatonként (OPEN_QUESTIONS #5)', () => {
       expect(checkRedirectTarget(url.href, { merchantDomains: ['bolt.example'], trackingDomains: n.trackingDomains }).ok).toBe(true)
     })
   }
-  it('a hosszkorlát levágja a subID-t; a feed korábbi subID-jét felülírja', () => {
-    const merchant = { programId: null, subidParam: 'sid', subidMaxLen: 6 }
+  it('a feed korábbi subID-jét felülírja', () => {
+    const merchant = { programId: null, subidParam: 'sid', subidMaxLen: 64 }
     const url = new URL(TRACKING_BUILDERS.cj!({ url: 'x', trackingUrl: 'https://www.anrdoezrs.net/click-1-2?sid=feedbol' }, clickId, merchant))
-    expect(url.searchParams.getAll('sid')).toEqual(['aB3dE6'])
+    expect(url.searchParams.getAll('sid')).toEqual([clickId])
+  })
+  it('12-nél rövidebb subID-korlát: hiba (a levágott azonosító nem párosítható; F6-átnézés)', () => {
+    const merchant = { programId: null, subidParam: 'sid', subidMaxLen: 6 }
+    expect(() => TRACKING_BUILDERS.cj!({ url: 'x', trackingUrl: 'https://www.anrdoezrs.net/click-1-2' }, clickId, merchant)).toThrow(/subID-korlát/)
+  })
+  it('Awin: más publisher-azonosítójú követő link → hiba; a sajáttal rendben', () => {
+    const prev = process.env.AWIN_PUBLISHER_ID
+    process.env.AWIN_PUBLISHER_ID = '555'
+    try {
+      const m = { programId: '1', subidParam: 'clickref', subidMaxLen: 50 }
+      expect(() => TRACKING_BUILDERS.awin!({ url: 'x', trackingUrl: 'https://www.awin1.com/cread.php?awinmid=1&awinaffid=999&ued=x' }, clickId, m)).toThrow()
+      expect(() => TRACKING_BUILDERS.awin!({ url: 'x', trackingUrl: 'https://www.awin1.com/pclick.php?p=1&a=999&m=3' }, clickId, m)).toThrow()
+      expect(TRACKING_BUILDERS.awin!({ url: 'x', trackingUrl: 'https://www.awin1.com/pclick.php?p=1&a=555&m=3' }, clickId, m)).toContain('clickref=')
+    } finally {
+      if (prev === undefined) delete process.env.AWIN_PUBLISHER_ID
+      else process.env.AWIN_PUBLISHER_ID = prev
+    }
+  })
+  it('CJ: más weboldal-azonosítójú követő link → hiba', () => {
+    const prev = process.env.CJ_WEBSITE_ID
+    process.env.CJ_WEBSITE_ID = '100'
+    try {
+      const m = { programId: null, subidParam: 'sid', subidMaxLen: 64 }
+      expect(() => TRACKING_BUILDERS.cj!({ url: 'x', trackingUrl: 'https://www.anrdoezrs.net/click-999-200' }, clickId, m)).toThrow()
+      expect(TRACKING_BUILDERS.cj!({ url: 'x', trackingUrl: 'https://www.anrdoezrs.net/click-100-200' }, clickId, m)).toContain('sid=')
+    } finally {
+      if (prev === undefined) delete process.env.CJ_WEBSITE_ID
+      else process.env.CJ_WEBSITE_ID = prev
+    }
   })
   it('Awin deeplink követő link nélkül: cread.php a program- és publisher-azonosítóval', () => {
     const prev = process.env.AWIN_PUBLISHER_ID

@@ -2,7 +2,7 @@
  * A `/go` végső céljának ellenőrzése (5. vasszabály): csak az adatbázisban tárolt ajánlatból épített URL, és annak
  * hostja a kereskedő `domain_allowlist`-jén vagy a hálózat tracking-domainjein van. Paraméterből érkező cél nincs.
  */
-import { checkUrl } from '../ingestion/normalize/url'
+import { checkUrl, embeddedTargetsAllowed } from '../ingestion/normalize/url'
 
 export interface TargetAllowlist {
   merchantDomains: readonly string[]
@@ -20,7 +20,10 @@ export function checkRedirectTarget(url: string, allow: TargetAllowlist): Target
     return { ok: false, reason: 'invalid_url' }
   }
   const tracking = checkUrl(url, allow.trackingDomains, { httpsOnly: true })
-  if (tracking.ok) return tracking
+  if (tracking.ok) {
+    // a hálózat átirányítójába ágyazott céloldal is csak a kereskedő domainje lehet (másodlagos open redirect ellen)
+    return embeddedTargetsAllowed(tracking.url, allow.merchantDomains) ? tracking : { ok: false, reason: 'url_not_allowed' }
+  }
   const merchant = checkUrl(url, allow.merchantDomains)
   if (merchant.ok) return merchant
   return { ok: false, reason: host ? merchant.reason : 'invalid_url' }

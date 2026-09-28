@@ -143,8 +143,9 @@ describe('tracking URL a subID-vel', () => {
     expect(new URL(url).searchParams.get('clickref')).toBe('abc123XYZ789')
     expect(new URL(url).host).toBe('www.awin1.com')
   })
-  it('CJ: sid; a hosszkorlát érvényesül', () => {
-    const url = getAdapter('cj').buildTrackingUrl({ url: 'x', trackingUrl: 'https://www.anrdoezrs.net/click-1-2?url=x' }, 'abcdefghijkl', { ...merchant, subidParam: 'sid', subidMaxLen: 6 })
-    expect(new URL(url).searchParams.get('sid')).toBe('abcdef')
+  it('CJ: sid; a 12-nél rövidebb hosszkorlát hiba (a levágott azonosító nem párosítható)', () => {
+    const url = getAdapter('cj').buildTrackingUrl({ url: 'x', trackingUrl: 'https://www.anrdoezrs.net/click-1-2?url=x' }, 'abcdefghijkl', { ...merchant, subidParam: 'sid', subidMaxLen: 64 })
+    expect(new URL(url).searchParams.get('sid')).toBe('abcdefghijkl')
+    expect(() => getAdapter('cj').buildTrackingUrl({ url: 'x', trackingUrl: 'https://www.anrdoezrs.net/click-1-2' }, 'abcdefghijkl', { ...merchant, subidMaxLen: 6 })).toThrow()
   })
 })

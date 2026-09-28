@@ -25,6 +25,26 @@ export function checkUrl(raw: string | undefined | null, allowlist: readonly str
   return { ok: true, url: u.href }
 }
 
+/**
+ * A hálózati követő linkbe ágyazott céloldal paraméterei (Awin `ued`, CJ / Dognet `url`, Admitad `ulp`, …). Ha van
+ * ilyen, annak is a kereskedő domainjén kell lennie — különben a hálózat saját átirányítója vinné idegen hostra a
+ * látogatót (másodlagos open redirect, F6-átnézés). A kulcsnév kis- és nagybetűtől független.
+ */
+export const EMBEDDED_TARGET_PARAMS: ReadonlySet<string> = new Set(['ued', 'url', 'ulp', 'murl', 'dest', 'destination', 'redirect', 'redirect_url', 'target'])
+
+export function embeddedTargetsAllowed(url: string, merchantDomains: readonly string[]): boolean {
+  let u: URL
+  try {
+    u = new URL(url)
+  } catch {
+    return false
+  }
+  for (const [key, value] of u.searchParams) {
+    if (EMBEDDED_TARGET_PARAMS.has(key.toLowerCase()) && !checkUrl(value, merchantDomains).ok) return false
+  }
+  return true
+}
+
 /** Termékkép: csak https, IP-literál nélkül; a host bármely nyilvános domain lehet (a bolt CDN-je). */
 export function checkImageUrl(raw: string | undefined | null): string | null {
   if (!raw) return null

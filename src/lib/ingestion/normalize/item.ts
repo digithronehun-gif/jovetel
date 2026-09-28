@@ -14,7 +14,7 @@ import { parseHuf } from './price'
 import { extractSize } from './size'
 import { ruleTags } from './tags'
 import { cleanLine, cleanText } from './text'
-import { checkImageUrl, checkUrl } from './url'
+import { checkImageUrl, checkUrl, embeddedTargetsAllowed } from './url'
 
 export interface NormalizeContext {
   /** a kereskedő domainjei (a bolt URL-jének engedélylistája) */
@@ -92,6 +92,8 @@ export function normalizeItem(m: MappedItem, ctx: NormalizeContext): NormalizedI
   if (m.trackingUrl && m.trackingUrl.trim()) {
     const t = checkUrl(m.trackingUrl, ctx.trackingDomains, { httpsOnly: true })
     if (!t.ok) return reject(t.reason, 'trackingUrl', sku, safeHost(m.trackingUrl))
+    // a követő linkbe ágyazott céloldal is a kereskedő domainjén legyen (F6-átnézés)
+    if (!embeddedTargetsAllowed(t.url, ctx.merchantDomains)) return reject('url_not_allowed', 'trackingUrl', sku, safeHost(m.trackingUrl))
     trackingUrl = t.url
   }
 
