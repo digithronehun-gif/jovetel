@@ -471,7 +471,7 @@ számít az ítéletbe, a letöltés SSRF-védett, titok nem kerül naplóba, Po
   materializálás megszüntetése, a join csak a kiválasztott 24 sorra → 196 ms → csak az aktív szűrők a feltételben
   (rossz sorbecslés és egyesével olvasó terv helyett) → 159 ms.
 - Paritás: 310 ajánlaton (300 véletlen + 10 határeset) az SQL és a TS ítélete, teljes ára, ablaka és kedvezménye egyezik.
-- Tesztek: unit 262 (+39), DB 10 fájl / 72 (+17), e2e 38 (+12: keresés, alsó lapos szűrő, rendezés, akció- és
+- Tesztek: unit 262 (+39), DB 11 fájl / 72 + 1 kihagyott (+17; köztük a keresés szemantikája: `tests/db/search-provider.test.ts`), e2e 38 (+12: keresés, alsó lapos szűrő, rendezés, akció- és
   ársáv-szűrő, üres állapot + lazítás, lapozás, hibás paraméterek, desktop-oszlop és noindex, API, kategóriák,
   390 px túllógás, útmutató-szerkesztő végig a nyilvános oldalig + audit_log, jogosultság). `pnpm verify` zöld.
 - Képernyőképek: `/kereses` (szűrővel, üres állapottal), `/kategoria`, `/kategoria/…/arcapolas`, `/utmutatok`,
