@@ -128,7 +128,12 @@ export interface FeedAdapter {
   parse(stream: Readable, ctx: AdapterContext): AsyncIterable<RawItem>
   map(raw: RawItem, ctx: AdapterContext): MappedItem | Rejection
   /** a kattintáskor használt cél-URL a hálózat subID-paraméterével (F6 használja) */
-  buildTrackingUrl(offer: { url: string; trackingUrl: string | null }, clickId: string, merchant: MerchantRow): string
+  buildTrackingUrl(
+    offer: { url: string; trackingUrl: string | null },
+    clickId: string,
+    merchant: Pick<MerchantRow, 'programId' | 'subidParam' | 'subidMaxLen'>,
+    feedConfig?: Record<string, unknown>,
+  ): string
 }
 
 export function isRejection(x: MappedItem | NormalizedItem | Rejection): x is Rejection {

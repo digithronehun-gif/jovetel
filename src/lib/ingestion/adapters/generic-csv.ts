@@ -6,7 +6,8 @@
 import { parseCsv } from '../parse/csv'
 import type { FeedEncoding } from '../parse/decode'
 import type { FeedAdapter, MappedItem, RawItem, Rejection } from '../types'
-import { columns, downloadFeed, pick, subid, withParam } from './common'
+import { columns, downloadFeed, pick } from './common'
+import { TRACKING_BUILDERS } from './tracking'
 
 export function mapGoogleLike(raw: RawItem, cols: Record<string, string>): MappedItem | Rejection {
   return {
@@ -39,8 +40,5 @@ export const genericCsv: FeedAdapter = {
     }) as AsyncIterable<RawItem>,
   map: (raw, ctx) => mapGoogleLike(raw, columns(ctx)),
   // közvetlen partner (saját program): a bolt URL-je + a hálózat subID-paramétere, ha van
-  buildTrackingUrl: (offer, clickId, merchant) => {
-    const [p, v] = subid(merchant, clickId, 'subid')
-    return withParam(offer.trackingUrl ?? offer.url, p, v)
-  },
+  buildTrackingUrl: TRACKING_BUILDERS['generic-csv']!,
 }

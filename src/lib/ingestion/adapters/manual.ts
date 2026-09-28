@@ -4,7 +4,8 @@
  */
 import { Readable } from 'node:stream'
 import type { FeedAdapter, RawItem } from '../types'
-import { pick, subid, withParam } from './common'
+import { pick } from './common'
+import { TRACKING_BUILDERS } from './tracking'
 
 async function* jsonItems(stream: Readable): AsyncGenerator<RawItem> {
   const chunks: Buffer[] = []
@@ -44,8 +45,5 @@ export const manual: FeedAdapter = {
     category: pick(raw, 'category'),
     availability: pick(raw, 'availability'),
   }),
-  buildTrackingUrl: (offer, clickId, merchant) => {
-    const [p, v] = subid(merchant, clickId, 'subid')
-    return withParam(offer.trackingUrl ?? offer.url, p, v)
-  },
+  buildTrackingUrl: TRACKING_BUILDERS['manual']!,
 }

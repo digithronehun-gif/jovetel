@@ -6,7 +6,8 @@
  */
 import { parseCsv } from '../parse/csv'
 import type { FeedAdapter, RawItem } from '../types'
-import { columns, downloadFeed, pick, subid, withParam } from './common'
+import { columns, downloadFeed, pick } from './common'
+import { TRACKING_BUILDERS } from './tracking'
 
 export const AWIN_FEED_HOSTS = ['productdata.awin.com', 'datafeed.api.productserve.com']
 
@@ -34,17 +35,5 @@ export const awin: FeedAdapter = {
       shippingCost: pick(raw, c.shippingCost, 'delivery_cost'),
     }
   },
-  buildTrackingUrl: (offer, clickId, merchant) => {
-    const [p, v] = subid(merchant, clickId, 'clickref')
-    if (offer.trackingUrl) return withParam(offer.trackingUrl, p, v)
-    // TODO(owner): a publisher-azonosító (AWIN_PUBLISHER_ID) nélkül nem építhető deeplink (F6)
-    const affId = process.env.AWIN_PUBLISHER_ID
-    if (!affId || !merchant.programId) throw new Error('Awin deeplink: hiányzik a publisher- vagy programazonosító.')
-    const u = new URL('https://www.awin1.com/cread.php')
-    u.searchParams.set('awinmid', merchant.programId)
-    u.searchParams.set('awinaffid', affId)
-    u.searchParams.set(p, v)
-    u.searchParams.set('ued', offer.url)
-    return u.href
-  },
+  buildTrackingUrl: TRACKING_BUILDERS['awin']!,
 }

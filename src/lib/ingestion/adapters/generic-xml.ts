@@ -5,7 +5,8 @@
 import { parseXml } from '../parse/xml'
 import type { FeedEncoding } from '../parse/decode'
 import type { FeedAdapter, RawItem } from '../types'
-import { columns, downloadFeed, stringArray, subid, withParam } from './common'
+import { columns, downloadFeed, stringArray } from './common'
+import { TRACKING_BUILDERS } from './tracking'
 import { mapGoogleLike } from './generic-csv'
 
 export const genericXml: FeedAdapter = {
@@ -18,8 +19,5 @@ export const genericXml: FeedAdapter = {
       encoding: (ctx.feed.config.encoding as FeedEncoding | undefined) ?? 'auto',
     }) as AsyncIterable<RawItem>,
   map: (raw, ctx) => mapGoogleLike(raw, columns(ctx)),
-  buildTrackingUrl: (offer, clickId, merchant) => {
-    const [p, v] = subid(merchant, clickId, 'subid')
-    return withParam(offer.trackingUrl ?? offer.url, p, v)
-  },
+  buildTrackingUrl: TRACKING_BUILDERS['generic-xml']!,
 }

@@ -8,7 +8,8 @@
  */
 import { parseXml } from '../parse/xml'
 import type { FeedAdapter, RawItem } from '../types'
-import { columns, downloadFeed, pick, subid, withParam } from './common'
+import { columns, downloadFeed, pick } from './common'
+import { TRACKING_BUILDERS } from './tracking'
 
 export const dognet: FeedAdapter = {
   code: 'dognet',
@@ -36,9 +37,5 @@ export const dognet: FeedAdapter = {
       shippingCost: pick(raw, c.shippingCost, 'DELIVERY.DELIVERY_PRICE'),
     }
   },
-  buildTrackingUrl: (offer, clickId, merchant) => {
-    const [p, v] = subid(merchant, clickId, 'data1')
-    if (offer.trackingUrl) return withParam(offer.trackingUrl, p, v)
-    throw new Error('Dognet: nincs deeplink (config.deeplinkTemplate, F6).')
-  },
+  buildTrackingUrl: TRACKING_BUILDERS['dognet']!,
 }

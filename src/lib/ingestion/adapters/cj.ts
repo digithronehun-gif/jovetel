@@ -8,7 +8,8 @@
 import { parseCsv } from '../parse/csv'
 import { parseXml } from '../parse/xml'
 import type { FeedAdapter, RawItem } from '../types'
-import { columns, downloadFeed, pick, subid, withParam } from './common'
+import { columns, downloadFeed, pick } from './common'
+import { TRACKING_BUILDERS } from './tracking'
 import { mapGoogleLike } from './generic-csv'
 
 export const CJ_FEED_HOSTS = ['datatransfer.cj.com']
@@ -36,9 +37,5 @@ export const cj: FeedAdapter = {
     }
     return { ...m, url, trackingUrl: link }
   },
-  buildTrackingUrl: (offer, clickId, merchant) => {
-    const [p, v] = subid(merchant, clickId, 'sid')
-    if (!offer.trackingUrl) throw new Error('CJ: a feed nem adott követő linket.')
-    return withParam(offer.trackingUrl, p, v)
-  },
+  buildTrackingUrl: TRACKING_BUILDERS['cj']!,
 }

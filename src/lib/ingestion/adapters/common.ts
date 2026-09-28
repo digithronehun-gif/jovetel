@@ -1,7 +1,7 @@
-/** Az adapterek közös segédei: mezőkeresés, letöltés az engedélylistával, subID-paraméter a tracking URL-be. */
+/** Az adapterek közös segédei: mezőkeresés, letöltés az engedélylistával (a subID-építés: `tracking.ts`). */
 import { safeDownload } from '../fetch/download'
 import { resolvePlaceholders } from '../fetch/ssrf'
-import type { AdapterContext, FetchedSource, MerchantRow, RawItem } from '../types'
+import type { AdapterContext, FetchedSource, RawItem } from '../types'
 
 /** Az első nem üres mező a felsorolt nevek közül (kis- és nagybetű nem számít). */
 export function pick(raw: RawItem, ...names: (string | undefined)[]): string | undefined {
@@ -39,16 +39,4 @@ export async function downloadFeed(ctx: AdapterContext, feedHosts: string[], ext
   return { stream, ext, origin: url.startsWith('file:') ? 'fixture' : new URL(url).host }
 }
 
-/** A query-paraméter beállítása (felülírja, ha már van). */
-export function withParam(url: string, key: string, value: string): string {
-  const u = new URL(url)
-  u.searchParams.set(key, value)
-  return u.href
-}
-
-/** A subID a hálózat paraméternevével és hosszkorlátjával. */
-export function subid(merchant: MerchantRow, clickId: string, fallbackParam: string): [string, string] {
-  const param = merchant.subidParam || fallbackParam
-  const value = merchant.subidMaxLen ? clickId.slice(0, merchant.subidMaxLen) : clickId
-  return [param, value]
-}
+export { subid, withParam } from './tracking'

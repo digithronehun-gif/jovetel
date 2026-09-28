@@ -7,7 +7,8 @@
 import type { Readable } from 'node:stream'
 import { parseXml } from '../parse/xml'
 import type { FeedAdapter, RawItem } from '../types'
-import { columns, downloadFeed, pick, subid, withParam } from './common'
+import { columns, downloadFeed, pick } from './common'
+import { TRACKING_BUILDERS } from './tracking'
 
 export const ADMITAD_FEED_HOSTS = ['export.admitad.com']
 
@@ -62,9 +63,5 @@ export const admitad: FeedAdapter = {
       availability: available === 'false' ? 'out of stock' : 'in stock',
     }
   },
-  buildTrackingUrl: (offer, clickId, merchant) => {
-    const [p, v] = subid(merchant, clickId, 'subid')
-    if (!offer.trackingUrl) throw new Error('Admitad: a feed nem adott követő linket.')
-    return withParam(offer.trackingUrl, p, v)
-  },
+  buildTrackingUrl: TRACKING_BUILDERS['admitad']!,
 }
