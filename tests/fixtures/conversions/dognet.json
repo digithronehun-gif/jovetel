@@ -1,0 +1,7 @@
+[
+  { "id": "dg-0001", "status": "P", "totalcost": "12990", "commission": "1299", "dateinserted": "2026-09-20 14:31:00", "dateapproved": null, "data1": "Fx7Qk2Lm9Pz1", "campaignid": "P-DEMO-1", "ip": "SHOULD-NOT-BE-STORED" },
+  { "id": "dg-0002", "status": "A", "totalcost": "4505", "commission": "450.5", "dateinserted": "2026-09-12 09:05:00", "dateapproved": "2026-09-26 10:00:00", "data1": "Rt4Yw8Nb3Hc6", "campaignid": "P-DEMO-1" },
+  { "id": "dg-0003", "status": "D", "totalcost": "8990", "commission": "0", "dateinserted": "2026-09-18 18:00:00", "data1": "Fx7Qk2Lm9Pz1", "campaignid": "P-DEMO-1" },
+  { "id": "dg-0004", "status": "P", "totalcost": "8000", "commission": "800", "dateinserted": "2026-09-21 08:00:00", "data1": "", "campaignid": "P-DEMO-1" },
+  { "id": "dg-0005", "status": "P", "totalcost": "100", "commission": "10", "data1": "Fx7Qk2Lm9Pz1", "campaignid": "P-DEMO-1" }
+]

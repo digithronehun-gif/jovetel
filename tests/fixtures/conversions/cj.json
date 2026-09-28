@@ -1,0 +1,16 @@
+{
+  "data": {
+    "publisherCommissions": {
+      "count": 5,
+      "payloadComplete": true,
+      "maxCommissionId": "3001005",
+      "records": [
+        { "commissionId": "3001001", "actionStatus": "new", "actionType": "advanced sale", "advertiserId": "P-DEMO-1", "eventDate": "2026-09-20T14:31:00Z", "postingDate": "2026-09-20T15:00:00Z", "saleAmountPubCurrency": "12990.00", "pubCommissionAmountPubCurrency": "1299.00", "shopperId": "Fx7Qk2Lm9Pz1", "correctionReason": null },
+        { "commissionId": "3001002", "actionStatus": "closed", "actionType": "advanced sale", "advertiserId": "P-DEMO-1", "eventDate": "2026-09-12T09:05:00Z", "postingDate": "2026-09-26T10:00:00Z", "saleAmountPubCurrency": "4505.00", "pubCommissionAmountPubCurrency": "450.50", "shopperId": "Rt4Yw8Nb3Hc6" },
+        { "commissionId": "3001003", "actionStatus": "closed", "actionType": "advanced sale", "advertiserId": "P-DEMO-1", "eventDate": "2026-09-18T18:00:00Z", "postingDate": "2026-09-25T10:00:00Z", "saleAmountPubCurrency": "-8990.00", "pubCommissionAmountPubCurrency": "-899.00", "shopperId": "Fx7Qk2Lm9Pz1", "correctionReason": "RETURNED_MERCHANDISE" },
+        { "commissionId": "3001004", "actionStatus": "locked", "advertiserId": "P-DEMO-1", "eventDate": "2026-09-21T08:00:00Z", "saleAmountPubCurrency": "8000.00", "pubCommissionAmountPubCurrency": "800.00", "shopperId": "" },
+        { "commissionId": "3001005", "actionStatus": "new", "advertiserId": "P-DEMO-1", "saleAmountPubCurrency": "100.00", "pubCommissionAmountPubCurrency": "10.00", "shopperId": "Fx7Qk2Lm9Pz1" }
+      ]
+    }
+  }
+}

@@ -44,3 +44,17 @@ describe('ingest workflow ütemezése', () => {
     expect(yml).toContain('^[0-9a-fA-F-]{36}$')
   })
 })
+
+describe('konverzió-szinkron ütemezése', () => {
+  const yml = readFileSync(join(import.meta.dirname, '../../.github/workflows/conversions.yml'), 'utf8')
+  const crons = [...yml.matchAll(/cron: '([^']+)'/g)].map((m) => m[1]!)
+  it('két UTC-bejegyzés: nyáron és télen is 05:00 Budapest', () => {
+    expect(crons.sort()).toEqual(['0 3 * * *', '0 4 * * *'])
+    expect(yml).toMatch(/'0 3 \* \* \*'\) want='\+0200'/)
+    expect(yml).toMatch(/'0 4 \* \* \*'\) want='\+0100'/)
+  })
+  it('a kézi bemenet csak ismert hálózatkód; a lépések commit-SHA-ra pinelve', () => {
+    expect(yml).toContain('awin|cj|admitad|dognet) ;;')
+    for (const m of yml.matchAll(/uses: ([^\s]+)/g)) expect(m[1]).toMatch(/@[0-9a-f]{40}$/)
+  })
+})

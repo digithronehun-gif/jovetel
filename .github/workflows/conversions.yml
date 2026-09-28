@@ -1,0 +1,79 @@
+# Konverzió-szinkron (ARCHITECTURE 3. és 7. pont): naponta 05:00-kor Budapest szerint, az elmúlt 60 nap tranzakciói.
+#
+# A GitHub cron UTC-ben fut, Budapest pedig nyáron UTC+2, télen UTC+1: mindkét időpontra van bejegyzés, és az első
+# lépés eldönti, melyik illik a mostani időszámításhoz (03:00 UTC = 05:00 CEST, 04:00 UTC = 05:00 CET).
+# Amelyik hálózatnak nincs kulcsa a Secrets között, az kimarad (hiba nélkül). Kézi indítás: Actions → Run workflow.
+name: Konverzió-szinkron
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+    inputs:
+      network:
+        description: 'Csak ez a hálózat (awin, cj, admitad, dognet); üresen: mind'
+        required: false
+        default: ''
+
+concurrency:
+  group: conversions
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    name: Tranzakciók szinkronizálása
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Időszámítás-ellenőrzés (nyári / téli)
+        id: slot
+        env:
+          SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          if [ -z "$SCHEDULE" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          offset=$(TZ=Europe/Budapest date +%z)
+          case "$SCHEDULE" in
+            '0 3 * * *') want='+0200' ;;
+            '0 4 * * *') want='+0100' ;;
+            *) want='' ;;
+          esac
+          if [ "$offset" = "$want" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; else echo "run=false" >> "$GITHUB_OUTPUT"; echo "Ez a bejegyzés most nem Budapest 05:00 ($offset) — kihagyva."; fi
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        if: steps.slot.outputs.run == 'true'
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        if: steps.slot.outputs.run == 'true'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        if: steps.slot.outputs.run == 'true'
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        if: steps.slot.outputs.run == 'true'
+
+      - name: Szinkron
+        if: steps.slot.outputs.run == 'true'
+        env:
+          APP_ENV: production
+          INGEST_DATABASE_URL: ${{ secrets.INGEST_DATABASE_URL }}
+          AWIN_API_TOKEN: ${{ secrets.AWIN_API_TOKEN }}
+          AWIN_PUBLISHER_ID: ${{ secrets.AWIN_PUBLISHER_ID }}
+          CJ_API_TOKEN: ${{ secrets.CJ_API_TOKEN }}
+          CJ_PUBLISHER_ID: ${{ secrets.CJ_PUBLISHER_ID }}
+          ADMITAD_CLIENT_ID: ${{ secrets.ADMITAD_CLIENT_ID }}
+          ADMITAD_CLIENT_SECRET: ${{ secrets.ADMITAD_CLIENT_SECRET }}
+          DOGNET_CONVERSIONS_URL: ${{ secrets.DOGNET_CONVERSIONS_URL }}
+          DOGNET_API_KEY: ${{ secrets.DOGNET_API_KEY }}
+          NETWORK: ${{ inputs.network }}
+        run: |
+          if [ -n "$NETWORK" ]; then
+            # a bemenet csak ismert hálózatkód lehet (parancs-injektálás ellen)
+            case "$NETWORK" in awin|cj|admitad|dognet) ;; *) echo "Ismeretlen hálózat."; exit 2 ;; esac
+            pnpm sync:conversions -- --network "$NETWORK"
+          else
+            pnpm sync:conversions
+          fi

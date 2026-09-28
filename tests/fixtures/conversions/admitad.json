@@ -1,0 +1,11 @@
+{
+  "results": [
+    { "action_id": 7700001, "status": "pending", "cart": 12990.0, "payment": 1299.0, "currency": "HUF", "action_date": "2026-09-20 14:31:00", "status_updated": null, "subid": "Fx7Qk2Lm9Pz1", "advcampaign_id": "P-DEMO-1", "order_id": "SHOULD-NOT-BE-STORED" },
+    { "action_id": 7700002, "status": "approved_but_stalled", "cart": 4505, "payment": 450.5, "currency": "HUF", "action_date": "2026-09-12 09:05:00", "status_updated": "2026-09-26 10:00:00", "subid": "Rt4Yw8Nb3Hc6", "advcampaign_id": "P-DEMO-1" },
+    { "action_id": 7700003, "status": "declined", "cart": 8990, "payment": 0, "currency": "HUF", "action_date": "2026-09-18 18:00:00", "subid": "Fx7Qk2Lm9Pz1", "advcampaign_id": "P-DEMO-1" },
+    { "action_id": 7700004, "status": "pending", "cart": 32, "payment": 3.2, "currency": "EUR", "action_date": "2026-09-22 12:00:00", "subid": "x", "advcampaign_id": 99999 },
+    { "action_id": 7700005, "status": "pending", "cart": 100, "payment": 10, "currency": "HUF", "subid": "Fx7Qk2Lm9Pz1" },
+    { "action_id": 7700006, "status": "pending", "cart": 8000, "payment": 800, "currency": "HUF", "action_date": "2026-09-21 08:00:00", "subid": "partner-hirlevel", "advcampaign_id": "P-DEMO-1" }
+  ],
+  "_meta": { "count": 6, "limit": 500, "offset": 0 }
+}
