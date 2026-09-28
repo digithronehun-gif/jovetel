@@ -3,6 +3,7 @@
  *   --feed <id>   egy feed futtatása
  *   --all         minden aktív feed (a `file:` fixture-feedek kivételével), utána a régi pillanatképek törlése
  *   --fixtures    a fixture-feedek regisztrálása és futtatása (`tests/fixtures/feeds/`); production DB-n nem fut
+ *   --stats-only  csak az ár-statisztika frissítése (éjfél után: a 30 napos ablak gördül), feed-letöltés nélkül
  *   --quiet       csak az összesítő
  * Blokkolt vagy hibás futásnál riasztó levél megy az ADMIN_ALERT_EMAIL címre. Kilépési kód: 1, ha bármelyik
  * futás `failed` (a `blocked` kezelt állapot: riasztás megy, a kód 0).
@@ -15,6 +16,7 @@ import { ensureFixtureFeeds } from '../src/lib/db/seed/fixture-feeds'
 import { sendEmail } from '../src/lib/email/send'
 import { defaultRawStore } from '../src/lib/ingestion/pipeline/raw-store'
 import { runFeed, type RunSummary } from '../src/lib/ingestion/pipeline/run'
+import { notifyRevalidation } from '../src/lib/ingestion/pipeline/revalidate'
 import { refreshCatalogStats } from '../src/lib/ingestion/pipeline/stats'
 import { siteUrl } from '../src/lib/env'
 import { requireEnv } from './_env'
@@ -28,8 +30,8 @@ const opt = (f: string) => {
 const quiet = has('--quiet')
 const FIXTURES_DIR = join(import.meta.dirname, '../tests/fixtures/feeds')
 
-if (!has('--feed') && !has('--all') && !has('--fixtures')) {
-  console.error('Használat: pnpm ingest -- --feed <id> | --all | --fixtures')
+if (!has('--feed') && !has('--all') && !has('--fixtures') && !has('--stats-only')) {
+  console.error('Használat: pnpm ingest -- --feed <id> | --all | --fixtures | --stats-only')
   process.exit(2)
 }
 
@@ -60,7 +62,9 @@ async function alert(s: RunSummary) {
 async function main() {
   let feeds: { id: string }[]
   let fileRoots: string[] = []
-  if (has('--fixtures')) {
+  if (has('--stats-only')) {
+    feeds = []
+  } else if (has('--fixtures')) {
     feeds = await ensureFixtureFeeds(sql, FIXTURES_DIR)
     fileRoots = [FIXTURES_DIR]
   } else if (has('--feed')) {
@@ -86,8 +90,13 @@ async function main() {
   }
   // a keresés és a kategóriaoldalak ár-statisztikája (a 30 napos ablak naponta gördül, ezért mindig fut)
   try {
+    const since = new Date()
     const st = await refreshCatalogStats(sql)
     if (!quiet) console.log(`Ár-statisztika: ${st.offersWritten} ajánlat, ${st.productsWritten} termék frissítve (${st.durationMs} ms)`)
+    // a változott termékoldalak gyorsítótára (1 óra) azonnal lejár
+    const rv = await notifyRevalidation(sql, since, { siteUrl: process.env.NEXT_PUBLIC_SITE_URL, secret: process.env.CRON_SECRET })
+    if (rv.status === 'failed') console.error(`Gyorsítótár-érvénytelenítés sikertelen: ${rv.error}`)
+    else if (!quiet) console.log(`Gyorsítótár: ${rv.status === 'skipped' ? 'kihagyva (nincs NEXT_PUBLIC_SITE_URL / CRON_SECRET)' : `${rv.tags} címke érvénytelenítve`}`)
   } catch (e) {
     console.error(`Ár-statisztika frissítése sikertelen: ${(e as Error).message}`)
     results.push({ runId: '', feedId: '', merchantSlug: '(ár-statisztika)', status: 'failed', seen: 0, valid: 0, rejected: 0, changed: 0, error: (e as Error).message, durationMs: 0, rejectReasons: {}, flags: {} })

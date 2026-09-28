@@ -4,6 +4,8 @@
 # két bejegyzés van, és az első lépés eldönti, melyik illik a mostani időszámításhoz:
 #   02:00 UTC = 04:00 CEST (nyár)   03:00 UTC = 04:00 CET (tél)
 #   14:00 UTC = 16:00 CEST (nyár)   15:00 UTC = 16:00 CET (tél)
+# Éjfél után (00:05 Budapest: 22:05 UTC nyáron, 23:05 UTC télen) csak az ár-statisztika fut (`--stats-only`):
+# a „Valódi akció?” 30 napos ablaka naponta gördül, így a keresés ítélete a napváltás után sem marad a tegnapi.
 # Az ütemezés késhet (GitHub terhelés), a döntés ezért nem az órára, hanem a kiváltó bejegyzésre épül.
 # Kézi indítás: Actions → „Feed-import” → Run workflow (opcionálisan egy feed-azonosítóval); az admin felület
 # [Futtatás most] gombja is ezt indítja (workflow_dispatch). A concurrency-csoport miatt egyszerre egy fut.
@@ -15,6 +17,8 @@ on:
     - cron: '0 3 * * *'
     - cron: '0 14 * * *'
     - cron: '0 15 * * *'
+    - cron: '5 22 * * *'
+    - cron: '5 23 * * *'
   workflow_dispatch:
     inputs:
       feed:
@@ -41,13 +45,17 @@ jobs:
         env:
           SCHEDULE: ${{ github.event.schedule }}
         run: |
-          if [ -z "$SCHEDULE" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          if [ -z "$SCHEDULE" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; echo "mode=ingest" >> "$GITHUB_OUTPUT"; exit 0; fi
           offset=$(TZ=Europe/Budapest date +%z)
+          mode=ingest
           case "$SCHEDULE" in
             '0 2 * * *'|'0 14 * * *') want='+0200' ;;
             '0 3 * * *'|'0 15 * * *') want='+0100' ;;
+            '5 22 * * *') want='+0200'; mode=stats ;;
+            '5 23 * * *') want='+0100'; mode=stats ;;
             *) want='' ;;
           esac
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
           if [ "$offset" = "$want" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; else echo "run=false" >> "$GITHUB_OUTPUT"; echo "Ez a bejegyzés most nem Budapest 04:00/16:00 ($offset) — kihagyva."; fi
 
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -72,6 +80,8 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          # a változott termékoldalak gyorsítótárának érvénytelenítése (POST /api/revalidate, HMAC-aláírással)
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
           ADMIN_ALERT_EMAIL: ${{ secrets.ADMIN_ALERT_EMAIL }}
@@ -83,8 +93,11 @@ jobs:
           ADMITAD_CLIENT_ID: ${{ secrets.ADMITAD_CLIENT_ID }}
           ADMITAD_CLIENT_SECRET: ${{ secrets.ADMITAD_CLIENT_SECRET }}
           FEED_ID: ${{ inputs.feed }}
+          MODE: ${{ steps.slot.outputs.mode }}
         run: |
-          if [ -n "$FEED_ID" ]; then
+          if [ "$MODE" = "stats" ]; then
+            pnpm ingest -- --stats-only
+          elif [ -n "$FEED_ID" ]; then
             # a bemenet csak uuid lehet (parancs-injektálás ellen)
             if ! [[ "$FEED_ID" =~ ^[0-9a-fA-F-]{36}$ ]]; then echo "Érvénytelen feed-azonosító."; exit 2; fi
             pnpm ingest -- --feed "$FEED_ID"
