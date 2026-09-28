@@ -138,7 +138,7 @@ Tailwind 4.3.3 · Playwright 1.56.1 (a gépen lévő Chromium-buildhez illeszked
 | F2 | Landing, várólista, jogi oldalak, hozzájárulás | ✅ | `fazis-02` (9c69ba8) | Lighthouse mobil 96/100/100/100 (h2) · 90/100/100/100 (h1) · 21 e2e |
 | F3 | Feed-import és napi árgyűjtő | ✅ | `fazis-03` (acea1bd) | 50 000 sor 17,7 s · újrafuttatás 0 írás · 7 adapter · átnézés: 2 BLOCKER + 7 SHOULD-FIX javítva · 26 e2e |
 | F4 | Keresés, kategóriák, útmutatók | ✅ | `fazis-04` (4c65804) | 50/50 top 5 · p95 159 ms / 50 000 termék · 38 e2e |
-| F5 | Termékoldal, teljes költség, ártörténet, „Valódi akció?” | ⏳ | | |
+| F5 | Termékoldal, teljes költség, ártörténet, „Valódi akció?” | 🔨 | | |
 | F6 | Követett kattintás, jelölés, konverziók | ⏳ | | |
 | F7 | Belépés, onboarding, beállítások | ⏳ | | |
 | F8 | App-keret, listák, megosztás, foglalás, árfigyelő | ⏳ | | |
@@ -489,3 +489,21 @@ mutatnak, ami az F5-ben készül el (addig 404); a kártya ezért nem tölt elő
 
 **Nyitott kérdések:** #3, #4 (feedek: valódi adat nélkül a keresés a [DEMO] katalóguson mérve).
 **Következő:** F5 — termékoldal, teljes költség, ártörténet, „Valódi akció?”.
+
+### F5 — Termékoldal, teljes költség, ártörténet, „Valódi akció?”
+
+**Terv:**
+1. `lib/pricing`: `bestOffer()` (a `product_stats` SQL-szabályának TS-párja: friss, listázható, készleten lévő előbb,
+   legalacsonyabb teljes ár, bolt-minőség) + 20 kézi teszteset egy közös fixture-ben, amit a TS unit teszt és az SQL
+   DB-teszt is lefuttat; a `verdict()` hiányzó ágai (készlethiány, hiányzó napok) tesztekkel.
+2. Adatréteg: termék, ajánlatok a kereskedő szállítási szabályaival és frissességgel, 90 napos ártörténet, kapcsolódó
+   termékek; adat-szintű gyorsítótár 1 órára, célzott tag-érvénytelenítéssel az ingest után (`/api/revalidate`, HMAC +
+   időbélyeg). Oldal-szintű ISR helyett, mert a nonce-os CSP dinamikus renderelést kíván.
+3. `/termek/[slug]` (PRODUCT_SPEC 5.3): galéria, legjobb ajánlat blokk (teljes ár nagyban, bontás, bolt, szállítási idő,
+   frissesség, [Megnézem a boltban] + `Disclosure`), `VerdictBadge` magyarázattal, `PriceHistoryChart` (30/90 nap,
+   boltonként, min30), `OfferRow` lista teljes ár szerint (48 óránál régebbi: „nem friss”, a végén), „Miért neked”,
+   leírás, jellemzők, kapcsolódó termékek, JSON-LD csak valós mezőkből, indexelési szabály.
+4. Műveletek (Szólj, ha olcsóbb lesz −5/−10/−20%/egyéni · Listára · Polcra teszem): vendégnél belépésre visznek
+   `returnTo` + `pendingAction` paraméterrel (belépés előtt, waitlist módban a várólistára).
+5. Mérés: 20 kézi eset, mobil LCP (Lighthouse), e2e: minden „Ft” szöveg `PriceBlock`-ban (termék-, kereső-, kategória-
+   és útmutatóoldalon), képernyőképek. Kockázat: a `/go` az F6-ban készül; addig a bolt-gomb célja még nem él.
