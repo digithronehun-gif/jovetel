@@ -240,3 +240,9 @@ A meglévő oszlopok jelentése pontosodott:
 | RLS | mindkét táblán bekapcsolva, policy nélkül | mint az `offers`: a publikus kulccsal nem olvasható |
 
 A jutalék mértéke egyik táblában sem szerepel (3. vasszabály; egy unit teszt a keresés kódját és a migrációt is ellenőrzi).
+
+**0010 `stats_snapshot_verdict` (F6 utáni átnézés):** `catalog_stats_state` (egy sor: `refreshed_at`) — a
+`refresh_catalog_stats()` minden futás végén beírja a pillanatkép idejét. A kártyák (keresés, kategória, útmutató,
+hasonló termékek) „ár ellenőrizve” ideje `least(feed utolsó sikeres futása / seen_at, refreshed_at)`, így a pillanatkép
+ára nem látszhat frissebbnek, és ha a statisztika tartósan nem frissül, a kártyák 48 óra után kiesnek. Az ítéletben a feed
+`old_price_huf` mezője csak a `feed_discount_note`-ot állítja; a „Most drágább” ítéletet nem írja felül (PRODUCT_SPEC 7.3).

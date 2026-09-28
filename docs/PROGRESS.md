@@ -4,7 +4,7 @@
 > A tulajdonos innen követi, hol tart a fejlesztés.
 
 ## Aktuális állapot
-- **Jelenlegi fázis:** F6 — Követett kattintás, jelölés, konverziók (🔨)
+- **Jelenlegi fázis:** F7 — Belépés, onboarding, beállítások (🔨)
 - **Utolsó frissítés:** 2026-09-28
 - **Mérföldkő / teendő a tulajdonosnak:** **2. mérföldkő: az árgyűjtő élesítése — határidő 2026. október 28.** (lent),
   és az 1. mérföldkő (a landing waitlist módban) továbbra is érvényes.
@@ -96,8 +96,11 @@
 >   | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | a 3. lépésből |
 >   | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | a 4. lépésből |
 >   | `IP_HASH_SALT` | hosszú véletlen szöveg (pl. `openssl rand -base64 32`); később ne változtasd |
+>   | `CRON_SECRET` | legalább 32 véletlen karakter (pl. `openssl rand -hex 32`); ugyanez kerül a GitHub Secrets közé is (2. mérföldkő) |
 >   | `NEXT_PUBLIC_POSTHOG_KEY` (opcionális) | az 5. lépésből; `NEXT_PUBLIC_POSTHOG_HOST=https://eu.i.posthog.com` |
 >
+> - **Az `IP_HASH_SALT`, a `CRON_SECRET` és az Upstash kulcsai nélkül a production build szándékosan leáll** (F6):
+>   só nélkül a kattintásnapló IP-kivonata visszafejthető, Upstash nélkül a rate limit nem véd több szerverpéldányon.
 > - Settings → Domains → a domain hozzáadása, a kiírt DNS-rekord (A / CNAME) beállítása a domain-szolgáltatónál.
 > - Deploy. Ellenőrzés: `https://<domain>/api/health` → 200; iratkozz fel a saját címeddel, és kattints a levélben.
 >
@@ -141,7 +144,7 @@ Tailwind 4.3.3 · Playwright 1.56.1 (a gépen lévő Chromium-buildhez illeszked
 | F3 | Feed-import és napi árgyűjtő | ✅ | `fazis-03` (acea1bd) | 50 000 sor 17,7 s · újrafuttatás 0 írás · 7 adapter · átnézés: 2 BLOCKER + 7 SHOULD-FIX javítva · 26 e2e |
 | F4 | Keresés, kategóriák, útmutatók | ✅ | `fazis-04` (4c65804) | 50/50 top 5 · p95 159 ms / 50 000 termék · 38 e2e |
 | F5 | Termékoldal, teljes költség, ártörténet, „Valódi akció?” | ✅ | `fazis-05` (80730af) | 20/20 legjobb ár (TS + SQL) · mobil LCP 1,97 s (h2, 5 futás mediánja) · Lighthouse 98/100/100/100 · 46 e2e |
-| F6 | Követett kattintás, jelölés, konverziók | 🔨 | | |
+| F6 | Követett kattintás, jelölés, konverziók | ✅ | `fazis-06` (HASH) | open redirect csomag 0 kijutás · /go p95 10,2 ms @ 500/perc · subID 4 hálózat · szintetikus konverzió 4/4 hálózat · átnézés: 1 BLOCKER + 7 SHOULD-FIX javítva · 64 e2e |
 | F7 | Belépés, onboarding, beállítások | ⏳ | | |
 | F8 | App-keret, listák, megosztás, foglalás, árfigyelő | ⏳ | | |
 | F9 | Szeretteim, alkalmak, értesítési motor | ⏳ | | |
@@ -585,3 +588,68 @@ független vasszabály-átnézés.
 6. Mérés: open redirect tesztcsomag (abszolút, protokoll-relatív, kódolt, láncolt, idegen host a feedben), redirect
    p95 500 kérés/perc mellett, subID hálózatonként, szintetikus konverzió párosítása, e2e: minden oldaltípuson minden
    affiliate gomb mellett `Disclosure`. Utána független vasszabály-átnézés.
+
+**Kész (2026-09-28):**
+- `/go/[offerId]`: uuid-ellenőrzés, egyetlen lekérdezés, `click_id` (base62, 12, `crypto`, egyenletes eloszlás),
+  a cél az adapter subID-es linkjéből, a végső host a kereskedő / a hálózat engedélylistáján (a beágyazott céloldal is),
+  különben a bolt saját oldala vagy a termékoldal (relatív `Location`); 302 `no-store`, `Referrer-Policy`,
+  `X-Robots-Tag`; rate limit 60/perc/IP-hash; botszűrés (`is_bot`); napló `after()`-ben, IP és UA csak sózott hash-ként,
+  `session_id` csak analitikai hozzájárulással; HEAD nem kattintás.
+- A subID-építés tiszta modulban (`adapters/tracking.ts`): Awin `clickref` (deeplink `cread.php`-vel is), CJ `sid`,
+  Dognet `data1` (deeplink-sablonnal), Admitad `subid`, közvetlen/kézi `subid`; a `networks.subid_param` felülírja.
+- `placement` / `ref` engedélylista és `goHref()`; a termékoldal gombjai `product_best` / `product_offers`.
+- Konverzió-szinkron: Awin, CJ, Admitad, Dognet elemző + lekérő, idempotens upsert, kattintás- és program-párosítás,
+  `pnpm sync:conversions`, GitHub Actions 05:00; kulcs nélkül a hálózat kimarad.
+- `/admin/kattintasok` (7/30/90 nap): összesítő, napi oszlopdiagram (egy adatsor, hover/fókusz-címke, táblázatnézet;
+  a `--chart-bar` szín a dataviz-validátorral ellenőrizve mindkét módban), bolt és hely szerint, legutóbbi konverziók, EPC.
+- `/igy-rangsorolunk` véglegesítve: legjobb ajánlat szabálya, frissesség, partnerlinkek, kattintásnapló, szponzorált elem.
+- Fejlesztői seed: determinisztikus [DEMO] kattintások és konverziók (`raw.demo = true`).
+
+**Mért számok (production build, `next start`, helyi stack):**
+- **Open redirect tesztcsomag: 0 kijutás** (`tests/e2e/go.spec.ts`, 16 teszt): abszolút URL, protokoll-relatív, kódolt,
+  kétszer kódolt, láncolt (`/go`-ra mutató `next`), `javascript:`, Host / X-Forwarded-Host fejléc, útvonal-trükkök
+  (nem uuid, dupla perjel, bejárás, `@`), idegen host a feed bolt-URL-jében, a feed követő linkjében és a követő linkbe
+  ágyazott céloldalban; csak GET; 61. kérés 429. Unit szinten további 26 cél-eset (`tests/unit/tracking.test.ts`).
+- **Redirect p95 10,2 ms 500 kérés/perc mellett** (határ: 150 ms; p50 7,2 ms, p99 13,6 ms, 500/500 átirányítás,
+  500/500 naplózott kattintás); 3000 kérés/percnél p95 7,2 ms (`pnpm perf:go`, `tests/.artifacts/perf/go-500rpm.json`).
+  Élesben az Upstash- és a pooler-kör néhány ms-mal növeli.
+- **subID hálózatonként helyes:** Awin `clickref`, CJ `sid`, Dognet `data1`, Admitad `subid` a teljes 12 karakteres
+  azonosítóval, a meglévő paraméterek megtartásával, a hálózat tracking-domainjén (unit tesztek a seed hálózati
+  soraiból); a 12-nél rövidebb korlát hiba.
+- **Szintetikus konverzió helyesen párosul** mind a 4 hálózaton (`tests/db/conversions.test.ts`): subID → kattintás →
+  kereskedő (a kattintásé győz a program-azonosító felett), idegen subID → csak program szerinti kereskedő, újrafuttatás
+  0 írás, státuszváltás pontosan 1 frissítés; e2e: a `/go` kattintásához írt konverzió megjelenik az adminban.
+- **e2e: minden oldaltípuson minden affiliate gomb mellett ott a `Disclosure`** (landing, 2 keresés, kategória,
+  útmutató-lista, útmutató, termékoldal, „Így rangsorolunk”, affiliate-tájékoztató), és boltba vivő link csak a `/go`-n
+  át; kódszabály: minden `goHref`-et hívó fájl rendereli a `Disclosure`-t.
+- Tesztek: unit 393 (+91), DB 12 fájl / 107 + 1 kihagyott (+15), e2e 64 (+18). `pnpm verify` zöld.
+- Képernyőképek: `/admin/kattintasok` (30 és 7 nap), `/igy-rangsorolunk` × 390/1440 × világos/sötét
+  (`tests/.artifacts/screens/f6/`), átnézve; javítva: 390 px-en az admin-menü és a 30 napos diagram utolsó
+  dátumfelirata kilógott (460 → 390 px) → a menü saját keretében görget, a szélső feliratok a szélhez igazodnak.
+
+**Független vasszabály-átnézés (alügynök, a `fazis-03` óta minden változáson):** 1 BLOCKER + 7 SHOULD-FIX, mind javítva:
+- BLOCKER (6.): a „Hasonló termékek” kompakt kártyáin nem volt „ár ellenőrizve”, és a gyorsítótár miatt ~48,5 órás ár is
+  megjelenhetett → minden kártyaváltozaton látszik, a 48 órás szűrés a renderelés idejéhez számol.
+- (5.) a hálózati követő linkbe ágyazott céloldal (pl. Awin `ued=https://evil…`) nem volt ellenőrizve (másodlagos open
+  redirect a hálózat átirányítóján át) → importkor elutasítva, a `/go`-n a bolt saját oldalára esik vissza; idegen
+  publisher-azonosítójú feed-link elutasítva.
+- `safeReturnTo('/.//evil.example')` → `//evil.example` volt (F7-ben lett volna open redirect) → javítva, tesztelve.
+- (6.) a kártyák „ár ellenőrizve” ideje frissebb lehetett a statisztika pillanatképénél → 0010 migráció:
+  `catalog_stats_state`, a megjelenített idő legfeljebb a pillanatkép ideje.
+- (6.) a feed „régi ára” a „Most drágább”-at „Szokásos ár”-rá változtatta (a spec 7.3 szó szerinti olvasata) → az
+  ítéletet a feed mezője már nem változtatja, csak a kiegészítő mondatot; spec és „Így rangsorolunk” frissítve.
+- Production buildben kötelező az `IP_HASH_SALT`, a `CRON_SECRET` és az Upstash (eddig csak figyelmeztetés volt).
+- A konverzió-összeg az integer tartományon kívül null (egy hibás tétel nem buktatja el a hálózat szinkronját).
+- Rate limit a `/kereses` és `/kategoria` oldalon is (300/perc/IP-hash).
+- Kiemelt NIT-ek javítva: HEAD kérés nem kattintás; 12-nél rövidebb subID-korlát hiba. Tisztának találta: SQL-injekció,
+  admin-jogosultság (két réteg), `/api/revalidate` HMAC, XSS (JSON-LD, feedszöveg), jutalék a rangsorban, jelölés.
+
+**Eltérés a spectől és miért:** ARCHITECTURE 4. pont és 3. pont vége „Megvalósítás (F6)”, DATA_MODEL 4. és 9. pont,
+PRODUCT_SPEC 7.3 (lásd fent) és 5.3 (placement-nevek a DATA_MODEL szerint). Új modul: `src/lib/tracking` (a CLAUDE.md
+mappalistájában nem szerepel; a kattintáskövetés és a konverzió-szinkron nem illett a meglévők egyikébe sem). Ha a
+követett cél nem építhető (pl. hiányzó Awin publisher-azonosító), a látogató jutalék nélkül a bolt saját oldalára jut,
+nem hibaoldalra.
+
+**Nyitott kérdések:** #5, #13 (subID, tracking-domainek: a jóváhagyott fiókon ellenőrizendők), új: #18 (a hálózati
+tranzakció-API-k mezői), #19 (Dognet tranzakció-export), #20 (nem forintos konverziók átváltása).
+**Következő:** F7 — belépés (magic link + Google), onboarding, beállítások, adatexport, fióktörlés.

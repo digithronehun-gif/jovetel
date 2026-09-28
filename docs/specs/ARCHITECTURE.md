@@ -165,6 +165,10 @@ pénznemnél null, a pénznem a `raw`-ban). A `raw`-ba csak engedélyezett mező
   ellenőrizve; `session_id` = `jv_anon` csak analitikai hozzájárulással.
 - Mért (helyi production build): 500 kérés/perc mellett p50 7,2 ms, p95 10,2 ms, p99 13,6 ms; 3000 kérés/percnél
   p95 7,2 ms; minden kattintás naplózva (`scripts/perf/go-load.mjs`).
+- F6-átnézés után: a hálózati követő linkbe ágyazott céloldal (`ued`, `url`, `ulp`, …) is a kereskedő domainjén kell
+  legyen — importkor elutasítva, a `/go`-n a bolt saját oldalára esik vissza (másodlagos open redirect ellen). A feed
+  Awin-linkje csak a saját `AWIN_PUBLISHER_ID`-nkkal, a CJ-link a saját `CJ_WEBSITE_ID`-nkkal fogadható el (ha be vannak
+  állítva). A 12 karakternél rövidebb subID-korlát hiba (a levágott azonosító nem párosítható). HEAD kérés nem kattintás.
 
 ---
 
@@ -212,6 +216,10 @@ Leiratkozás: aláírt token típusonként (`/leiratkozas?t=…`), egy kattintá
 | Napi összesítő küldése | Vercel Cron | 07:30 (és óránként a eltérő `digest_time`-okra) | levelek összeállítása és küldése |
 | Napi KPI | Vercel Cron | 02:00 | `kpi_daily` frissítés (materializált nézet) |
 | Takarítás | Vercel Cron | vasárnap 03:00 | megőrzési szabályok |
+
+**Production-előfeltétel (F6-átnézés):** a `pnpm build` production deploynál (`VERCEL_ENV`/`APP_ENV` = production)
+leáll, ha hiányzik az `IP_HASH_SALT`, a `CRON_SECRET` (legalább 16 karakter) vagy az Upstash (`scripts/check-prod-env.ts`).
+A `/kereses` és `/kategoria` oldal rate limitje 300/perc/IP-hash (egy oldal több lekérdezés).
 
 Cron végpontok: `Authorization: Bearer ${CRON_SECRET}` nélkül 401. (Vercel Cron időpontjai UTC-ben
 vannak megadva; a Budapest-idő átszámítása a `vercel.json`-ban, kommenttel.)
