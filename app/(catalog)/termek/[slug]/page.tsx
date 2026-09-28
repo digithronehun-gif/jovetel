@@ -23,6 +23,7 @@ import { budapestDayKey } from '@/lib/format/date'
 import { launchMode, siteUrl } from '@/lib/env'
 import { loginHref } from '@/lib/launch'
 import { formatHuf, rankOffers, verdict } from '@/lib/pricing'
+import { isStale } from '@/lib/pricing/freshness'
 import { whyForYou } from '@/lib/search/why'
 import { goHref } from '@/lib/tracking/placements'
 import { productJsonLd, serializeJsonLd } from '@/lib/seo/jsonLd'
@@ -43,7 +44,9 @@ async function load(slug: string) {
   const historyOf = (offerId: string) =>
     data.history.filter((h) => h.offerId === offerId).map((h) => ({ day: h.day, minHuf: h.minHuf, lastHuf: h.lastHuf }))
   const bestVerdict = best ? verdict({ currentHuf: best.priceHuf, oldPriceHuf: best.oldPriceHuf, history: historyOf(best.offerId), today }) : null
-  return { data, now, ranked, best, bestVerdict, historyOf }
+  // a kapcsolódó termékek a gyorsítótárból (≤ 1 óra): a 48 órás határ a renderelés idejéhez számol (6. vasszabály)
+  const related = data.related.filter((r) => !isStale(r.checkedAt, now))
+  return { data, now, ranked, best, bestVerdict, historyOf, related }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -74,7 +77,7 @@ const TAG_LABEL = (tag: string): string | null => {
 export default async function ProductPage({ params }: Props) {
   const r = await load((await params).slug)
   if (!r) notFound()
-  const { data, now, ranked, best, bestVerdict, historyOf } = r
+  const { data, now, ranked, best, bestVerdict, historyOf, related } = r
   const p = data.product
   const name = displayProductName(p.name, p.brandName)
   const size = formatSize(p.sizeValue, p.sizeUnit)
@@ -272,13 +275,13 @@ export default async function ProductPage({ params }: Props) {
         </section>
       ) : null}
 
-      {data.related.length ? (
+      {related.length ? (
         <section aria-labelledby="kapcsolodo" className="mt-12 flex flex-col gap-4">
           <h2 id="kapcsolodo" className="text-title text-ink">
             Hasonló termékek
           </h2>
           <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
-            {data.related.map((rp) => (
+            {related.map((rp) => (
               <li key={rp.slug} className="min-w-0">
                 <ProductCard
                   variant="compact"

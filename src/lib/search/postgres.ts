@@ -120,8 +120,11 @@ export class PostgresSearch implements SearchProvider {
     const categoryCond = state.category
       ? sql`and (ps.category_path = ${state.category} or ps.category_path like ${`${state.category}/%`})`
       : sql``
-    const bestChecked = sql`case when ps.best_missed_runs = 0 and bf.last_success_at is not null
-      then greatest(bf.last_success_at, ps.best_seen_at) else ps.best_seen_at end`
+    // „ár ellenőrizve”: a feed utolsó sikeres futása, de legfeljebb a statisztika pillanatképének ideje (0010 migráció):
+    // a pillanatkép ára nem tüntethető fel frissebbnek, mint amikor készült
+    const bestChecked = sql`least(case when ps.best_missed_runs = 0 and bf.last_success_at is not null
+      then greatest(bf.last_success_at, ps.best_seen_at) else ps.best_seen_at end,
+      (select refreshed_at from public.catalog_stats_state))`
 
     // base: a szöveg + kategória + címkeszűrők jelzőivel, a legjobb FRISS ajánlattal
     const base = (materialized: boolean) => sql`
@@ -156,8 +159,9 @@ export class PostgresSearch implements SearchProvider {
           join public.offer_stats os on os.merchant_id = any(sel.ids)
           join public.merchants mm on mm.id = os.merchant_id
           left join public.feeds f on f.id = os.feed_id
-          cross join lateral (select case when os.missed_runs = 0 and f.last_success_at is not null
-            then greatest(f.last_success_at, os.seen_at) else os.seen_at end as checked_at) x
+          cross join lateral (select least(case when os.missed_runs = 0 and f.last_success_at is not null
+            then greatest(f.last_success_at, os.seen_at) else os.seen_at end,
+            (select refreshed_at from public.catalog_stats_state)) as checked_at) x
           where x.checked_at >= ${stale}::timestamptz
           order by os.product_id, os.in_stock desc, os.total_huf, mm.quality_score desc, os.offer_id
         ) e

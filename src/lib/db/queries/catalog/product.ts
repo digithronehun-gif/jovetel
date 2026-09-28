@@ -162,8 +162,10 @@ export async function loadProductPage(slug: string, now: Date = new Date()): Pro
     join public.products pr on pr.id = ps.product_id
     join public.merchants m on m.id = ps.best_merchant_id
     left join public.feeds f on f.id = ps.best_feed_id
-    cross join lateral (select case when ps.best_missed_runs = 0 and f.last_success_at is not null
-      then greatest(f.last_success_at, ps.best_seen_at) else ps.best_seen_at end as checked_at) x
+    -- „ár ellenőrizve”: legfeljebb a statisztika pillanatképének ideje (0010 migráció)
+    cross join lateral (select least(case when ps.best_missed_runs = 0 and f.last_success_at is not null
+      then greatest(f.last_success_at, ps.best_seen_at) else ps.best_seen_at end,
+      (select refreshed_at from public.catalog_stats_state)) as checked_at) x
     where ps.product_id <> ${p.id} and ps.best_offer_id is not null and ps.category_path = me.category_path
       and x.checked_at >= ${stale}::timestamptz
       and (me.best_total_huf is null or ps.best_total_huf between me.best_total_huf * 0.6 and me.best_total_huf * 1.6)

@@ -21,7 +21,8 @@ export interface ProductCardData {
 
 /**
  * Termékkártya (DESIGN_SYSTEM 6. pont): kép 4:5 --stone háttéren, márka, név (max. 2 sor), PriceBlock,
- * VerdictBadge (ha van), max. 3 WhyTag, és egy műveleti hely (pl. szív → listára).
+ * VerdictBadge (ha van), max. 3 WhyTag, és egy műveleti hely (pl. szív → listára). Minden változatban látszik, mikor
+ * ellenőriztük az árat (6. vasszabály); a kompakt változatból csak a bolt neve és a bontás marad el.
  */
 export function ProductCard({
   product,
@@ -73,7 +74,7 @@ export function ProductCard({
           <PriceBlock
             cost={product.cost}
             merchantName={compact ? undefined : product.merchantName}
-            checkedAt={compact ? undefined : product.checkedAt}
+            checkedAt={product.checkedAt}
             now={now}
             size={compact ? 's' : 'm'}
             showBreakdown={!compact}

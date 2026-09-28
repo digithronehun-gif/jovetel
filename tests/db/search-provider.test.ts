@@ -133,4 +133,18 @@ describe('PostgresSearch', () => {
     const later = new Date(NOW.getTime() + 49 * 3600e3)
     expect((await search.search(DEFAULT_STATE, { now: later })).total).toBe(0)
   })
+
+  it('„ár ellenőrizve” legfeljebb a statisztika pillanatképének ideje (F6-átnézés, 0010 migráció)', async () => {
+    // a feed azóta újra sikeresen lefutott, de a statisztika még a régi pillanatkép: a kártya nem mutathat újabb időt
+    const snapshot = new Date(NOW.getTime() - 2 * 3600e3)
+    await sql`update public.catalog_stats_state set refreshed_at = ${snapshot.toISOString()}::timestamptz`
+    const r = await search.search(DEFAULT_STATE, { now: NOW })
+    expect(r.total).toBeGreaterThan(0)
+    for (const h of r.hits) expect(h.checkedAt.getTime()).toBeLessThanOrEqual(snapshot.getTime())
+    // ha a statisztika-frissítés 48 óránál régebben futott utoljára, a kártyák eltűnnek (nem jelenik meg régi ár)
+    await sql`update public.catalog_stats_state set refreshed_at = ${new Date(NOW.getTime() - 49 * 3600e3).toISOString()}::timestamptz`
+    expect((await search.search(DEFAULT_STATE, { now: NOW })).total).toBe(0)
+    await refreshCatalogStats(sql, NOW)
+    expect((await search.search(DEFAULT_STATE, { now: NOW })).total).toBeGreaterThan(0)
+  })
 })

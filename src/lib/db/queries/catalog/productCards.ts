@@ -54,8 +54,10 @@ export async function getProductCards(productIds: string[], now: Date = new Date
     select p.id, p.slug, p.name, p.brand_name, p.image_url, ps.best_offer_id, ps.best_merchant_id, m.name as merchant_name,
       ps.best_price_huf, ps.best_shipping_huf, ps.best_customs_huf, ps.best_total_huf, coalesce(ps.best_in_stock, false) as best_in_stock,
       ps.verdict,
-      case when ps.best_missed_runs = 0 and f.last_success_at is not null
-        then greatest(f.last_success_at, ps.best_seen_at) else ps.best_seen_at end as checked_at
+      -- legfeljebb a statisztika pillanatképének ideje (0010 migráció)
+      least(case when ps.best_missed_runs = 0 and f.last_success_at is not null
+        then greatest(f.last_success_at, ps.best_seen_at) else ps.best_seen_at end,
+        (select refreshed_at from public.catalog_stats_state)) as checked_at
     from public.products p
     left join public.product_stats ps on ps.product_id = p.id
     left join public.merchants m on m.id = ps.best_merchant_id
