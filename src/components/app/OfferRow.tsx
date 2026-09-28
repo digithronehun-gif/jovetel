@@ -1,6 +1,7 @@
 import { ExternalLink, Truck } from 'lucide-react'
 import { cn } from '@/components/ui/cn'
 import type { CostBreakdown } from '@/lib/pricing'
+import { goHref } from '@/lib/tracking/placements'
 import { Disclosure } from './Disclosure'
 import { PriceBlock } from './PriceBlock'
 
@@ -13,11 +14,6 @@ export interface OfferRowData {
   fresh: boolean
   deliveryDaysMin: number | null
   deliveryDaysMax: number | null
-}
-
-/** A „Megnézem a boltban” gomb célja: a követett átirányító (5. vasszabály: csak az adatbázisban tárolt URL-re visz). */
-export function goHref(offerId: string, placement: 'best_offer' | 'offer_list'): string {
-  return `/go/${offerId}?placement=${placement}`
 }
 
 export function deliveryText(min: number | null, max: number | null): string | null {
@@ -35,6 +31,7 @@ export function OfferRow({ offer, now }: { offer: OfferRowData; now: Date }) {
   return (
     <li
       data-offer-row
+      data-affiliate
       data-offer-fresh={offer.fresh || undefined}
       className={cn('flex flex-col gap-3 border-b border-line py-4 last:border-b-0 sm:flex-row sm:items-start sm:justify-between', !offer.fresh && 'opacity-80')}
     >
@@ -53,7 +50,7 @@ export function OfferRow({ offer, now }: { offer: OfferRowData; now: Date }) {
       </div>
       <div className="flex shrink-0 flex-col gap-1.5 sm:max-w-64 sm:items-end">
         <a
-          href={goHref(offer.offerId, 'offer_list')}
+          href={goHref(offer.offerId, 'product_offers')}
           target="_blank"
           rel="sponsored nofollow noopener"
           className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-line bg-surface px-4 text-small font-semibold text-ink hover:border-ink-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-deep"

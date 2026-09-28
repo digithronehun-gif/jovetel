@@ -82,7 +82,7 @@ test.describe('termékoldal (/termek/[slug])', () => {
     await expect(best).toContainText('30 napja nem volt ilyen olcsó ennél a boltnál.')
     // a bolt-gomb a követett átirányítóra visz (5. vasszabály), mellette a jelölés (3. vasszabály)
     const cta = best.locator('[data-cta="best-offer"]')
-    await expect(cta).toHaveAttribute('href', /^\/go\/[0-9a-f-]{36}\?placement=best_offer$/)
+    await expect(cta).toHaveAttribute('href', /^\/go\/[0-9a-f-]{36}\?placement=product_best$/)
     await expect(cta).toHaveAttribute('rel', /sponsored/)
     await expect(best.locator('[data-disclosure]')).toContainText('Partnerlink: ha vásárolsz, jutalékot kaphatunk.')
     // „Miért neked” (vendégnél: az ítélet)
@@ -104,7 +104,7 @@ test.describe('termékoldal (/termek/[slug])', () => {
     await expect(rows.nth(2)).toContainText('Az ár nem friss')
     await expect(rows.nth(2)).not.toHaveAttribute('data-offer-fresh', 'true')
     for (const row of await rows.all()) {
-      await expect(row.getByRole('link', { name: /Megnézem a boltban/ })).toHaveAttribute('href', /^\/go\/[0-9a-f-]{36}\?placement=offer_list$/)
+      await expect(row.getByRole('link', { name: /Megnézem a boltban/ })).toHaveAttribute('href', /^\/go\/[0-9a-f-]{36}\?placement=product_offers$/)
       await expect(row.locator('[data-disclosure]')).toBeVisible()
     }
     // minden webshopba vivő gomb mellett ott a jelölés az oldalon

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Disclosure } from '@/components/app/Disclosure'
 import { LazyPriceHistoryChart } from '@/components/app/LazyPriceHistoryChart'
-import { deliveryText, goHref, OfferRow } from '@/components/app/OfferRow'
+import { deliveryText, OfferRow } from '@/components/app/OfferRow'
 import { PriceBlock } from '@/components/app/PriceBlock'
 import { ProductActions } from '@/components/app/ProductActions'
 import { ProductCard } from '@/components/app/ProductCard'
@@ -24,6 +24,7 @@ import { launchMode, siteUrl } from '@/lib/env'
 import { loginHref } from '@/lib/launch'
 import { formatHuf, rankOffers, verdict } from '@/lib/pricing'
 import { whyForYou } from '@/lib/search/why'
+import { goHref } from '@/lib/tracking/placements'
 import { productJsonLd, serializeJsonLd } from '@/lib/seo/jsonLd'
 
 type Props = { params: Promise<{ slug: string }> }
@@ -137,7 +138,7 @@ export default async function ProductPage({ params }: Props) {
             ) : null}
           </header>
 
-          <section aria-labelledby="legjobb-ajanlat" className="flex flex-col gap-4 rounded-xl border border-line bg-surface p-5" data-best-offer>
+          <section aria-labelledby="legjobb-ajanlat" className="flex flex-col gap-4 rounded-xl border border-line bg-surface p-5" data-best-offer data-affiliate>
             <h2 id="legjobb-ajanlat" className="text-small font-semibold text-ink-muted">
               Legjobb ajánlat
             </h2>
@@ -157,7 +158,7 @@ export default async function ProductPage({ params }: Props) {
                 ) : null}
                 <div className="flex flex-col gap-2">
                   <a
-                    href={goHref(best.offerId, 'best_offer')}
+                    href={goHref(best.offerId, 'product_best')}
                     target="_blank"
                     rel="sponsored nofollow noopener"
                     data-cta="best-offer"

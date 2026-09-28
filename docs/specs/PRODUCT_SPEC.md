@@ -263,7 +263,7 @@ termékedet a polcra” · „Próbáld ki az ajándék-varázslót”.
   Friss ajánlat nélkül nincs „legjobb ajánlat” blokk, csak a tényszerű „nincs friss árunk” szöveg.
 - **Összes ajánlat:** teljes ár szerint; a 48 óránál régebbi árú ajánlat a lista végén, „Az ár nem friss” jelöléssel,
   a gombja és a jelölése megmarad. Minden sorban ott a `Disclosure`.
-- A bolt-gomb a `/go/{offerId}?placement=best_offer|offer_list` követett átirányítóra visz (F6), `rel="sponsored"`.
+- A bolt-gomb a `/go/{offerId}?placement=product_best|product_offers` követett átirányítóra visz (F6), `rel="sponsored"`.
 - Az ítélet (`VerdictBadge` + magyarázat) a legjobb ajánlat saját napi ártörténetéből számol a renderelés napjával.
 - **„Miért neked”** vendégnél csak a nem személyes címke látszik (valódi akció); a bőrprofil-, keret- és
   kedvencbolt-címkék belépve (F7, 7.1).
