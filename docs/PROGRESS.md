@@ -140,7 +140,7 @@ Tailwind 4.3.3 · Playwright 1.56.1 (a gépen lévő Chromium-buildhez illeszked
 | F2 | Landing, várólista, jogi oldalak, hozzájárulás | ✅ | `fazis-02` (9c69ba8) | Lighthouse mobil 96/100/100/100 (h2) · 90/100/100/100 (h1) · 21 e2e |
 | F3 | Feed-import és napi árgyűjtő | ✅ | `fazis-03` (acea1bd) | 50 000 sor 17,7 s · újrafuttatás 0 írás · 7 adapter · átnézés: 2 BLOCKER + 7 SHOULD-FIX javítva · 26 e2e |
 | F4 | Keresés, kategóriák, útmutatók | ✅ | `fazis-04` (4c65804) | 50/50 top 5 · p95 159 ms / 50 000 termék · 38 e2e |
-| F5 | Termékoldal, teljes költség, ártörténet, „Valódi akció?” | ✅ | `fazis-05` (HASH) | 20/20 legjobb ár (TS + SQL) · mobil LCP 1,97 s (h2, 5 futás mediánja) · Lighthouse 98/100/100/100 · 46 e2e |
+| F5 | Termékoldal, teljes költség, ártörténet, „Valódi akció?” | ✅ | `fazis-05` (80730af) | 20/20 legjobb ár (TS + SQL) · mobil LCP 1,97 s (h2, 5 futás mediánja) · Lighthouse 98/100/100/100 · 46 e2e |
 | F6 | Követett kattintás, jelölés, konverziók | ⏳ | | |
 | F7 | Belépés, onboarding, beállítások | ⏳ | | |
 | F8 | App-keret, listák, megosztás, foglalás, árfigyelő | ⏳ | | |
