@@ -11,3 +11,9 @@ export function displayProductName(name: string, brand: string | null | undefine
   }
   return name
 }
+
+/** Kiszerelés: „50 ml”, „3,5 g”, „1 db” (magyar tizedesvesszővel). */
+export function formatSize(value: number | null | undefined, unit: 'ml' | 'g' | 'db' | null | undefined): string | null {
+  if (value == null || !unit) return null
+  return `${value.toLocaleString('hu-HU', { maximumFractionDigits: 2 })}\u00a0${unit}`
+}

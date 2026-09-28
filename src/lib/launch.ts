@@ -37,3 +37,15 @@ export function giftHref(q?: string): string | null {
   if (!ROUTE_READY.ajandek) return null
   return q ? `/ajandek?q=${encodeURIComponent(q)}` : '/ajandek'
 }
+
+/**
+ * Vendég művelet (Szólj, ha olcsóbb lesz · Listára · Polcra teszem) célja: élő módban a belépés `returnTo` +
+ * `pendingAction` paraméterrel (PRODUCT_SPEC 2. „Elv”); waitlist módban, vagy amíg a belépés nem készült el (F7),
+ * a várólista.
+ */
+export function loginHref(returnTo: string, pendingAction?: string, env: Record<string, string | undefined> = process.env): string {
+  if (launchMode(env) !== 'live' || !ROUTE_READY.belepes) return '/#varolista'
+  const p = new URLSearchParams({ returnTo })
+  if (pendingAction) p.set('pendingAction', pendingAction)
+  return `/belepes?${p.toString()}`
+}
