@@ -93,6 +93,19 @@ describe('verdict (PRODUCT_SPEC 7.3)', () => {
       feedDiscountNote: false,
     })
   })
+  it('hiányzó napok: csak az ártörténettel rendelkező napok számítanak (14 szórt nap elég, 13 nem)', () => {
+    const scattered = (n: number) =>
+      Array.from({ length: n }, (_, i) => {
+        const d = new Date(`${TODAY}T12:00:00Z`)
+        d.setUTCDate(d.getUTCDate() - (2 * i + 1)) // minden második nap hiányzik
+        return { day: d.toISOString().slice(0, 10), minHuf: 10000, lastHuf: 10000 }
+      })
+    expect(verdict({ currentHuf: 9000, history: scattered(14), today: TODAY })).toMatchObject({ kind: 'deal', daysTracked: 14 })
+    expect(verdict({ currentHuf: 9000, history: scattered(13), today: TODAY })).toMatchObject({ kind: 'collecting', daysTracked: 13 })
+    // ugyanarra a napra két sor (pl. két futás): egy napnak számít
+    const dup = [...scattered(13), { ...scattered(1)[0]! }]
+    expect(verdict({ currentHuf: 9000, history: dup, today: TODAY }).daysTracked).toBe(13)
+  })
   it('median2', () => {
     expect(median2([])).toBeNull()
     expect(median2([3, 1, 2])).toBe(4)

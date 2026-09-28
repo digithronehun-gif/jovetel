@@ -1,3 +1,4 @@
+export * from './bestOffer'
 export * from './copy'
 export * from './format'
 export * from './freshness'

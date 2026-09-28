@@ -1,0 +1,35 @@
+{
+  "_leiras": "F5 elfogadási kritérium: a legjobb teljes ár 20 kézi tesztesetben helyes. A TS (lib/pricing/bestOffer) és az SQL (refresh_catalog_stats → product_stats) is ezeken fut. seenHoursAgo: az ár ellenőrzése óta eltelt órák (48 felett nem friss). expect: a legjobb ajánlat sku-ja (null: nincs friss, listázható ajánlat).",
+  "merchants": {
+    "szallitos": { "fee": 990, "threshold": 14990, "customs": 0, "quality": 0.8 },
+    "ingyenes": { "fee": 0, "threshold": null, "customs": 0, "quality": 0.6 },
+    "draga-szallitas": { "fee": 2490, "threshold": null, "customs": 0, "quality": 0.9 },
+    "eu-n-kivuli": { "fee": 0, "threshold": null, "customs": 1800, "quality": 0.7 },
+    "kuszobos": { "fee": 1290, "threshold": 10000, "customs": 0, "quality": 0.5 },
+    "szunetel": { "fee": 0, "threshold": null, "customs": 0, "quality": 1, "status": "paused" },
+    "nem-osszehasonlithato": { "fee": 0, "threshold": null, "customs": 0, "quality": 1, "allowed": false },
+    "ugyanolyan": { "fee": 0, "threshold": null, "customs": 0, "quality": 0.6 }
+  },
+  "cases": [
+    { "name": "egyetlen ajánlat", "offers": [{ "sku": "a", "merchant": "szallitos", "price": 5000 }], "expect": "a", "expectTotal": 5990 },
+    { "name": "olcsóbb listaár, de drágább szállítás", "offers": [{ "sku": "a", "merchant": "draga-szallitas", "price": 5000 }, { "sku": "b", "merchant": "ingyenes", "price": 6000 }], "expect": "b", "expectTotal": 6000 },
+    { "name": "pont a küszöbön ingyenes a szállítás", "offers": [{ "sku": "a", "merchant": "kuszobos", "price": 10000 }, { "sku": "b", "merchant": "ingyenes", "price": 10500 }], "expect": "a", "expectTotal": 10000 },
+    { "name": "1 Ft-tal a küszöb alatt fizetős", "offers": [{ "sku": "a", "merchant": "kuszobos", "price": 9999 }, { "sku": "b", "merchant": "ingyenes", "price": 10500 }], "expect": "b", "expectTotal": 10500 },
+    { "name": "küszöb nélkül mindig van szállítás", "offers": [{ "sku": "a", "merchant": "draga-szallitas", "price": 50000 }, { "sku": "b", "merchant": "ingyenes", "price": 52000 }], "expect": "b", "expectTotal": 52000 },
+    { "name": "EU-n kívüli vámmal drágább", "offers": [{ "sku": "a", "merchant": "eu-n-kivuli", "price": 4000 }, { "sku": "b", "merchant": "ingyenes", "price": 5500 }], "expect": "b", "expectTotal": 5500 },
+    { "name": "EU-n kívüli vámmal is olcsóbb", "offers": [{ "sku": "a", "merchant": "eu-n-kivuli", "price": 4000 }, { "sku": "b", "merchant": "ingyenes", "price": 5900 }], "expect": "a", "expectTotal": 5800 },
+    { "name": "az olcsóbb nincs készleten", "offers": [{ "sku": "a", "merchant": "ingyenes", "price": 3000, "inStock": false }, { "sku": "b", "merchant": "szallitos", "price": 4000 }], "expect": "b", "expectTotal": 4990 },
+    { "name": "semmi nincs készleten: a legolcsóbb", "offers": [{ "sku": "a", "merchant": "ingyenes", "price": 3000, "inStock": false }, { "sku": "b", "merchant": "szallitos", "price": 2500, "inStock": false }], "expect": "a", "expectTotal": 3000 },
+    { "name": "a legolcsóbb ára 49 órás", "offers": [{ "sku": "a", "merchant": "ingyenes", "price": 1000, "seenHoursAgo": 49 }, { "sku": "b", "merchant": "ingyenes", "price": 2000 }], "expect": "b", "expectTotal": 2000 },
+    { "name": "pont 48 órás ár még friss", "offers": [{ "sku": "a", "merchant": "ingyenes", "price": 1000, "seenHoursAgo": 48 }, { "sku": "b", "merchant": "ingyenes", "price": 2000 }], "expect": "a", "expectTotal": 1000 },
+    { "name": "minden ár régi", "offers": [{ "sku": "a", "merchant": "ingyenes", "price": 1000, "seenHoursAgo": 60 }, { "sku": "b", "merchant": "szallitos", "price": 900, "seenHoursAgo": 100 }], "expect": null },
+    { "name": "azonos teljes ár: a jobb bolt-minőség", "offers": [{ "sku": "a", "merchant": "ingyenes", "price": 5990 }, { "sku": "b", "merchant": "szallitos", "price": 5000 }], "expect": "b", "expectTotal": 5990 },
+    { "name": "azonos ár és minőség: az azonosító dönt", "offers": [{ "sku": "b", "merchant": "ugyanolyan", "price": 4000, "id": "00000000-0000-4000-8000-000000000002" }, { "sku": "a", "merchant": "ingyenes", "price": 4000, "id": "00000000-0000-4000-8000-000000000001" }], "expect": "a", "expectTotal": 4000 },
+    { "name": "szüneteltetett kereskedő kimarad", "offers": [{ "sku": "a", "merchant": "szunetel", "price": 100 }, { "sku": "b", "merchant": "szallitos", "price": 5000 }], "expect": "b", "expectTotal": 5990 },
+    { "name": "összehasonlítást nem engedő program kimarad", "offers": [{ "sku": "a", "merchant": "nem-osszehasonlithato", "price": 100 }, { "sku": "b", "merchant": "ingyenes", "price": 8000 }], "expect": "b", "expectTotal": 8000 },
+    { "name": "inaktív ajánlat kimarad", "offers": [{ "sku": "a", "merchant": "ingyenes", "price": 100, "active": false }, { "sku": "b", "merchant": "szallitos", "price": 20000 }], "expect": "b", "expectTotal": 20000 },
+    { "name": "csak nem listázható ajánlat", "offers": [{ "sku": "a", "merchant": "szunetel", "price": 100 }, { "sku": "b", "merchant": "nem-osszehasonlithato", "price": 200 }], "expect": null },
+    { "name": "három bolt, a küszöb fölé eső ingyenes nyer", "offers": [{ "sku": "a", "merchant": "szallitos", "price": 14990 }, { "sku": "b", "merchant": "kuszobos", "price": 14000 }, { "sku": "c", "merchant": "draga-szallitas", "price": 12600 }], "expect": "b", "expectTotal": 14000 },
+    { "name": "régi, készleten lévő helyett a friss, elfogyott", "offers": [{ "sku": "a", "merchant": "ingyenes", "price": 2000, "seenHoursAgo": 72 }, { "sku": "b", "merchant": "szallitos", "price": 3000, "inStock": false }], "expect": "b", "expectTotal": 3990 }
+  ]
+}
