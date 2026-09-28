@@ -78,8 +78,11 @@ export default function RankingPage() {
             <VerdictBadge kind="pricier" size="sm" /> ha a mai ár több mint 5%-kal a 30 napos szokásos (medián) ár felett van.
           </li>
           <li>
-            <VerdictBadge kind="usual" size="sm" /> minden más esetben — akkor is, ha a bolt kedvezményt jelez, de az elmúlt 30
-            napban volt már ennyi vagy kevesebb is.
+            <VerdictBadge kind="usual" size="sm" /> minden más esetben.
+          </li>
+          <li>
+            Ha a bolt kedvezményt jelez, az ítéletet ez nem változtatja meg. Ha az elmúlt 30 napban volt már ennyi vagy kevesebb
+            is, ezt külön mondatban jelezzük.
           </li>
         </ul>
       </LegalSection>

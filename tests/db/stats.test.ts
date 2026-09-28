@@ -136,8 +136,10 @@ describe('paritás: SQL (refresh_catalog_stats) = TS (lib/pricing)', () => {
     // a határesetek a spec szerint
     const kind = (sku: string) => byId.get(ids.get(sku)!)!.verdict
     expect([kind('n13'), kind('n14'), kind('k97'), kind('k97a'), kind('k105'), kind('k105f'), kind('paros'), kind('regi'), kind('ma'), kind('regen')]).toEqual([
-      'collecting', 'deal', 'usual', 'deal', 'usual', 'pricier', 'pricier', 'usual', 'deal', 'collecting',
+      // 'regi': 12 000 Ft 10 000 Ft-os medián mellett, a feed kedvezményt jelez → Most drágább marad (6. vasszabály, 0010)
+      'collecting', 'deal', 'usual', 'deal', 'usual', 'pricier', 'pricier', 'pricier', 'deal', 'collecting',
     ])
+    expect(byId.get(ids.get('regi')!)!.feed_discount_note).toBe(true)
   })
 
   it('a második frissítés 0 sort ír; árváltozásnál csak az érintett ajánlat és termék íródik', async () => {

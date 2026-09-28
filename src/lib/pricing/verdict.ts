@@ -2,8 +2,8 @@ import type { VerdictKind } from './types'
 
 /**
  * „Valódi akció?” ítélet (PRODUCT_SPEC 7.3) — KIZÁRÓLAG a saját napi ártörténetünkből (6. vasszabály).
- * A feed „régi ár” mezője soha nem tesz egy árat valódi akcióvá; csak a tényszerű kiegészítő mondatot
- * váltja ki, és ilyenkor „Most drágább” helyett „Szokásos ár” a felirat.
+ * A feed „régi ár” mezője az ítéletet SOHA nem változtatja (nem tesz egy árat valódi akcióvá, és a „Most drágább”-at
+ * sem teszi „Szokásos ár”-rá); csak a tényszerű kiegészítő mondatot váltja ki.
  *
  * A küszöbök egész számokkal számolnak (lebegőpontos kerekítés nélkül), hogy az SQL-pár
  * (`refresh_catalog_stats()`, 0009 migráció) pontosan ugyanazt adja; egy DB-teszt ezt ellenőrzi:
@@ -93,11 +93,11 @@ export function verdictFromStats(s: VerdictStats): Verdict {
       realDiscountPct: Math.floor(((s.med30Twice - 2 * cur) * 100) / s.med30Twice),
     }
   }
-  const feedClaimsDiscount = s.oldPriceHuf != null && s.oldPriceHuf > cur
-  // a feed kedvezményt jelez, de a saját 30 napunk szerint volt már ennyi vagy kevesebb (jelen ≥ min30)
-  if (feedClaimsDiscount && cur >= s.min30Huf) return { ...base, kind: 'usual', feedDiscountNote: true }
-  if (200 * cur > 105 * s.med30Twice) return { ...base, kind: 'pricier' }
-  return { ...base, kind: 'usual' }
+  // a feed kedvezményt jelez, de a saját 30 napunk szerint volt már ennyi vagy kevesebb (jelen ≥ min30): csak a
+  // tényszerű kiegészítő mondat — az ítéletet a feed mezője nem változtatja (6. vasszabály; F6-átnézés, 0010 migráció)
+  const feedDiscountNote = s.oldPriceHuf != null && s.oldPriceHuf > cur && cur >= s.min30Huf
+  if (200 * cur > 105 * s.med30Twice) return { ...base, kind: 'pricier', feedDiscountNote }
+  return { ...base, kind: 'usual', feedDiscountNote }
 }
 
 /** Ítélet egy ajánlatra a napi ártörténetéből. */

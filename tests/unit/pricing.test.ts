@@ -74,17 +74,19 @@ describe('verdict (PRODUCT_SPEC 7.3)', () => {
     expect(verdict({ currentHuf: 8800, history: h, today: TODAY }).kind).toBe('usual')
     expect(verdict({ currentHuf: 8729, history: h, today: TODAY })).toMatchObject({ kind: 'deal', min30Huf: 9000, med30Huf: 10000, realDiscountPct: 12 })
   })
-  it('a feed „régi ára” soha nem tesz valódi akcióvá; csak a kiegészítő mondatot váltja ki', () => {
+  it('a feed „régi ára” az ítéletet soha nem változtatja; csak a kiegészítő mondatot váltja ki (6. vasszabály)', () => {
     const h = days(TODAY, Array(20).fill(10000))
     expect(verdict({ currentHuf: 10000, oldPriceHuf: 20000, history: h, today: TODAY })).toMatchObject({
       kind: 'usual',
       feedDiscountNote: true,
     })
-    // drágább a szokásosnál, de a bolt kedvezményt jelez → Szokásos ár + tényszerű mondat
+    // drágább a szokásosnál, és a bolt kedvezményt jelez → Most drágább marad, a tényszerű mondattal (F6-átnézés)
     expect(verdict({ currentHuf: 12000, oldPriceHuf: 15000, history: h, today: TODAY })).toMatchObject({
-      kind: 'usual',
+      kind: 'pricier',
       feedDiscountNote: true,
     })
+    // ugyanaz régi ár nélkül: ugyanaz az ítélet
+    expect(verdict({ currentHuf: 12000, history: h, today: TODAY }).kind).toBe('pricier')
     // valódi akciónál nincs kiegészítés
     expect(verdict({ currentHuf: 9000, oldPriceHuf: 15000, history: h, today: TODAY })).toMatchObject({ kind: 'deal', feedDiscountNote: false })
     // ártörténet nélkül a régi ár semmit nem számít

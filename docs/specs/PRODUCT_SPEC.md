@@ -402,8 +402,11 @@ Vendégnél csak 4–5. Címkék forrása: `product_tags` (szabály, feed, szerk
 - `jelen < min30 × 0,97` → **Valódi akció** · „30 napja nem volt ilyen olcsó ennél a boltnál.”
 - `jelen > med30 × 1,05` → **Most drágább** · „Most drágább a szokásosnál.”
 - egyébként → **Szokásos ár** · „Nagyjából ennyibe szokott kerülni.”
-- Ha a feed kedvezményt jelez (`old_price` > jelen), de `jelen ≥ min30` → **Szokásos ár** + tényszerű
-  kiegészítés: „A bolt kedvezményt jelez, de az elmúlt 30 napban volt már ennyi vagy kevesebb is.”
+- Ha a feed kedvezményt jelez (`old_price` > jelen), de `jelen ≥ min30` → az ítélet **nem változik** (Szokásos ár
+  vagy Most drágább, a saját ártörténet szerint) + tényszerű kiegészítés: „A bolt kedvezményt jelez, de az elmúlt
+  30 napban volt már ennyi vagy kevesebb is.” (F6-átnézés: a CLAUDE.md 6. vasszabálya szerint az ítélet kizárólag a
+  saját ártörténetből számol; a korábbi szöveg „→ Szokásos ár”-t írt, amivel a feed mezője a „Most drágább”-at
+  „Szokásos ár”-rá változtatta volna.)
 - Termékszinten a legjobb ajánlat ítélete látszik. Semleges, tényszerű nyelv; kereskedőt minősítő
   szó nincs.
 

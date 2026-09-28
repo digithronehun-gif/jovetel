@@ -327,6 +327,12 @@ export const offerStats = pgTable(
 )
 
 /** Termékenként a legjobb friss, listázható ajánlat és a szűrőkhöz kellő mezők (0009). */
+/** A statisztika pillanatképének ideje (egy sor; 0010 migráció): a kártyák „ár ellenőrizve” ideje ennél nem későbbi. */
+export const catalogStatsState = pgTable('catalog_stats_state', {
+  id: boolean('id').primaryKey().default(true),
+  refreshedAt: timestamp('refreshed_at', { withTimezone: true }).notNull(),
+})
+
 export const productStats = pgTable('product_stats', {
   productId: uuid('product_id')
     .primaryKey()
